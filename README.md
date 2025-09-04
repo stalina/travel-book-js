@@ -1,4 +1,4 @@
-# travel-book-js (SPA Vue 3)
+# travel-book-js (SPA- Vue 3)
 
 Application front-only (Vue 3 + Vite + TypeScript) qui reproduit la génération du Travel Book côté navigateur.
 
