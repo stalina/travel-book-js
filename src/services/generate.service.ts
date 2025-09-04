@@ -307,8 +307,8 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
     return `${fmt(lat, true)}, ${fmt(lon, false)}`
   }
   function cssUrlSingleQuoted(path: string): string {
-    // Conserver le chemin tel quel pour correspondre aux clés du manifest; échapper uniquement les apostrophes
-    return String(path).replace(/'/g, "\\'")
+    // Conserver le chemin tel quel pour correspondre aux clés du manifest; échapper les apostrophes ET les backslashes
+    return String(path).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
   }
   function cssUrlValue(urlStr: string): string {
     // Pour data: on ne met pas de quotes; sinon, quotes simples
