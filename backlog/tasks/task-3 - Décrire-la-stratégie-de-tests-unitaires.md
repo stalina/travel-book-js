@@ -1,9 +1,11 @@
 ---
 id: task-3
 title: Décrire la stratégie de tests unitaires
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot-agent'
 created_date: '2025-10-11 22:18'
+updated_date: '2025-10-11 22:25'
 labels: []
 dependencies: []
 ---
