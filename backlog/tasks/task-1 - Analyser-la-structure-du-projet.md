@@ -1,9 +1,11 @@
 ---
 id: task-1
 title: Analyser la structure du projet
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot-agent'
 created_date: '2025-10-11 22:17'
+updated_date: '2025-10-11 22:25'
 labels: []
 dependencies: []
 ---
