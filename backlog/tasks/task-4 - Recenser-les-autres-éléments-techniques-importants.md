@@ -22,3 +22,12 @@ Ajouter toute information technique pertinente (scripts, configuration, conventi
 - [ ] #2 Décrire les configurations spécifiques
 - [ ] #3 Mentionner les outils complémentaires
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Lister scripts utiles
+2. Décrire configurations spécifiques
+3. Mentionner outils complémentaires
+4. Rédiger la synthèse pour Copilot
+<!-- SECTION:PLAN:END -->
