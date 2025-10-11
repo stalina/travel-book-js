@@ -1,0 +1,22 @@
+---
+id: task-2
+title: Lister les librairies et frameworks utilisés
+status: To Do
+assignee: []
+created_date: '2025-10-11 22:18'
+labels: []
+dependencies: []
+---
+
+## Description
+
+<!-- SECTION:DESCRIPTION:BEGIN -->
+Identifier les dépendances principales (ex: Vue.js, Vite, Vitest, etc.) et les inclure dans la documentation technique pour Copilot.
+<!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Lister les librairies du package.json
+- [ ] #2 Identifier les frameworks principaux
+- [ ] #3 Repérer les outils de build et de test
+<!-- AC:END -->
