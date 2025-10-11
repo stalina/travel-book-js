@@ -35,3 +35,28 @@ Pour une parité visuelle hors-ligne complète, vous pouvez embarquer Noto Serif
 - File System Access API (Chrome/Edge) recommandé.
 - Fallback: input type=file (webkitdirectory) et zip via fflate.
 - Tout reste local, aucune donnée n’est envoyée. Les drapeaux utilisent un emoji, et les cartes pays sont locales.
+
+## Page de couverture
+
+Le générateur ajoute automatiquement une page de couverture en première page du `travel_book.html`.
+
+Contenu:
+
+- Photo de couverture: `trip.cover_photo.path` (ou `cover_photo_path`). Si absente, première photo disponible d'une étape. Si aucune photo n'est disponible, un fond uni couleur thème est utilisé.
+- Année du voyage: dérivée de `trip.start_date`.
+- Titre du voyage: `trip.name`.
+
+Mise en forme:
+
+- Bloc sur toute la page (`.cover-page`) avec image en background (`.cover-background`).
+- Titre et année centrés verticalement et horizontalement (overlay `.cover-overlay`).
+- Lisibilité assurée par un overlay semi-transparent et `text-shadow`.
+- Classes préfixées `cover-` pour éviter collisions.
+
+Personnalisation:
+
+- Modifier les styles dans `public/assets/style.css` (section `/* --- Couverture --- */`).
+- Vous pouvez remplacer dynamiquement la photo choisie en ajoutant / modifiant `trip.cover_photo` avant l'appel à `generateArtifacts`.
+- Pour désactiver la page de couverture, retirer l'appel `buildCoverSection()` dans `generate.service.ts` (ou ajouter un flag futur si besoin).
+
+Tests: voir `tests/generate.service.spec.ts` pour des exemples de contrôle de la couverture (année, titre, fallback photo).
