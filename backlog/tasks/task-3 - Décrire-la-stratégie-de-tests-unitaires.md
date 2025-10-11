@@ -22,3 +22,12 @@ Documenter l’approche de tests (Vitest, organisation des fichiers de test, con
 - [ ] #2 Expliquer l’organisation des fichiers de test
 - [ ] #3 Préciser les conventions de nommage des tests
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Décrire l’outil de test utilisé
+2. Expliquer organisation des fichiers de test
+3. Préciser conventions de nommage
+4. Rédiger la synthèse pour Copilot
+<!-- SECTION:PLAN:END -->
