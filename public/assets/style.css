@@ -301,3 +301,59 @@ html, body {
     margin-bottom: 0;
   }
 }
+
+/* --- Couverture ------------------------------------------------------- */
+.cover-page {
+  position: relative;
+  height: calc(100vh - 40px);
+  padding: 0;
+  page-break-after: always;
+}
+
+.cover-background {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cover-overlay {
+  position: relative;
+  text-align: center;
+  color: #fff;
+  font-family: "BrandonGrotesque";
+  text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  gap: calc(40px * var(--full-to-relative));
+  align-items: center;
+  justify-content: center;
+  padding: calc(80px * var(--full-to-relative));
+  background: rgba(0,0,0,0.25);
+  border-radius: calc(16px * var(--full-to-relative));
+}
+
+.cover-year {
+  background: rgba(0,0,0,0.45);
+  padding: calc(20px * var(--full-to-relative)) calc(40px * var(--full-to-relative));
+  border-radius: calc(8px * var(--full-to-relative));
+  font-size: calc(45px * var(--full-to-relative));
+  letter-spacing: 2px;
+}
+
+.cover-title {
+  font-size: calc(120px * var(--full-to-relative));
+  line-height: 1.05;
+  max-width: 80%;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.35);
+}
+
+@media print {
+  .cover-page { border: none; }
+  .cover-overlay { background: rgba(0,0,0,0.30); }
+}

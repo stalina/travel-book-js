@@ -565,6 +565,21 @@ Full help available: `backlog --help`
 - **Outils complémentaires** : gestion des tâches via Backlog.md, organisation des assets dans `public/`, utilisation de templates HTML
 
 ## Contraintes d’exécution et déploiement
+## Page de couverture du Travel Book
+
+Une page de couverture est désormais générée automatiquement (avant la première étape) dans `generate.service.ts` via la fonction interne `buildCoverSection()`. Elle affiche:
+
+- La photo de couverture (`trip.cover_photo.path` ou `cover_photo_path`). Fallback: première photo d'étape; sinon fond de couleur thème.
+- L'année du voyage (`new Date(trip.start_date*1000).getFullYear()`).
+- Le titre du voyage (`trip.name`).
+
+Styles dédiés (préfixe `.cover-`) définis dans `public/assets/style.css`. Pour personnaliser:
+1. Ajuster la section CSS `/* --- Couverture --- */`.
+2. (Optionnel) Ajouter un flag futur si besoin de désactiver; actuellement retirer l'appel `buildCoverSection()` suffira.
+3. Tests associés: voir `tests/generate.service.spec.ts` (vérifie présence couverture, fallback photo, année, titre).
+
+Important: conserver la structure `div.break-after.cover-page` pour garder les règles d'impression (page-break) et l'alignement existant.
+
 
 - **Tout le code doit s’exécuter côté navigateur** :
   - Aucun accès serveur, aucune dépendance Node.js côté runtime
