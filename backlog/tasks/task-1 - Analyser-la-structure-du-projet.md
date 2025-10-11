@@ -22,3 +22,13 @@ Examiner l’arborescence, les dossiers principaux, et les conventions de nommag
 - [ ] #2 Décrire les conventions de nommage utilisées
 - [ ] #3 Repérer les fichiers de configuration importants
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Lire l’arborescence du projet
+2. Identifier les dossiers/fichiers clés
+3. Décrire conventions de nommage et organisation
+4. Repérer les fichiers de configuration majeurs
+5. Rédiger la synthèse pour Copilot
+<!-- SECTION:PLAN:END -->
