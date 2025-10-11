@@ -1,9 +1,10 @@
 ---
 id: task-10
 title: Mise à jour README & instructions Copilot
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-10-11 23:24'
+updated_date: '2025-10-11 23:31'
 labels: []
 dependencies: []
 ---
@@ -16,8 +17,14 @@ Documenter la nouvelle page de couverture : structure, champs utilisés (trip.st
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 README inclut section 'Page de couverture'
-- [ ] #2 Instructions Copilot expliquent comment adapter la couverture
-- [ ] #3 Mention des fallbacks (première photo, couleur unie)
-- [ ] #4 Aucune duplication inutile, liens internes corrects
+- [x] #1 README inclut section 'Page de couverture'
+- [x] #2 Instructions Copilot expliquent comment adapter la couverture
+- [x] #3 Mention des fallbacks (première photo, couleur unie)
+- [x] #4 Aucune duplication inutile, liens internes corrects
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+README + copilot-instructions: section Page de couverture documentée.
+<!-- SECTION:NOTES:END -->
