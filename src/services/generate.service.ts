@@ -388,7 +388,11 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
       let cssBg = ''
       if (coverUrl) {
         const resolved = photoDataUrlMap[coverUrl] || coverUrl
-        cssBg = `style="background-image: url(${resolved.startsWith('data:') ? resolved : `'${resolved.replace(/'/g, "\\'")}'`});"`
+        cssBg = `style="background-image: url(${
+          resolved.startsWith('data:') 
+            ? resolved 
+            : `'${resolved.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`
+        });"`
       } else {
         cssBg = 'style="background: var(--theme-color);"'
       }
