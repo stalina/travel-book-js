@@ -528,3 +528,47 @@ Descriptions support literal newlines; shell examples may show escaped `\\n`, bu
 Full help available: `backlog --help`
 
 <!-- BACKLOG.MD GUIDELINES END -->
+
+---
+# Section technique du projet (Travel Book JS)
+
+## Structure du projet
+
+- **src/** : code source principal (Vue, TypeScript)
+  - Organisation modulaire : `models/`, `router/`, `services/`, `stores/`, `utils/`, `views/`
+- **public/** : ressources statiques (HTML, CSS, images, polices)
+- **tests/** : tests unitaires (Vitest)
+- **scripts/** : scripts utilitaires (ex : fetch_maps.mjs)
+- **backlog/** : gestion des tâches et documentation projet
+- **Fichiers de configuration** : `package.json`, `tsconfig.json`, `vite.config.ts`, `vitest.config.ts`, `eslint.config.js`
+- **Conventions** : TypeScript, nommage explicite, organisation claire
+
+## Librairies et frameworks
+
+- **Framework principal** : Vue.js (Single File Components, composition API)
+- **Outils de build** : Vite
+- **Tests unitaires** : Vitest
+- **Autres dépendances** : Pinia, Vue Router, etc. (voir package.json)
+- **Linting/formatting** : ESLint
+
+## Stratégie de tests unitaires
+
+- **Outil utilisé** : Vitest
+- **Organisation** : dossier `tests/`, fichiers `.spec.ts`
+- **Setup** : fichier `setup.ts` pour la configuration globale
+- **Conventions** : nommage des fichiers de test en lien avec le service ou la vue testée
+
+## Autres éléments techniques importants
+
+- **Scripts** : `scripts/fetch_maps.mjs` pour automatiser la récupération de données
+- **Configurations spécifiques** : ESLint, Vite, TypeScript, gestion des assets statiques
+- **Outils complémentaires** : gestion des tâches via Backlog.md, organisation des assets dans `public/`, utilisation de templates HTML
+
+## Contraintes d’exécution et déploiement
+
+- **Tout le code doit s’exécuter côté navigateur** :
+  - Aucun accès serveur, aucune dépendance Node.js côté runtime
+  - Le générateur doit être déployable sur une page statique (ex : GitHub Pages, Netlify, Vercel)
+  - Toute nouvelle fonctionnalité ou dépendance doit respecter cette contrainte
+
+---
