@@ -1,10 +1,14 @@
 ---
 id: task-6
 title: Ajouter une page de couverture au travel book
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@agent'
 created_date: '2025-10-11 23:22'
-labels: []
+updated_date: '2025-10-11 23:25'
+labels:
+  - feature
+  - cover
 dependencies: []
 ---
 
@@ -25,3 +29,18 @@ Créer la première page du travel book contenant la photo de couverture, l'ann�
 - [ ] #7 Tests: au moins un test vérifie la présence des éléments (année, titre, balise couverture)
 - [ ] #8 Documentation README et instructions Copilot mises à jour pour expliquer la page de couverture et comment la personnaliser
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Analyser structure actuelle HTML et point d insertion
+2. Extraire cover_photo (ou fallback) en data URL (cohérent avec autres photos)
+3. Ajouter fonction buildCoverSection(trip, coverDataUrl)
+4. Insérer le HTML avant bodyHtml steps
+5. Ajouter classes CSS minimales et placeholders
+6. Mettre à jour style.css (.cover-page, .cover-overlay, .cover-title, .cover-year)
+7. Ajouter tests de génération
+8. Mettre à jour README + instructions
+9. Vérifier single-file build
+10. Finaliser: notes + check AC + Done
+<!-- SECTION:PLAN:END -->
