@@ -1,9 +1,11 @@
 ---
 id: task-15
 title: Documentation page statistiques
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@stalina'
 created_date: '2025-10-12 00:04'
+updated_date: '2025-10-12 17:53'
 labels:
   - docs
   - stats
