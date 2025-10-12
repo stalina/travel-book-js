@@ -1,7 +1,7 @@
 ---
 id: task-11
 title: Ajouter page statistiques voyage
-status: In Progress
+status: Done
 assignee:
   - '@stalina'
 created_date: '2025-10-12 00:03'
