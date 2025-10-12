@@ -436,8 +436,9 @@ html, body {
 .stats-distance-diagram .stats-far { position: relative; z-index: 2; }
 .stats-distance-diagram .stats-distance-text { font-size: 12px; text-transform: uppercase; color: var(--grey-15); text-align: center; line-height: 1.3; }
 .stats-distance-diagram .stats-arc { position: absolute; top: 60px; left: 0; right: 0; height: 140px; pointer-events: none; }
-.stats-distance-diagram .stats-arc span { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); background: var(--theme-secondary); color: #fff; padding: 4px 10px; font-size: 14px; border-radius: 4px; }
-.stats-distance-diagram .stats-arc:before { content: ""; position: absolute; left: 160px; right: 160px; bottom: 0; height: 120px; border: 3px solid var(--grey-19); border-color: var(--grey-19) transparent transparent transparent; border-radius: 50%/100% 100% 0 0; }
+.stats-distance-diagram .stats-arc span { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); background: var(--theme-secondary); color: #fff; padding: 4px 10px; font-size: 14px; border-radius: 4px; z-index: 2; }
+.stats-distance-diagram .stats-arc-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.stats-distance-diagram .stats-arc-path { fill: none; stroke: var(--grey-19); stroke-width: 6; stroke-linecap: round; }
 /* Ligne de base entre les deux points */
 .stats-distance-diagram:after { content: ""; position: absolute; left: 160px; right: 160px; bottom: 54px; height: 2px; background: var(--grey-19); }
 
