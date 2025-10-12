@@ -458,8 +458,14 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
       const farCity = (farStep as any)?.city || farStep?.name || ''
 
       // Construction HTML (nouveau layout 2 colonnes)
+      // Hauteur disponible théorique pour la colonne (hors padding) : 100vh - 40px (page) - padding vertical (2*40px) => approx 100vh - 120px.
+      // On calcule une hauteur slot (min 90px, max 260px) pour que tout tienne.
+      const slotCount = Math.max(1, countries.length)
+      const pageH = 1000 // base arbitraire; ajusté via calc en CSS relatif (on utilisera vh pour rendu réel)
+      const slotRaw = (pageH - 120) / slotCount
+      const slot = Math.max(90, Math.min(260, slotRaw))
       const countriesHtml = countries.map(c => `
-            <div class="stats-country">
+            <div class="stats-country" style="height:${slot}vh;">
               <div class="stats-country-shape">
                 <img src="assets/images/maps/${esc(c.code)}.svg" alt="${esc(c.name)}" />
                 <div class="stats-country-name">${esc(c.name)}</div>
