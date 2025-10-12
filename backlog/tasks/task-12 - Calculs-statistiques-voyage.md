@@ -20,10 +20,10 @@ Implémenter fonctions de calcul: total km (trip.total_km fallback distance cumu
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Fonction util statDistance(lat1,lon1,lat2,lon2) haversine
-- [ ] #2 Retombe sur trip.total_km si fourni sinon calcule cumul (approx)
-- [ ] #3 Durée = (end-start)+1 en jours
-- [ ] #4 Nombre photos = somme photosMapping
-- [ ] #5 Distance max correctement identifiée
-- [ ] #6 Renvoie objet stats typed
+- [x] #1 Fonction util statDistance(lat1,lon1,lat2,lon2) haversine
+- [x] #2 Retombe sur trip.total_km si fourni sinon calcule cumul (approx)
+- [x] #3 Durée = (end-start)+1 en jours
+- [x] #4 Nombre photos = somme photosMapping
+- [x] #5 Distance max correctement identifiée
+- [x] #6 Renvoie objet stats typed
 <!-- AC:END -->
