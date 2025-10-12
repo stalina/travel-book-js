@@ -66,3 +66,50 @@ describe('generate.service - page de couverture', () => {
   expect(/data:image\//.test(html)).toBe(true)
   })
 })
+
+describe('generate.service - page statistiques', () => {
+  beforeAll(() => {
+    ;(globalThis as any).fetch = (async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (/assets\/style\.css$/.test(url)) return new Response('body{}', { status: 200, headers: { 'Content-Type': 'text/css' } })
+      if (/assets\/fonts\/fonts\.css$/.test(url)) return new Response('', { status: 200, headers: { 'Content-Type': 'text/css' } })
+      if (/\.svg$/.test(url)) return new Response('<svg xmlns="http://www.w3.org/2000/svg"/>', { status: 200, headers: { 'Content-Type': 'image/svg+xml' } })
+      if (/Brandon_Grotesque_medium\.otf$/.test(url)) return new Response(new Blob(['OTF'], { type: 'font/otf' }), { status: 200 })
+      if (/country_bounding_boxes\.json$/.test(url)) return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } })
+      return new Response('not found', { status: 404 })
+    }) as any
+  })
+
+  async function setupMulti() {
+    const trip: any = {
+      id: 2,
+      name: 'Voyage Multi Pays',
+      start_date: Date.UTC(2024,0,1)/1000,
+      end_date: Date.UTC(2024,0,5)/1000,
+      total_km: 1234.56,
+      steps: [
+        { id: 1, name: 'Start', description: '', start_time: Date.UTC(2024,0,1)/1000, lat: 48.8566, lon: 2.3522, country_code: 'FR', weather_condition: 'clear-day', weather_temperature: 10 },
+        { id: 2, name: 'Berlin', description: '', start_time: Date.UTC(2024,0,2)/1000, lat: 52.52, lon: 13.405, country_code: 'DE', weather_condition: 'cloudy', weather_temperature: 4 },
+        { id: 3, name: 'Ljubljana', description: '', start_time: Date.UTC(2024,0,3)/1000, lat: 46.0569, lon: 14.5058, country_code: 'SI', weather_condition: 'cloudy', weather_temperature: 6 }
+      ]
+    }
+    ;(window as any).__parsedTrip = { trip, stepPhotos: { 1: [mockFile('a.jpg')], 2: [mockFile('b.jpg'), mockFile('c.jpg')], 3: [] } }
+    const artifacts = await generateArtifacts({} as any)
+    const html = await buildSingleFileHtmlString(artifacts)
+    return { html }
+  }
+
+  it('génère une stats-page après la cover', async () => {
+    const { html } = await setupMulti()
+    expect(html).toMatch(/class=\"break-after cover-page\"/)
+    expect(html).toMatch(/class=\"break-after stats-page\"/)
+  })
+
+  it('affiche les métriques de base', async () => {
+    const { html } = await setupMulti()
+    expect(html).toMatch(/KILOMÈTRES/)
+    expect(html).toMatch(/JOURS/)
+    expect(html).toMatch(/ÉTAPES/)
+    expect(html).toMatch(/PHOTOS/)
+  })
+})

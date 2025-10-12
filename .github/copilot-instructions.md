@@ -580,6 +580,19 @@ Styles dédiés (préfixe `.cover-`) définis dans `public/assets/style.css`. Po
 
 Important: conserver la structure `div.break-after.cover-page` pour garder les règles d'impression (page-break) et l'alignement existant.
 
+## Page de statistiques du voyage
+
+Une deuxième page est désormais générée juste après la couverture via la fonction interne `buildStatsSection()` (dans `generate.service.ts`). Elle affiche:
+
+- Les pays uniques traversés (ordre d'apparition) avec leur silhouette SVG locale `assets/images/maps/<code>.svg` et le nom en français.
+- Des métriques clés: kilomètres (arrondis, `trip.total_km` si fourni sinon somme Haversine), nombre de jours, nombre d'étapes, nombre total de photos, distance maximale depuis le point de départ (et un petit diagramme arc).
+
+Styles: classes préfixées `.stats-` (voir fin de `public/assets/style.css`). Structure racine: `div.break-after.stats-page` pour conserver la pagination à l'impression.
+
+Personnalisation / Désactivation: retirer ou conditionner l'appel à `buildStatsSection()` dans `generate.service.ts` (ajouter un flag futur si nécessaire).
+
+Tests: assertions présentes dans `tests/generate.service.spec.ts` (détection `.stats-page`, labels de métriques).
+
 
 - **Tout le code doit s’exécuter côté navigateur** :
   - Aucun accès serveur, aucune dépendance Node.js côté runtime

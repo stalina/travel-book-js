@@ -357,3 +357,126 @@ html, body {
   .cover-page { border: none; }
   .cover-overlay { background: rgba(0,0,0,0.30); }
 }
+
+/* --- Page Statistiques -------------------------------------------------- */
+.stats-page {
+  position: relative;
+  min-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+  font-family: "BrandonGrotesque";
+}
+
+.stats-countries {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 10px 20px 0 20px;
+}
+
+.stats-country {
+  position: relative;
+  flex: 0 0 auto;
+  width: 180px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stats-country-shape {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stats-country-shape img {
+  max-width: 100%;
+  max-height: 100%;
+  opacity: 0.85;
+  filter: grayscale(100%);
+}
+
+.stats-country-name {
+  position: absolute;
+  font-size: 14px;
+  text-align: center;
+  color: var(--dark-1);
+  padding: 4px 6px;
+  background: rgba(255,255,255,0.75);
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+
+.stats-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 30px 40px;
+  padding: 0 40px 40px 40px;
+}
+
+.stats-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  gap: 8px;
+  position: relative;
+}
+
+.stats-icon { font-size: 40px; line-height: 1; }
+.stats-value { font-size: 42px; color: var(--theme-color); line-height: 1; }
+.stats-label { font-size: 14px; text-transform: uppercase; color: var(--grey-15); letter-spacing: 1px; }
+
+/* Diagramme distance */
+.stats-distance-diagram {
+  position: relative;
+  width: 220px;
+  height: 120px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  font-size: 32px;
+}
+.stats-distance-diagram .stats-home,
+.stats-distance-diagram .stats-far { position: relative; z-index: 2; }
+.stats-distance-diagram .stats-arc {
+  position: absolute;
+  top: 20px;
+  left: 0; right: 0;
+  height: 100px;
+  pointer-events: none;
+}
+.stats-distance-diagram .stats-arc span {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--theme-secondary);
+  color: #fff;
+  padding: 4px 10px;
+  font-size: 14px;
+  border-radius: 4px;
+}
+.stats-distance-diagram .stats-arc:before {
+  content: "";
+  position: absolute;
+  left: 20px; right: 20px; bottom: 0;
+  height: 80px;
+  border: 3px solid var(--grey-19);
+  border-color: var(--grey-19) transparent transparent transparent;
+  border-radius: 50%/100% 100% 0 0;
+}
+.stats-distance-caption { font-size: 12px; text-transform: uppercase; color: var(--grey-15); margin-top: 6px; }
+
+@media print {
+  .stats-country { break-inside: avoid; }
+  .stats-metric { break-inside: avoid; }
+}
