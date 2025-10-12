@@ -1,9 +1,11 @@
 ---
 id: task-13
 title: Mise en page & styles page stats
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@stalina'
 created_date: '2025-10-12 00:04'
+updated_date: '2025-10-12 17:50'
 labels:
   - css
   - stats
