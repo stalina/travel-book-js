@@ -365,50 +365,54 @@ html, body {
 .stats-layout { display: flex; height: calc(100vh - 40px); }
 .stats-left { flex: 0 0 33%; background: var(--dark-1); color: #fff; display: flex; align-items: stretch; justify-content: center; padding: 40px 20px; }
 /* La colonne inner répartit verticalement l'espace; chaque pays grandit puis rétrécit pour tenir */
-.stats-left-inner { 
-  /* Passage en grid: une ligne par pays répartie uniformément */
-  display: grid; 
-  grid-auto-rows: 1fr; 
-  width: 100%; 
-  height: 100%; 
-  overflow: hidden; 
-  /* Espacement vertical minimal; le remplissage est assuré par 1fr */
-  row-gap: 14px; 
-  justify-items: center; 
-  align-items: stretch; 
+.stats-left-inner {
+  /* Flex column + hauteur fixe calculée pour chaque pays via var(--country-count) */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  gap: 0; /* géré dans hauteur interne */
 }
 .stats-right { flex: 1; display: flex; flex-direction: column; padding: 80px 80px 60px 80px; gap: 60px; }
 
 /* Pays colonne gauche */
-.stats-country { 
-  width: 80%; 
-  max-width: 260px; 
-  position: relative; 
-  display: flex; 
-  align-items: center; 
-  /* Pour que chaque cellule occupe toute la hauteur 1fr et que le contenu se scale */
+.stats-country {
+  /* Hauteur disponible: 100% - padding vertical (2*40px) = calc(100% - 80px)
+     Répartie par le nombre de pays. On applique un clamp pour éviter des pays trop grands ou trop petits. */
+  --available-height: calc(100% - 80px);
+  --raw-country-h: calc(var(--available-height) / var(--country-count));
+  height: clamp(70px, var(--raw-country-h), 260px);
+  width: 80%;
+  max-width: 260px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px auto; /* léger espacement */
+  flex: 0 0 auto;
 }
-.stats-country-shape { 
-  position: relative; 
-  width: 100%; 
-  height: 100%; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
+.stats-left-inner[style*="--country-count:1"] .stats-country { height: 240px; }
+.stats-left-inner[style*="--country-count:2"] .stats-country { height: clamp(120px, var(--raw-country-h), 300px); }
+.stats-left-inner[style*="--country-count:3"] .stats-country { height: clamp(110px, var(--raw-country-h), 280px); }
+
+.stats-country-shape {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.stats-country-shape img { 
-  width: 100%; 
-  height: 100%; 
-  max-height: 100%; 
-  filter: grayscale(100%) brightness(1.05); 
-  opacity: 0.9; 
-  object-fit: contain; 
+.stats-country-shape img {
+  width: 100%;
+  height: 100%;
+  filter: grayscale(100%) brightness(1.05);
+  opacity: 0.9;
+  object-fit: contain;
 }
 .stats-country-name { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 4px; font-size: clamp(12px, 1.6vw, 20px); font-weight: 500; letter-spacing: 1px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
-/* Si beaucoup de pays (>6), réduire l'espacement */
-.stats-left-inner:has(.stats-country:nth-child(7)) { gap: 16px; }
-.stats-left-inner:has(.stats-country:nth-child(9)) { gap: 10px; }
+/* Anciennes règles gap adaptatif supprimées: la hauteur est calculée dynamiquement. */
 
 /* En-tête colonne droite */
 .stats-header { display: flex; flex-direction: column; gap: 20px; }
