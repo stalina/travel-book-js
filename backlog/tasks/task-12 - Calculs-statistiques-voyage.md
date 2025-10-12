@@ -27,3 +27,17 @@ Implémenter fonctions de calcul: total km (trip.total_km fallback distance cumu
 - [x] #5 Distance max correctement identifiée
 - [x] #6 Renvoie objet stats typed
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Implémenté dans buildStatsSection():
+- Calcul km (trip.total_km sinon cumul Haversine)
+- Durée jours (end-start+1)
+- Comptage photos via photosMapping
+- Steps count
+- Distance max depuis première étape (Haversine) + identification step la plus éloignée
+- Retour valeurs intégrées dans page statistiques
+- Typage implicite via const locaux
+Tests: existants verts (5)
+<!-- SECTION:NOTES:END -->
