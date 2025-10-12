@@ -476,7 +476,39 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
       const tripSummary = esc((trip as any).summary || '')
       const departureCity = esc(((trip.steps[0] as any).city) || trip.steps[0].name || '')
 
-  return `\n      <div class="break-after stats-page">\n        <div class="stats-layout">\n          <div class="stats-left">\n            <div class="stats-left-inner" style="--country-count:${countries.length};">${countriesHtml}</div>\n          </div>\n          <div class="stats-right">\n            <div class="stats-header">\n              <div class="stats-title">RÉSUMÉ DU VOYAGE</div>\n              ${tripSummary ? `<div class=\"stats-subtitle\">${tripSummary}</div>` : ''}\n            </div>\n            <div class="stats-metrics-grid">${metricsGrid}</div>\n            <div class="stats-distance-block">\n              <div class="stats-distance-diagram">\n                <div class="stats-home-block">\n                  <div class="stats-home">🏠</div>\n                  <div class="stats-distance-text">Départ: ${departureCity}</div>\n                </div>\n                <div class="stats-arc">\n                  <span>${numberFr0(maxDistKm)} km</span>\n                  <svg class="stats-arc-svg" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">\n                    <path d="M100 260 Q500 40 900 260" class="stats-arc-path" />\n                  </svg>\n                </div>\n                <div class="stats-far-block">\n                  <div class="stats-far">📍</div>\n                  <div class="stats-distance-text">Point le plus éloigné${farCity ? ' : '+esc(farCity) : ''}</div>\n                </div>\n              </div>\n            </div>\n          </div>\n        </div>\n      </div>`
+  return `
+      <div class="break-after stats-page">
+        <div class="stats-layout">
+          <div class="stats-left">
+            <div class="stats-left-inner" style="--country-count:${countries.length};">${countriesHtml}</div>
+          </div>
+          <div class="stats-right">
+            <div class="stats-header">
+              <div class="stats-title">RÉSUMÉ DU VOYAGE</div>
+              ${tripSummary ? `<div class="stats-subtitle">${tripSummary}</div>` : ''}
+            </div>
+            <div class="stats-metrics-grid">${metricsGrid}</div>
+            <div class="stats-distance-block">
+              <div class="stats-distance-diagram">
+                <div class="stats-home-block">
+                  <div class="stats-home">🏠</div>
+                  <div class="stats-distance-text">Départ: ${departureCity}</div>
+                </div>
+                <div class="stats-arc">
+                  <span>${numberFr0(maxDistKm)} km</span>
+                  <svg class="stats-arc-svg" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">
+                    <path d="M140 250 Q500 90 860 250" class="stats-arc-path" />
+                  </svg>
+                </div>
+                <div class="stats-far-block">
+                  <div class="stats-far">📍</div>
+                  <div class="stats-distance-text">Point le plus éloigné${farCity ? ' : '+esc(farCity) : ''}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`
     } catch (e) {
       DBG.warn('stats:build error', e)
       return ''

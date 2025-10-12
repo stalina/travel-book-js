@@ -373,7 +373,7 @@ html, body {
   height: 100%;
   gap: 0; /* géré dans hauteur interne */
 }
-.stats-right { flex: 1; display: flex; flex-direction: column; padding: 80px 80px 60px 80px; gap: 60px; }
+.stats-right { flex: 1; display: grid; grid-template-rows: auto auto 1fr; /* header, metrics, distance diagram flex */ padding: 70px 70px 50px 70px; row-gap: 32px; min-height: calc(100vh - 40px); box-sizing: border-box; }
 
 /* Pays colonne gauche */
 .stats-country {
@@ -415,21 +415,21 @@ html, body {
 /* Anciennes règles gap adaptatif supprimées: la hauteur est calculée dynamiquement. */
 
 /* En-tête colonne droite */
-.stats-header { display: flex; flex-direction: column; gap: 20px; align-items: center; text-align: center; }
-.stats-title { font-size: 54px; letter-spacing: 2px; color: var(--dark-1); width: 100%; }
-.stats-subtitle { font-size: 20px; line-height: 1.4; color: var(--grey-9); max-width: 90%; white-space: pre-wrap; }
+.stats-header { display: flex; flex-direction: column; gap: 16px; align-items: center; text-align: center; }
+.stats-title { font-size: clamp(40px, 4.2vw, 54px); letter-spacing: 2px; color: var(--dark-1); width: 100%; line-height: 1.05; }
+.stats-subtitle { font-size: clamp(14px, 1.4vw, 20px); line-height: 1.35; color: var(--grey-9); max-width: 90%; white-space: pre-wrap; max-height: 8.5em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; line-clamp: 6; }
 
 /* Grille métriques 2x2 */
-.stats-metrics-grid { display: grid; grid-template-columns: repeat(2, minmax(200px, 1fr)); grid-auto-rows: 1fr; gap: 60px 100px; max-width: 700px; margin-left: auto; margin-right: auto; }
-.stats-metric { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; }
+.stats-metrics-grid { display: grid; grid-template-columns: repeat(2, minmax(160px, 1fr)); grid-auto-rows: 1fr; gap: 36px 50px; max-width: 600px; margin: 0 auto; align-self: center; }
+.stats-metric { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; }
 
-.stats-icon { font-size: 40px; line-height: 1; }
-.stats-value { font-size: 42px; color: var(--theme-color); line-height: 1; }
-.stats-label { font-size: 14px; text-transform: uppercase; color: var(--grey-15); letter-spacing: 1px; }
+.stats-icon { font-size: clamp(26px, 3vw, 40px); line-height: 1; }
+.stats-value { font-size: clamp(30px, 3.2vw, 42px); color: var(--theme-color); line-height: 1.05; }
+.stats-label { font-size: clamp(10px, 1vw, 14px); text-transform: uppercase; color: var(--grey-15); letter-spacing: 1px; }
 
 /* Diagramme distance */
-.stats-distance-block { margin-top: auto; max-width: 800px; margin-left: auto; margin-right: auto; }
-.stats-distance-diagram { position: relative; width: 100%; height: 210px; display: flex; align-items: flex-end; justify-content: space-between; font-size: 40px; }
+.stats-distance-block { margin-top: 0; max-width: 800px; margin-left: auto; margin-right: auto; display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; }
+.stats-distance-diagram { position: relative; width: 100%; height: clamp(180px, 24vh, 210px); display: flex; align-items: flex-end; justify-content: space-between; font-size: clamp(30px, 4vw, 40px); }
 .stats-distance-diagram .stats-home-block,
 .stats-distance-diagram .stats-far-block { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 90px; width: 120px; }
 .stats-distance-diagram .stats-home,
