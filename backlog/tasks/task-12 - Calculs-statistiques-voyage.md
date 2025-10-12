@@ -1,9 +1,11 @@
 ---
 id: task-12
 title: Calculs statistiques voyage
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@stalina'
 created_date: '2025-10-12 00:04'
+updated_date: '2025-10-12 17:50'
 labels:
   - stats
   - calcul
