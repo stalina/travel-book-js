@@ -357,3 +357,93 @@ html, body {
   .cover-page { border: none; }
   .cover-overlay { background: rgba(0,0,0,0.30); }
 }
+
+/* --- Page Statistiques -------------------------------------------------- */
+
+/* Container général nouvelle mise en page */
+.stats-page { position: relative; min-height: calc(100vh - 40px); font-family: "BrandonGrotesque"; }
+.stats-layout { display: flex; height: calc(100vh - 40px); }
+.stats-left { flex: 0 0 33%; background: var(--dark-1); color: #fff; display: flex; align-items: stretch; justify-content: center; padding: 40px 20px; }
+/* La colonne inner répartit verticalement l'espace; chaque pays grandit puis rétrécit pour tenir */
+.stats-left-inner {
+  /* Flex column + hauteur fixe calculée pour chaque pays via var(--country-count) */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  gap: 0; /* géré dans hauteur interne */
+}
+.stats-right { flex: 1; display: grid; grid-template-rows: auto auto 1fr; /* header, metrics, distance diagram flex */ padding: 60px 60px 40px 60px; row-gap: 24px; min-height: calc(100vh - 40px); box-sizing: border-box; }
+
+/* Pays colonne gauche */
+.stats-country {
+  /* Hauteur disponible: 100% - padding vertical (2*40px) = calc(100% - 80px)
+     Répartie par le nombre de pays. On applique un clamp pour éviter des pays trop grands ou trop petits. */
+  --available-height: calc(100% - 80px);
+  --raw-country-h: calc(var(--available-height) / var(--country-count));
+  height: clamp(70px, var(--raw-country-h), 260px);
+  width: 80%;
+  max-width: 260px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px auto; /* léger espacement */
+  flex: 0 0 auto;
+}
+.stats-left-inner[style*="--country-count:1"] .stats-country { height: 240px; }
+.stats-left-inner[style*="--country-count:2"] .stats-country { height: clamp(120px, var(--raw-country-h), 300px); }
+.stats-left-inner[style*="--country-count:3"] .stats-country { height: clamp(110px, var(--raw-country-h), 280px); }
+
+.stats-country-shape {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stats-country-shape img {
+  width: 100%;
+  height: 100%;
+  filter: grayscale(100%) brightness(1.05);
+  opacity: 0.9;
+  object-fit: contain;
+}
+.stats-country-name { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 4px; font-size: clamp(12px, 1.6vw, 20px); font-weight: 500; letter-spacing: 1px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+
+/* Anciennes règles gap adaptatif supprimées: la hauteur est calculée dynamiquement. */
+
+/* En-tête colonne droite */
+.stats-header { display: flex; flex-direction: column; gap: 16px; align-items: center; text-align: center; }
+.stats-title { font-size: clamp(40px, 4.2vw, 54px); letter-spacing: 2px; color: var(--dark-1); width: 100%; line-height: 1.05; }
+.stats-subtitle { font-size: clamp(14px, 1.4vw, 20px); line-height: 1.35; color: var(--grey-9); max-width: 90%; white-space: pre-wrap; max-height: 8.5em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; line-clamp: 6; }
+
+/* Grille métriques 2x2 */
+.stats-metrics-grid { display: grid; grid-template-columns: repeat(2, minmax(160px, 1fr)); grid-auto-rows: 1fr; gap: 36px 50px; max-width: 600px; margin: 0 auto; align-self: center; }
+.stats-metric { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; }
+
+.stats-icon { font-size: clamp(26px, 3vw, 40px); line-height: 1; }
+.stats-value { font-size: clamp(30px, 3.2vw, 42px); color: var(--theme-color); line-height: 1.05; }
+.stats-label { font-size: clamp(10px, 1vw, 14px); text-transform: uppercase; color: var(--grey-15); letter-spacing: 1px; }
+
+/* Diagramme distance */
+.stats-distance-block { margin-top: 0; margin-left: auto; margin-right: auto; display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; width:100%}
+.stats-distance-diagram { position: relative; width: 100%; height: clamp(160px, 22vh, 210px); display: flex; align-items: flex-end; justify-content: space-between; font-size: clamp(30px, 4vw, 40px); }
+.stats-distance-diagram .stats-home-block,
+.stats-distance-diagram .stats-far-block { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 90px; width: 120px; }
+.stats-distance-diagram .stats-home,
+.stats-distance-diagram .stats-far { position: relative; z-index: 2; }
+.stats-distance-diagram .stats-distance-text { font-size: 12px; text-transform: uppercase; color: var(--grey-15); text-align: center; line-height: 1.3; }
+.stats-distance-diagram .stats-arc { position: absolute; top: 0; left: 0; right: 0; height: 160px; pointer-events: none; }
+.stats-distance-diagram .stats-arc span { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); background: var(--theme-secondary); color: #fff; padding: 6px 18px 8px; font-size: 15px; border-radius: 4px; z-index: 2; font-family: "BrandonGrotesque"; font-weight: 500; letter-spacing: .5px; }
+.stats-distance-diagram .stats-arc span:after { content: ""; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid var(--theme-secondary); }
+.stats-distance-diagram .stats-arc-svg { position: absolute; inset: 0; width:80%; height: 100%; margin-left: 10%;}
+.stats-distance-diagram .stats-arc-path { fill: none; stroke: var(--grey-19); stroke-width: 6; stroke-linecap: round; }
+/* Ligne de base entre les deux points */
+/* Baseline supprimée pour style épuré */
+ .stats-distance-diagram:after { display: none; }
+
+@media print {
+  .stats-left, .stats-right { break-inside: avoid; }
+}

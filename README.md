@@ -60,3 +60,30 @@ Personnalisation:
 - Pour désactiver la page de couverture, retirer l'appel `buildCoverSection()` dans `generate.service.ts` (ou ajouter un flag futur si besoin).
 
 Tests: voir `tests/generate.service.spec.ts` pour des exemples de contrôle de la couverture (année, titre, fallback photo).
+
+## Page Statistiques (2ᵉ page)
+
+Une page de statistiques (`.stats-page`) est automatiquement insérée juste après la page de couverture.
+
+Contenu principal:
+
+- Pays traversés (uniques, dans l'ordre de première apparition) affichés sous forme de silhouettes SVG locales (`public/assets/images/maps/<code>.svg`). Si une carte est manquante, un placeholder est généré.
+- Nom de chaque pays en français, centré dans/au-dessus de la silhouette (majuscules). Les noms proviennent d'un mapping interne ou d'`Intl.DisplayNames`.
+- Statistiques clés (icônes inline + valeur + label):
+	- Kilomètres (arrondi) — utilise `trip.total_km` si disponible sinon distance cumulée approximative entre étapes (Haversine).
+	- Jours de voyage (calcul `(end-start)+1`).
+	- Nombre d'étapes.
+	- Nombre total de photos (somme des photos chargées pour chaque étape).
+	- Distance maximum depuis l'étape de départ + petit diagramme arc représentant le point le plus éloigné.
+
+Structure HTML: blocs `.stats-countries` (flex wrap) et `.stats-metrics` (grid). Chaque métrique a `.stats-metric`, les classes distance: `.stats-distance`, `.stats-distance-diagram`.
+
+Impression: la page conserve `break-after` via la classe de conteneur `break-after stats-page` pour rester isolée en PDF.
+
+Personnalisation:
+
+- Styles: section `/* --- Page Statistiques --- */` à la fin de `public/assets/style.css`.
+- Pour désactiver: retirer l'appel `buildStatsSection()` dans `generate.service.ts`.
+- Pour ajouter une nouvelle métrique: calculer la valeur dans `buildStatsSection()` (ou externaliser plus tard) et ajouter un bloc `.stats-metric`.
+
+Tests: assertions de présence de `.stats-page` et des labels (KILOMÈTRES, JOURS, ÉTAPES, PHOTOS) dans `tests/generate.service.spec.ts`.
