@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@stalina'
 created_date: '2025-10-12 00:04'
-updated_date: '2025-10-12 17:52'
+updated_date: '2025-10-12 17:53'
 labels:
   - tests
   - stats
@@ -20,9 +20,20 @@ dependencies: []
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Test sélectionne plusieurs steps multi-pays
-- [ ] #2 Vérifie arrondi km
-- [ ] #3 Vérifie distance max > 0
-- [ ] #4 Vérifie nombre photos
-- [ ] #5 Aucun fetch réseau additionnel
+- [x] #1 Test sélectionne plusieurs steps multi-pays
+- [x] #2 Vérifie arrondi km
+- [x] #3 Vérifie distance max > 0
+- [x] #4 Vérifie nombre photos
+- [x] #5 Aucun fetch réseau additionnel
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Tests actuels:
+- Présence page stats après cover
+- Vérification km/jours/étapes/photos
+- Scenario multi-pays couvrant distance max
+- Aucune requête réseau additionnelle (logs montrent aucune fetch supplémentaire)
+Tous verts (5).
+<!-- SECTION:NOTES:END -->
