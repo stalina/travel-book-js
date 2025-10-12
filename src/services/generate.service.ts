@@ -496,8 +496,8 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
                 </div>
                 <div class="stats-arc">
                   <span>${numberFr0(maxDistKm)} km</span>
-                  <svg class="stats-arc-svg" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">
-                    <path d="M140 250 Q500 90 860 250" class="stats-arc-path" />
+                  <svg class="stats-arc-svg" viewBox="0 0 1000 200" preserveAspectRatio="none" aria-hidden="true">
+                    <path d="M150 160 Q500 40 850 160" class="stats-arc-path" />
                   </svg>
                 </div>
                 <div class="stats-far-block">
