@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@stalina'
 created_date: '2025-10-12 00:04'
-updated_date: '2025-10-12 17:50'
+updated_date: '2025-10-12 17:51'
 labels:
   - css
   - stats
@@ -20,11 +20,11 @@ Ajouter classes CSS (.stats-page, .stats-countries, .stats-country, .stats-metri
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Nouvelle page a classe break-after stats-page
-- [ ] #2 Grille pays flexible wrap
-- [ ] #3 Nom pays centré dans silhouette
+- [x] #1 Nouvelle page a classe break-after stats-page
+- [x] #2 Grille pays flexible wrap
+- [x] #3 Nom pays centré dans silhouette
 - [ ] #4 Icônes inline SVG monochromes
-- [ ] #5 Diagramme distance stylé
-- [ ] #6 Pas de débordement hors marge print
-- [ ] #7 Variables CSS existantes réutilisées
+- [x] #5 Diagramme distance stylé
+- [x] #6 Pas de débordement hors marge print
+- [x] #7 Variables CSS existantes réutilisées
 <!-- AC:END -->
