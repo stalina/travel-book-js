@@ -12,6 +12,8 @@ export async function parseTrip(input: FFInput) {
     name: tripJson.name,
     start_date: tripJson.start_date,
     end_date: tripJson.end_date ?? null,
+    summary: tripJson.summary,
+    cover_photo: tripJson.cover_photo,
     steps: []
   }
 
@@ -20,7 +22,7 @@ export async function parseTrip(input: FFInput) {
     trip.steps.push({
       name: s.display_name,
       description: s.description,
-  city: s.location?.name || undefined,
+      city: s.location?.name || undefined,
       country: s.location.detail,
       country_code: s.location.country_code,
       weather_condition: s.weather_condition,

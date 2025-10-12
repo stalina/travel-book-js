@@ -4,6 +4,8 @@ export type Trip = {
   start_date: number
   end_date: number | null
   steps: Step[]
+  summary?: string
+  cover_photo: Photo | null
 }
 
 export type Step = {
