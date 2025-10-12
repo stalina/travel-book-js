@@ -1,7 +1,7 @@
 ---
 id: task-16
 title: Refonte visuelle page statistiques
-status: In Progress
+status: Done
 assignee:
   - '@stalina'
 created_date: '2025-10-12 08:55'
