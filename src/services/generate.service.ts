@@ -457,30 +457,25 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
       const maxDistKm = Math.round(maxDist)
       const farCity = (farStep as any)?.city || farStep?.name || ''
 
-      // Construction HTML
+      // Construction HTML (nouveau layout 2 colonnes)
       const countriesHtml = countries.map(c => `
-        <div class="stats-country">
-          <div class="stats-country-shape">
-            <img src="assets/images/maps/${esc(c.code)}.svg" alt="${esc(c.name)}" />
-            <div class="stats-country-name">${esc(c.name)}</div>
-          </div>
-        </div>`).join('\n')
+            <div class="stats-country">
+              <div class="stats-country-shape">
+                <img src="assets/images/maps/${esc(c.code)}.svg" alt="${esc(c.name)}" />
+                <div class="stats-country-name">${esc(c.name)}</div>
+              </div>
+            </div>`).join('')
 
-      const metricsHtml = `
-        <div class="stats-metric"><div class="stats-icon">🗺️</div><div class="stats-value">${numberFr0(km)}</div><div class="stats-label">KILOMÈTRES</div></div>
-        <div class="stats-metric"><div class="stats-icon">📆</div><div class="stats-value">${numberFr0(days)}</div><div class="stats-label">JOURS</div></div>
-        <div class="stats-metric"><div class="stats-icon">📍</div><div class="stats-value">${numberFr0(stepsCount)}</div><div class="stats-label">ÉTAPES</div></div>
-        <div class="stats-metric"><div class="stats-icon">📷</div><div class="stats-value">${numberFr0(totalPhotos)}</div><div class="stats-label">PHOTOS</div></div>
-        <div class="stats-metric stats-distance">
-          <div class="stats-distance-diagram">
-            <div class="stats-home">🏠</div>
-            <div class="stats-arc"><span>${numberFr0(maxDistKm)} km</span></div>
-            <div class="stats-far">📍</div>
-          </div>
-          <div class="stats-distance-caption">Point le plus éloigné${farCity ? ' : '+esc(farCity) : ''}</div>
-        </div>`
+      const metricsGrid = `
+              <div class="stats-metric"><div class="stats-icon">🗺️</div><div class="stats-value">${numberFr0(km)}</div><div class="stats-label">KILOMÈTRES</div></div>
+              <div class="stats-metric"><div class="stats-icon">📆</div><div class="stats-value">${numberFr0(days)}</div><div class="stats-label">JOURS</div></div>
+              <div class="stats-metric"><div class="stats-icon">📍</div><div class="stats-value">${numberFr0(stepsCount)}</div><div class="stats-label">ÉTAPES</div></div>
+              <div class="stats-metric"><div class="stats-icon">📷</div><div class="stats-value">${numberFr0(totalPhotos)}</div><div class="stats-label">PHOTOS</div></div>`
 
-      return `\n      <div class="break-after stats-page">\n        <div class="stats-countries">${countriesHtml}</div>\n        <div class="stats-metrics">${metricsHtml}</div>\n      </div>`
+      const tripSummary = esc((trip as any).summary || '')
+      const departureCity = esc(((trip.steps[0] as any).city) || trip.steps[0].name || '')
+
+      return `\n      <div class="break-after stats-page">\n        <div class="stats-layout">\n          <div class="stats-left">\n            <div class="stats-left-inner">${countriesHtml}</div>\n          </div>\n          <div class="stats-right">\n            <div class="stats-header">\n              <div class="stats-title">RÉSUMÉ DU VOYAGE</div>\n              ${tripSummary ? `<div class=\"stats-subtitle\">${tripSummary}</div>` : ''}\n            </div>\n            <div class="stats-metrics-grid">${metricsGrid}</div>\n            <div class="stats-distance-block">\n              <div class="stats-distance-diagram">\n                <div class="stats-home">🏠</div>\n                <div class="stats-arc"><span>${numberFr0(maxDistKm)} km</span></div>\n                <div class="stats-far">📍</div>\n              </div>\n              <div class="stats-distance-caption">Point le plus éloigné${farCity ? ' : '+esc(farCity) : ''}</div>\n              <div class="stats-departure">Départ: ${departureCity}</div>\n            </div>\n          </div>\n        </div>\n      </div>`
     } catch (e) {
       DBG.warn('stats:build error', e)
       return ''

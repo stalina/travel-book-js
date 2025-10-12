@@ -103,6 +103,7 @@ describe('generate.service - page statistiques', () => {
     const { html } = await setupMulti()
     expect(html).toMatch(/class=\"break-after cover-page\"/)
     expect(html).toMatch(/class=\"break-after stats-page\"/)
+    expect(html).toMatch(/RÉSUMÉ DU VOYAGE/)
   })
 
   it('affiche les métriques de base', async () => {
