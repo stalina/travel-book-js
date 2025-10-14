@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@stalina'
 created_date: '2025-10-12 00:04'
-updated_date: '2025-10-12 17:51'
+updated_date: '2025-10-14 08:35'
 labels:
   - css
   - stats
@@ -20,7 +20,7 @@ Ajouter classes CSS (.stats-page, .stats-countries, .stats-country, .stats-metri
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [x] #1 Nouvelle page a classe break-after stats-page
+- [ ] #1 Nouvelle page a classe break-after stats-page
 - [x] #2 Grille pays flexible wrap
 - [x] #3 Nom pays centré dans silhouette
 - [x] #4 Icônes inline SVG monochromes
