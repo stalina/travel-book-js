@@ -1,15 +1,16 @@
 ---
 id: task-14
 title: Tests unitaires page statistiques
-status: In Progress
+status: Done
 assignee:
   - '@stalina'
 created_date: '2025-10-12 00:04'
-updated_date: '2025-10-12 17:53'
+updated_date: '2025-10-14 08:36'
 labels:
   - tests
   - stats
 dependencies: []
+ordinal: 15000
 ---
 
 ## Description
