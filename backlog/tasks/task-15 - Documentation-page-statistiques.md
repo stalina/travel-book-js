@@ -1,15 +1,16 @@
 ---
 id: task-15
 title: Documentation page statistiques
-status: In Progress
+status: Done
 assignee:
   - '@stalina'
 created_date: '2025-10-12 00:04'
-updated_date: '2025-10-12 17:54'
+updated_date: '2025-10-14 08:36'
 labels:
   - docs
   - stats
 dependencies: []
+ordinal: 16000
 ---
 
 ## Description
