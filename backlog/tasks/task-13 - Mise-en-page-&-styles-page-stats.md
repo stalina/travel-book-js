@@ -5,11 +5,12 @@ status: Done
 assignee:
   - '@stalina'
 created_date: '2025-10-12 00:04'
-updated_date: '2025-10-14 08:35'
+updated_date: '2025-10-14 08:36'
 labels:
   - css
   - stats
 dependencies: []
+ordinal: 1000
 ---
 
 ## Description

@@ -1,15 +1,16 @@
 ---
 id: task-12
 title: Calculs statistiques voyage
-status: In Progress
+status: Done
 assignee:
   - '@stalina'
 created_date: '2025-10-12 00:04'
-updated_date: '2025-10-12 17:50'
+updated_date: '2025-10-14 08:36'
 labels:
   - stats
   - calcul
 dependencies: []
+ordinal: 14000
 ---
 
 ## Description

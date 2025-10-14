@@ -4,9 +4,10 @@ title: Tests et validation de la couverture
 status: Done
 assignee: []
 created_date: '2025-10-11 23:24'
-updated_date: '2025-10-11 23:30'
+updated_date: '2025-10-14 08:36'
 labels: []
 dependencies: []
+ordinal: 8000
 ---
 
 ## Description

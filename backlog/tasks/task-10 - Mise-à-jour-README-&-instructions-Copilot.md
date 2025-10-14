@@ -4,9 +4,10 @@ title: Mise à jour README & instructions Copilot
 status: Done
 assignee: []
 created_date: '2025-10-11 23:24'
-updated_date: '2025-10-11 23:31'
+updated_date: '2025-10-14 08:36'
 labels: []
 dependencies: []
+ordinal: 4000
 ---
 
 ## Description

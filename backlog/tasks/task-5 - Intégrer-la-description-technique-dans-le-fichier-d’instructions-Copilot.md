@@ -4,9 +4,10 @@ title: Intégrer la description technique dans le fichier d’instructions Copil
 status: Done
 assignee: []
 created_date: '2025-10-11 22:18'
-updated_date: '2025-10-11 22:29'
+updated_date: '2025-10-14 08:36'
 labels: []
 dependencies: []
+ordinal: 13000
 ---
 
 ## Description
