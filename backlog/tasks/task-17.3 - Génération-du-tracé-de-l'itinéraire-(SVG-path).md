@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-10-19 17:42'
-updated_date: '2025-10-19 17:57'
+updated_date: '2025-10-19 17:58'
 labels:
   - carte
   - svg
@@ -27,3 +27,15 @@ Créer une fonction qui génère un élément SVG <path> reliant toutes les éta
 - [ ] #4 Le path respecte l'ordre chronologique des étapes
 - [ ] #5 Gestion des cas limites (1 seule étape, étapes très proches)
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Créer fonction generatePathData() pour créer le SVG path
+2. Utiliser latLonToSvg() pour convertir chaque étape
+3. Générer la commande M pour le premier point
+4. Générer les commandes L pour les points suivants
+5. Ajouter le path au SVG dans buildMapSection()
+6. Gérer les cas limites (1 étape, étapes proches)
+7. Ajouter tests unitaires
+<!-- SECTION:PLAN:END -->
