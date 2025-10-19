@@ -1,9 +1,11 @@
 ---
 id: task-17.4
 title: Génération des vignettes d'étapes
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot'
 created_date: '2025-10-19 17:42'
+updated_date: '2025-10-19 18:00'
 labels:
   - carte
   - svg
@@ -26,3 +28,16 @@ Pour chaque étape, créer une vignette ronde positionnée selon ses coordonnée
 - [ ] #5 Taille des vignettes adaptée (responsive ou fixe avec ratio)
 - [ ] #6 Z-index approprié (vignettes au-dessus du tracé)
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Créer fonction generateStepMarkers() pour créer les vignettes
+2. Pour chaque étape, récupérer la photo principale
+3. Créer des éléments SVG <foreignObject> contenant des div circulaires
+4. Positionner selon latLonToSvg()
+5. Appliquer background-image avec la photo
+6. Fallback icône si pas de photo
+7. Intégrer dans buildMapSection()
+8. Ajouter tests
+<!-- SECTION:PLAN:END -->
