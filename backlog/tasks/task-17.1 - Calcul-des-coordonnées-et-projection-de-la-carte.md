@@ -1,7 +1,7 @@
 ---
 id: task-17.1
 title: Calcul des coordonnées et projection de la carte
-status: In Progress
+status: Done
 assignee:
   - '@copilot'
 created_date: '2025-10-19 17:41'
