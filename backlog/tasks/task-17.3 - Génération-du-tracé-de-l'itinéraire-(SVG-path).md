@@ -1,9 +1,11 @@
 ---
 id: task-17.3
 title: Génération du tracé de l'itinéraire (SVG path)
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot'
 created_date: '2025-10-19 17:42'
+updated_date: '2025-10-19 17:57'
 labels:
   - carte
   - svg
