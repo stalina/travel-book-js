@@ -1,11 +1,11 @@
 ---
 id: task-17.3
 title: Génération du tracé de l'itinéraire (SVG path)
-status: In Progress
+status: Done
 assignee:
   - '@copilot'
 created_date: '2025-10-19 17:42'
-updated_date: '2025-10-19 17:59'
+updated_date: '2025-10-19 18:00'
 labels:
   - carte
   - svg
@@ -39,3 +39,15 @@ Créer une fonction qui génère un élément SVG <path> reliant toutes les éta
 6. Gérer les cas limites (1 étape, étapes proches)
 7. Ajouter tests unitaires
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Implémentation complète du tracé SVG:
+- generatePathData(): crée le path SVG avec M/L
+- Utilise latLonToSvg() pour conversion coordonnées
+- Gestion cas 1 étape (pas de path)
+- Style: stroke rouge #FF6B6B, width 3px
+- Tests ajoutés: path M/L, cas 1 étape
+- Tous tests passent (10/10)
+<!-- SECTION:NOTES:END -->
