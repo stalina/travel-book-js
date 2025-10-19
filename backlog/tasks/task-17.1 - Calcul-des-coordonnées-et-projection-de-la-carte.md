@@ -26,3 +26,13 @@ Calculer le bounding box englobant toutes les étapes du voyage et définir la p
 - [ ] #3 Fonction de conversion lat/lon → coordonnées SVG (pixels)
 - [ ] #4 Tests unitaires validant les calculs de projection
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Analyser les données de trip.json pour comprendre la structure des coordonnées
+2. Créer une fonction calculateBoundingBox() pour min/max lat/lon
+3. Créer une fonction calculateViewBox() avec marges
+4. Créer une fonction latLonToSvg() pour la conversion
+5. Ajouter tests unitaires pour valider les calculs
+<!-- SECTION:PLAN:END -->
