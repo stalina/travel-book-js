@@ -1,9 +1,11 @@
 ---
 id: task-17.8
 title: Documentation et finalisation page carte
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot'
 created_date: '2025-10-19 17:47'
+updated_date: '2025-10-19 18:05'
 labels:
   - carte
   - documentation
@@ -26,3 +28,14 @@ Mettre à jour README et instructions Copilot, vérifier cohérence du build et 
 - [ ] #5 Notes d'implémentation complètes dans la tâche
 - [ ] #6 Tous les critères d'acceptation de task-17 validés
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Ajouter section "Page Carte" dans README
+2. Mettre à jour instructions Copilot (.github/copilot-instructions.md)
+3. Documenter comment personnaliser/désactiver
+4. Vérifier build single-file (aucune régression)
+5. Mettre à jour notes task-17 parent
+6. Finaliser documentation
+<!-- SECTION:PLAN:END -->
