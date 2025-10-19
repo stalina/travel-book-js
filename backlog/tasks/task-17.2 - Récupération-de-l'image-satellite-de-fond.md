@@ -4,6 +4,7 @@ title: Récupération de l'image satellite de fond
 status: To Do
 assignee: []
 created_date: '2025-10-19 17:41'
+updated_date: '2025-10-19 18:08'
 labels:
   - carte
   - assets
@@ -25,3 +26,17 @@ Intégrer une tuile de carte satellite statique couvrant la zone du voyage (cont
 - [ ] #4 Respect contrainte : tout exécutable côté client
 - [ ] #5 Documentation de la méthode choisie
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Tâche optionnelle/future:
+Actuellement, la page carte fonctionne avec un fond gris simple (#e5e7eb).
+L'image satellite peut être ajoutée ultérieurement via:
+- API Mapbox Static (nécessite clé API)
+- API OpenStreetMap/Tiles statiques
+- Ou pré-génération d'images
+
+Contrainte: tout doit rester côté client (pas de serveur).
+La page carte est fonctionnelle sans image satellite.
+<!-- SECTION:NOTES:END -->
