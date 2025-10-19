@@ -1,7 +1,7 @@
 ---
 id: task-17.5
 title: Fonction buildMapSection dans generate.service.ts
-status: In Progress
+status: Done
 assignee:
   - '@copilot'
 created_date: '2025-10-19 17:44'
@@ -21,10 +21,24 @@ Créer la fonction interne buildMapSection() qui assemble tous les éléments (f
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Fonction buildMapSection() dans generate.service.ts
-- [ ] #2 Structure HTML : <div class="break-after map-page">...</div>
-- [ ] #3 Intégration de l'image satellite de fond
-- [ ] #4 Intégration du SVG avec path et vignettes
-- [ ] #5 Gestion des erreurs (try/catch avec fallback)
-- [ ] #6 Insertion de la page après buildStatsSection()
+- [x] #1 Fonction buildMapSection() dans generate.service.ts
+- [x] #2 Structure HTML : <div class="break-after map-page">...</div>
+- [x] #3 Intégration de l'image satellite de fond
+- [x] #4 Intégration du SVG avec path et vignettes
+- [x] #5 Gestion des erreurs (try/catch avec fallback)
+- [x] #6 Insertion de la page après buildStatsSection()
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+buildMapSection() complètement implémentée:
+- Fonction intégrée dans generate.service.ts
+- Structure HTML: <div class="break-after map-page">
+- SVG viewBox 1000x1000 preserveAspectRatio
+- Intégration path tracé et markers vignettes
+- Try/catch avec fallback (retourne chaîne vide)
+- Insertion après buildStatsSection() via bodyHtml +=
+- Logs debug pour suivi (viewBox, path, markers)
+- Tests passent (13/13)
+<!-- SECTION:NOTES:END -->
