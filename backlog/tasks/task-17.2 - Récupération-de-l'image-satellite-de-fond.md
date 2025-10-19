@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-10-19 17:41'
-updated_date: '2025-10-19 18:10'
+updated_date: '2025-10-19 18:14'
 labels:
   - carte
   - assets
@@ -27,6 +27,18 @@ Intégrer une tuile de carte satellite statique couvrant la zone du voyage (cont
 - [ ] #4 Respect contrainte : tout exécutable côté client
 - [ ] #5 Documentation de la méthode choisie
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Rechercher solution image satellite côté client
+2. Option A: Utiliser service de tuiles statiques (ex: Mapbox, Stadia Maps)
+3. Option B: Fond dégradé terre/mer stylisé
+4. Implémenter récupération et intégration dans SVG
+5. Ajouter fallback en cas d'échec
+6. Tester avec voyage réel
+7. Documenter la solution
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
