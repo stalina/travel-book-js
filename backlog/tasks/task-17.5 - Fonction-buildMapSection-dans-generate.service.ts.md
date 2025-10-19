@@ -1,9 +1,11 @@
 ---
 id: task-17.5
 title: Fonction buildMapSection dans generate.service.ts
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot'
 created_date: '2025-10-19 17:44'
+updated_date: '2025-10-19 18:04'
 labels:
   - carte
   - backend
