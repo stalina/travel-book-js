@@ -36,3 +36,14 @@ Calculer le bounding box englobant toutes les étapes du voyage et définir la p
 4. Créer une fonction latLonToSvg() pour la conversion
 5. Ajouter tests unitaires pour valider les calculs
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Implémentation complète des fonctions de calcul cartographique:
+- calculateBoundingBox(): calcule min/max lat/lon de toutes les étapes
+- calculateViewBox(): génère viewBox SVG avec padding configurable (15%)
+- latLonToSvg(): conversion lat/lon vers coordonnées SVG (0-1000)
+- buildMapSection(): structure de base de la page carte
+- Tests unitaires ajoutés et validés (8/8 passent)
+<!-- SECTION:NOTES:END -->
