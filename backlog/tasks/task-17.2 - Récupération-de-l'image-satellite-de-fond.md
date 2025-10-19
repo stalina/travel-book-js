@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-10-19 17:41'
-updated_date: '2025-10-19 18:14'
+updated_date: '2025-10-19 18:25'
 labels:
   - carte
   - assets
@@ -21,11 +21,11 @@ Intégrer une tuile de carte satellite statique couvrant la zone du voyage (cont
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Utiliser un service de tuiles statiques compatible (ex: Mapbox Static API, ou génération pré-exportée)
-- [ ] #2 Image de fond encodée en data URL ou stockée dans assets
-- [ ] #3 Fallback : fond de carte simple (couleur/gradient) si image indisponible
-- [ ] #4 Respect contrainte : tout exécutable côté client
-- [ ] #5 Documentation de la méthode choisie
+- [x] #1 Utiliser un service de tuiles statiques compatible (ex: Mapbox Static API, ou génération pré-exportée)
+- [x] #2 Image de fond encodée en data URL ou stockée dans assets
+- [x] #3 Fallback : fond de carte simple (couleur/gradient) si image indisponible
+- [x] #4 Respect contrainte : tout exécutable côté client
+- [x] #5 Documentation de la méthode choisie
 <!-- AC:END -->
 
 ## Implementation Plan
