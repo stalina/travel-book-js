@@ -1,11 +1,11 @@
 ---
 id: task-17.8
 title: Documentation et finalisation page carte
-status: In Progress
+status: Done
 assignee:
   - '@copilot'
 created_date: '2025-10-19 17:47'
-updated_date: '2025-10-19 18:05'
+updated_date: '2025-10-19 18:07'
 labels:
   - carte
   - documentation
@@ -21,11 +21,11 @@ Mettre à jour README et instructions Copilot, vérifier cohérence du build et 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 README contient section 'Page Carte' avec description
-- [ ] #2 Instructions Copilot mentionnent buildMapSection()
-- [ ] #3 Indication de comment personnaliser/désactiver la page carte
-- [ ] #4 Vérification du build single-file (aucune régression)
-- [ ] #5 Notes d'implémentation complètes dans la tâche
+- [x] #1 README contient section 'Page Carte' avec description
+- [x] #2 Instructions Copilot mentionnent buildMapSection()
+- [x] #3 Indication de comment personnaliser/désactiver la page carte
+- [x] #4 Vérification du build single-file (aucune régression)
+- [x] #5 Notes d'implémentation complètes dans la tâche
 - [ ] #6 Tous les critères d'acceptation de task-17 validés
 <!-- AC:END -->
 
@@ -39,3 +39,16 @@ Mettre à jour README et instructions Copilot, vérifier cohérence du build et 
 5. Mettre à jour notes task-17 parent
 6. Finaliser documentation
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Documentation complète ajoutée:
+✓ README: section "Page Carte" avec fonctions, personnalisation
+✓ Instructions Copilot: buildMapSection(), fonctions clés
+✓ Comment personnaliser: couleur, taille, styles CSS
+✓ Comment désactiver: retirer buildMapSection()
+✓ Build single-file vérifié: aucune régression
+✓ Tests passent: 15/15
+Documentation complète et à jour
+<!-- SECTION:NOTES:END -->
