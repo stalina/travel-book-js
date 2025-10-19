@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-10-19 17:42'
-updated_date: '2025-10-19 18:00'
+updated_date: '2025-10-19 18:02'
 labels:
   - carte
   - svg
@@ -21,12 +21,12 @@ Pour chaque étape, créer une vignette ronde positionnée selon ses coordonnée
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Récupération de la photo principale de chaque étape (depuis photosMapping)
-- [ ] #2 Création d'un élément SVG <circle> ou HTML <div> rond positionné en absolu
-- [ ] #3 Photo affichée en background clippé circulaire
-- [ ] #4 Fallback : icône/couleur si aucune photo disponible
-- [ ] #5 Taille des vignettes adaptée (responsive ou fixe avec ratio)
-- [ ] #6 Z-index approprié (vignettes au-dessus du tracé)
+- [x] #1 Récupération de la photo principale de chaque étape (depuis photosMapping)
+- [x] #2 Création d'un élément SVG <circle> ou HTML <div> rond positionné en absolu
+- [x] #3 Photo affichée en background clippé circulaire
+- [x] #4 Fallback : icône/couleur si aucune photo disponible
+- [x] #5 Taille des vignettes adaptée (responsive ou fixe avec ratio)
+- [x] #6 Z-index approprié (vignettes au-dessus du tracé)
 <!-- AC:END -->
 
 ## Implementation Plan
