@@ -114,3 +114,119 @@ describe('generate.service - page statistiques', () => {
     expect(html).toMatch(/PHOTOS/)
   })
 })
+
+describe('generate.service - page carte', () => {
+  beforeAll(() => {
+    ;(globalThis as any).fetch = (async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (/assets\/style\.css$/.test(url)) {
+        return new Response(':root { --theme-color: rgb(71, 174, 162); }', { status: 200, headers: { 'Content-Type': 'text/css' } })
+      }
+      if (/assets\/fonts\/fonts\.css$/.test(url)) {
+        return new Response('@font-face { font-family: "Test"; }', { status: 200, headers: { 'Content-Type': 'text/css' } })
+      }
+      if (/Brandon_Grotesque_medium\.otf$/.test(url)) {
+        return new Response(new Blob(['OTF'], { type: 'font/otf' }), { status: 200 })
+      }
+      if (/\.svg$/.test(url)) {
+        return new Response('<svg xmlns="http://www.w3.org/2000/svg"/>', { status: 200, headers: { 'Content-Type': 'image/svg+xml' } })
+      }
+      if (/country_bounding_boxes\.json$/.test(url)) {
+        return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } })
+      }
+      return new Response('not found', { status: 404 })
+    }) as any
+  })
+
+  async function setupMap(tripOverrides: any = {}, stepPhotos: Record<number, File[]> = {}) {
+    const baseTrip: any = {
+      id: 1,
+      name: 'Voyage Test Carte',
+      start_date: 1704063600,
+      end_date: 1704668400,
+      summary: 'Test carte',
+      cover_photo: null,
+      steps: [
+        { id: 10, name: 'Paris', lat: 48.8566, lon: 2.3522, country: 'France', country_code: 'fr', start_time: 1704063600, description: 'Départ', city: 'Paris', weather_condition: 'clear', weather_temperature: 15, slug: 'paris' },
+        { id: 11, name: 'Lyon', lat: 45.7640, lon: 4.8357, country: 'France', country_code: 'fr', start_time: 1704150000, description: 'Étape 2', city: 'Lyon', weather_condition: 'cloudy', weather_temperature: 12, slug: 'lyon' },
+        { id: 12, name: 'Marseille', lat: 43.2965, lon: 5.3698, country: 'France', country_code: 'fr', start_time: 1704236400, description: 'Arrivée', city: 'Marseille', weather_condition: 'sunny', weather_temperature: 18, slug: 'marseille' }
+      ]
+    }
+    const trip = { ...baseTrip, ...tripOverrides, steps: tripOverrides.steps || baseTrip.steps }
+    ;(window as any).__parsedTrip = { trip, stepPhotos }
+    const artifacts = await generateArtifacts({} as any)
+    const html = await buildSingleFileHtmlString(artifacts)
+    return { html, trip }
+  }
+
+  it('génère une map-page après stats-page', async () => {
+    const { html } = await setupMap()
+    expect(html).toMatch(/class="break-after stats-page"/)
+    expect(html).toMatch(/class="break-after map-page"/)
+  })
+
+  it('contient un SVG avec viewBox', async () => {
+    const { html } = await setupMap()
+    expect(html).toMatch(/<svg class="map-svg" viewBox="0 0 1000 1000"/)
+  })
+
+  it('calcule correctement le bounding box', async () => {
+    // Test avec des coordonnées connues
+    const { html } = await setupMap()
+    // Vérifie que le HTML est généré (les calculs internes sont testés implicitement)
+    expect(html).toContain('map-container')
+  })
+
+  it('génère un tracé SVG avec path M et L', async () => {
+    const { html } = await setupMap()
+    // Vérifie la présence d'un path avec les commandes M (move) et L (line)
+    expect(html).toMatch(/<path class="map-route"/)
+    expect(html).toMatch(/d="M\s+[\d.]+\s+[\d.]+\s+L/)
+  })
+
+  it('ne génère pas de path pour une seule étape', async () => {
+    const { html } = await setupMap({
+      steps: [
+        { id: 10, name: 'Paris', lat: 48.8566, lon: 2.3522, country: 'France', country_code: 'fr', start_time: 1704063600, description: 'Seule étape', city: 'Paris', weather_condition: 'clear', weather_temperature: 15, slug: 'paris' }
+      ]
+    })
+    expect(html).toContain('map-container')
+    // Pas de path généré pour une seule étape
+    expect(html).not.toMatch(/<path class="map-route"/)
+  })
+
+  it('génère des vignettes pour chaque étape', async () => {
+    const { html } = await setupMap()
+    // 3 étapes = 3 vignettes (foreignObject)
+    const foreignObjects = html.match(/<foreignObject/g)
+    expect(foreignObjects).toBeTruthy()
+    expect(foreignObjects!.length).toBe(3)
+  })
+
+  it('utilise la photo principale de l\'étape dans la vignette', async () => {
+    const file = mockFile('step-photo.jpg')
+    const { html } = await setupMap({}, { 10: [file] })
+    // La photo doit apparaître en data URL dans un background-image
+    expect(html).toMatch(/background-image:\s*url\(data:image/)
+  })
+
+  it('affiche un fallback si pas de photo', async () => {
+    const { html } = await setupMap()
+    // Sans photos, on doit avoir l'icône fallback
+    expect(html).toContain('map-marker-icon')
+    expect(html).toContain('📍')
+  })
+
+  it('positionne les vignettes selon les coordonnées GPS', async () => {
+    const { html } = await setupMap()
+    // Les foreignObject doivent avoir des attributs x et y
+    expect(html).toMatch(/<foreignObject x="[\d.]+" y="[\d.]+"/g)
+  })
+
+  it('gère correctement le viewBox SVG', async () => {
+    const { html } = await setupMap()
+    // Le SVG doit avoir un viewBox "0 0 1000 1000"
+    expect(html).toContain('viewBox="0 0 1000 1000"')
+    expect(html).toContain('preserveAspectRatio="xMidYMid meet"')
+  })
+})

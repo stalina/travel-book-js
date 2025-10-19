@@ -593,6 +593,36 @@ Personnalisation / Désactivation: retirer ou conditionner l'appel à `buildStat
 
 Tests: assertions présentes dans `tests/generate.service.spec.ts` (détection `.stats-page`, labels de métriques).
 
+## Page cartographique du voyage
+
+Une troisième page cartographique est générée après les statistiques via `buildMapSection()` dans `generate.service.ts`. Elle affiche:
+
+- Un tracé rouge de l'itinéraire complet reliant toutes les étapes chronologiquement (SVG path avec commandes M/L)
+- Des vignettes rondes positionnées géographiquement (SVG foreignObject) contenant la photo principale de chaque étape (ou icône 📍 fallback)
+
+**Fonctions clés:**
+- `calculateBoundingBox()`: enveloppe géographique min/max lat/lon
+- `calculateViewBox()`: génère viewBox SVG avec padding 15%
+- `latLonToSvg()`: conversion GPS → coordonnées SVG (0-1000)
+- `generatePathData()`: path SVG M/L
+- `generateStepMarkers()`: vignettes avec foreignObject
+
+Styles: préfixe `.map-*` dans `public/assets/style.css`. Structure: `div.break-after.map-page`.
+
+Personnalisation: couleur tracé, taille vignettes, styles CSS section `/* --- Carte (page 3) --- */`. Désactivation: retirer `buildMapSection()`.
+
+Tests: `.map-page`, path SVG, vignettes, viewBox dans `tests/generate.service.spec.ts`.
+
+
+- **Tout le code doit s'exécuter côté navigateur** :
+  - Aucun accès serveur, aucune dépendance Node.js côté runtime
+  - Le générateur doit être déployable sur une page statique (ex : GitHub Pages, Netlify, Vercel)
+  - Toute nouvelle fonctionnalité ou dépendance doit respecter cette contrainte
+
+---
+
+
+
 
 - **Tout le code doit s’exécuter côté navigateur** :
   - Aucun accès serveur, aucune dépendance Node.js côté runtime

@@ -516,6 +516,130 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
   }
   bodyHtml += buildStatsSection()
 
+  // --- Page Carte ---------------------------------------------------------
+  type BBox = { minLat: number, maxLat: number, minLon: number, maxLon: number }
+  type SvgCoord = { x: number, y: number }
+
+  function calculateBoundingBox(steps: Step[]): BBox | null {
+    if (!steps.length) return null
+    let minLat = Infinity, maxLat = -Infinity
+    let minLon = Infinity, maxLon = -Infinity
+    for (const s of steps) {
+      if (s.lat < minLat) minLat = s.lat
+      if (s.lat > maxLat) maxLat = s.lat
+      if (s.lon < minLon) minLon = s.lon
+      if (s.lon > maxLon) maxLon = s.lon
+    }
+    return { minLat, maxLat, minLon, maxLon }
+  }
+
+  function calculateViewBox(bbox: BBox, padding: number = 0.1): { x: number, y: number, width: number, height: number } {
+    const latSpan = bbox.maxLat - bbox.minLat
+    const lonSpan = bbox.maxLon - bbox.minLon
+    const padLat = latSpan * padding
+    const padLon = lonSpan * padding
+    return {
+      x: bbox.minLon - padLon,
+      y: bbox.minLat - padLat,
+      width: lonSpan + 2 * padLon,
+      height: latSpan + 2 * padLat
+    }
+  }
+
+  function latLonToSvg(lat: number, lon: number, viewBox: { x: number, y: number, width: number, height: number }): SvgCoord {
+    // SVG Y axis goes down, lat goes up → invert Y
+    const x = ((lon - viewBox.x) / viewBox.width) * 1000
+    const y = ((viewBox.y + viewBox.height - lat) / viewBox.height) * 1000
+    return { x, y }
+  }
+
+  function generatePathData(steps: Step[], viewBox: { x: number, y: number, width: number, height: number }): string {
+    if (!steps.length) return ''
+    const coords = steps.map(s => latLonToSvg(s.lat, s.lon, viewBox))
+    if (coords.length === 1) {
+      // Une seule étape : pas de ligne, juste un point (géré par les vignettes)
+      return ''
+    }
+    // Première étape : Move
+    let path = `M ${coords[0].x.toFixed(2)} ${coords[0].y.toFixed(2)}`
+    // Étapes suivantes : Line
+    for (let i = 1; i < coords.length; i++) {
+      path += ` L ${coords[i].x.toFixed(2)} ${coords[i].y.toFixed(2)}`
+    }
+    return path
+  }
+
+  function generateStepMarkers(steps: Step[], viewBox: { x: number, y: number, width: number, height: number }): string {
+    const markerSize = 40 // pixels
+    const markers: string[] = []
+    
+    for (const step of steps) {
+      const coord = latLonToSvg(step.lat, step.lon, viewBox)
+      // Récupérer la photo principale de l'étape
+      const stepMapping = photosMapping[step.id]
+      const photos = stepMapping ? Object.values(stepMapping) as any[] : []
+      const mainPhoto = photos.length > 0 ? photos[0] : null
+      
+      // Résoudre l'URL de la photo (data URL ou URL distante)
+      let photoUrl = ''
+      if (mainPhoto) {
+        const rawUrl = mainPhoto.path
+        photoUrl = photoDataUrlMap[rawUrl] || rawUrl
+      }
+      
+      // Générer la vignette avec foreignObject pour utiliser HTML/CSS
+      const bgStyle = photoUrl 
+        ? `background-image: url(${photoUrl.startsWith('data:') ? photoUrl : `'${photoUrl.replace(/'/g, "\\'")}'`});`
+        : 'background: var(--theme-color);'
+      
+      const iconFallback = photoUrl ? '' : '<div class="map-marker-icon">📍</div>'
+      
+      markers.push(`
+        <foreignObject x="${(coord.x - markerSize/2).toFixed(2)}" y="${(coord.y - markerSize/2).toFixed(2)}" width="${markerSize}" height="${markerSize}">
+          <div xmlns="http://www.w3.org/1999/xhtml" class="map-marker" style="${bgStyle} background-size: cover; background-position: center;">
+            ${iconFallback}
+          </div>
+        </foreignObject>`)
+    }
+    
+    return markers.join('\n')
+  }
+
+  function buildMapSection(): string {
+    try {
+      if (!trip.steps.length) return ''
+      DBG.log('map:building section')
+
+      const bbox = calculateBoundingBox(trip.steps)
+      if (!bbox) return ''
+
+      const viewBox = calculateViewBox(bbox, 0.15)
+      DBG.log('map:viewBox calculated', viewBox)
+
+      // Génération du tracé de l'itinéraire
+      const pathData = generatePathData(trip.steps, viewBox)
+      DBG.log('map:path generated', { length: pathData.length, steps: trip.steps.length })
+
+      // Génération des vignettes d'étapes
+      const markers = generateStepMarkers(trip.steps, viewBox)
+      DBG.log('map:markers generated', { count: trip.steps.length })
+
+      return `
+      <div class="break-after map-page">
+        <div class="map-container">
+          <svg class="map-svg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
+            ${pathData ? `<path class="map-route" d="${esc(pathData)}" fill="none" stroke="#FF6B6B" stroke-width="3" />` : ''}
+            ${markers}
+          </svg>
+        </div>
+      </div>`
+    } catch (e) {
+      DBG.warn('map:build error', e)
+      return ''
+    }
+  }
+  bodyHtml += buildMapSection()
+
   // Parse éventuel du plan utilisateur pour imposer cover/pages
   type StepPlan = { cover?: number, pages: number[][] }
   const planByStep: Record<number, StepPlan> = {}
