@@ -1,10 +1,11 @@
 ---
 id: task-17.2
 title: Récupération de l'image satellite de fond
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot'
 created_date: '2025-10-19 17:41'
-updated_date: '2025-10-19 18:08'
+updated_date: '2025-10-19 18:10'
 labels:
   - carte
   - assets
