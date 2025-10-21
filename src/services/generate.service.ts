@@ -11,6 +11,16 @@ export type GenerateOptions = {
   photosPlan?: string // contenu texte de photos_by_pages.txt permettant d'écraser la pagination auto
 }
 
+
+/**
+ * Escapes a string for inclusion inside a single-quoted CSS url('...') value.
+ * Escapes both backslash and single quote.
+ * E.g., O'Reilly\foo  ->  O\\'Reilly\\\\foo
+ */
+function escapeForCssUrlSingleQuotes(str: string): string {
+  return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
 // Logger minimaliste pour le debug (prefixé), centralise l'usage de console
 const DBG = {
   log: (...args: any[]) => {
@@ -589,7 +599,7 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
       
       // Générer la vignette avec foreignObject pour utiliser HTML/CSS
       const bgStyle = photoUrl 
-        ? `background-image: url(${photoUrl.startsWith('data:') ? photoUrl : `'${photoUrl.replace(/'/g, "\\'")}'`});`
+        ? `background-image: url(${photoUrl.startsWith('data:') ? photoUrl : `'${escapeForCssUrlSingleQuotes(photoUrl)}'`});`
         : 'background: var(--theme-color);'
       
       const iconFallback = photoUrl ? '' : '<div class="map-marker-icon">📍</div>'
