@@ -227,7 +227,7 @@ describe('generate.service - page carte', () => {
     const { html } = await setupMap()
     // Le SVG doit avoir un viewBox "0 0 1000 1000"
     expect(html).toContain('viewBox="0 0 1000 1000"')
-    expect(html).toContain('preserveAspectRatio="xMidYMid meet"')
+  expect(html).toContain('preserveAspectRatio="xMidYMid slice"')
   })
 
   it('génère un fond satellite avec tuiles', async () => {

@@ -663,10 +663,26 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
     tiles: Array<{ dataUrl: string, bounds: { north: number, south: number, west: number, east: number } }>,
     adjustedViewBox: { x: number, y: number, width: number, height: number }
   }> {
-    // Calcul du niveau de zoom initial en fonction de l'étendue du voyage
-    const lonSpan = Math.max(1e-6, bbox.maxLon - bbox.minLon)
-    const latSpan = Math.max(1e-6, bbox.maxLat - bbox.minLat)
-    const maxSpan = Math.max(lonSpan, latSpan)
+    const clampLat = (lat: number) => Math.max(-85, Math.min(85, lat))
+    const clampLon = (lon: number) => Math.max(-180, Math.min(180, lon))
+
+    const rawLatSpan = Math.max(1e-6, bbox.maxLat - bbox.minLat)
+    const rawLonSpan = Math.max(1e-6, bbox.maxLon - bbox.minLon)
+    const maxSpan = Math.max(rawLatSpan, rawLonSpan)
+
+  // Utilise un padding généreux pour garantir que tous les points restent visibles
+  // même lorsque le SVG est rendu avec preserveAspectRatio="slice" (le rendu peut
+  // rogner ~25% de la largeur/hauteur suivant le ratio d'écran).
+  const paddingFactor = 0.3
+    const latPadding = Math.max(1e-5, rawLatSpan * paddingFactor)
+    const lonPadding = Math.max(1e-5, rawLonSpan * paddingFactor)
+
+    const paddedBBox: BBox = {
+      minLat: clampLat(bbox.minLat - latPadding),
+      maxLat: clampLat(bbox.maxLat + latPadding),
+      minLon: clampLon(bbox.minLon - lonPadding),
+      maxLon: clampLon(bbox.maxLon + lonPadding)
+    }
 
     let zoom = 5
     if (maxSpan < 0.1) zoom = 13
@@ -695,15 +711,15 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
       return { lat, lon }
     }
 
-    // Ajuster le niveau de zoom pour limiter le nombre de tuiles à télécharger
     const computeTileRange = (zoomLevel: number) => {
-      const nw = latLonToTile(bbox.maxLat, bbox.minLon, zoomLevel)
-      const se = latLonToTile(bbox.minLat, bbox.maxLon, zoomLevel)
-      let minX = Math.floor(Math.min(nw.x, se.x))
-      let maxX = Math.floor(Math.max(nw.x, se.x))
-      let minY = Math.floor(Math.min(nw.y, se.y))
-      let maxY = Math.floor(Math.max(nw.y, se.y))
-      return { minX, maxX, minY, maxY }
+      const nw = latLonToTile(paddedBBox.maxLat, paddedBBox.minLon, zoomLevel)
+      const se = latLonToTile(paddedBBox.minLat, paddedBBox.maxLon, zoomLevel)
+      return {
+        minX: Math.floor(Math.min(nw.x, se.x)),
+        maxX: Math.floor(Math.max(nw.x, se.x)),
+        minY: Math.floor(Math.min(nw.y, se.y)),
+        maxY: Math.floor(Math.max(nw.y, se.y))
+      }
     }
 
     let range = computeTileRange(zoom)
@@ -717,10 +733,9 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
     const tilesX = maxX - minX + 1
     const tilesY = maxY - minY + 1
 
-    DBG.log('tiles:fetching', { zoom, tilesX, tilesY, range })
+    DBG.log('tiles:fetching', { zoom, tilesX, tilesY, range, paddedBBox })
 
     const tileImages: Array<{
-      x: number, y: number,
       dataUrl: string,
       bounds: { north: number, south: number, west: number, east: number }
     }> = []
@@ -737,8 +752,6 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
               const topLeft = tileToLatLon(tx, ty, zoom)
               const bottomRight = tileToLatLon(tx + 1, ty + 1, zoom)
               tileImages.push({
-                x: tx,
-                y: ty,
                 dataUrl,
                 bounds: {
                   north: topLeft.lat,
@@ -762,42 +775,23 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
       DBG.warn('tiles:no tiles fetched, using fallback')
       return {
         tiles: [],
-        adjustedViewBox: calculateViewBox(bbox, 0.15)
+        adjustedViewBox: calculateViewBox(paddedBBox, 0)
       }
     }
 
-    const tileNorthWest = tileToLatLon(minX, minY, zoom)
-    const tileSouthEast = tileToLatLon(maxX + 1, maxY + 1, zoom)
-
-    const tileNorth = tileNorthWest.lat
-    const tileWest = tileNorthWest.lon
-    const tileSouth = tileSouthEast.lat
-    const tileEast = tileSouthEast.lon
-
-    const paddingFactor = 0.12
-    const latPadding = latSpan * paddingFactor
-    const lonPadding = lonSpan * paddingFactor
-
-    const finalSouth = Math.min(tileSouth, bbox.minLat - latPadding)
-    const finalNorth = Math.max(tileNorth, bbox.maxLat + latPadding)
-    const finalWest = Math.min(tileWest, bbox.minLon - lonPadding)
-    const finalEast = Math.max(tileEast, bbox.maxLon + lonPadding)
+    const coverageNW = tileToLatLon(minX, minY, zoom)
+    const coverageSE = tileToLatLon(maxX + 1, maxY + 1, zoom)
 
     const adjustedViewBox = {
-      x: finalWest,
-      y: finalSouth,
-      width: Math.max(0.00001, finalEast - finalWest),
-      height: Math.max(0.00001, finalNorth - finalSouth)
+      x: coverageNW.lon,
+      y: coverageSE.lat,
+      width: Math.max(0.00001, coverageSE.lon - coverageNW.lon),
+      height: Math.max(0.00001, coverageNW.lat - coverageSE.lat)
     }
 
     DBG.log('tiles:adjustedViewBox', adjustedViewBox)
 
-    const tiles = tileImages.map(t => ({
-      dataUrl: t.dataUrl,
-      bounds: t.bounds
-    }))
-
-    return { tiles, adjustedViewBox }
+    return { tiles: tileImages, adjustedViewBox }
   }
 
   async function buildMapSection(): Promise<string> {
@@ -843,7 +837,7 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
       return `
       <div class="break-after map-page">
         <div class="map-container">
-          <svg class="map-svg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
+          <svg class="map-svg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
             ${background}
             ${pathData ? `<path class="map-route" d="${esc(pathData)}" fill="none" stroke="#FF6B6B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />` : ''}
             ${markers}

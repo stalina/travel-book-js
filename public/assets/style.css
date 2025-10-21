@@ -287,14 +287,6 @@ html, body {
   margin-bottom: 10px;
 }
 
-.break-after:nth-child(odd) {
-  padding-left: 80px;
-}
-
-.break-after:nth-child(even) {
-  padding-right: 80px;
-}
-
 @media print {
   .break-after {
     border: none;
