@@ -605,7 +605,202 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
     return markers.join('\n')
   }
 
-  function buildMapSection(): string {
+  function generateSatelliteBackground(bbox: BBox): string {
+    // Calcul du niveau de zoom approprié pour couvrir le bounding box
+    // Formule simplifiée basée sur la largeur en degrés
+    const lonSpan = bbox.maxLon - bbox.minLon
+    const latSpan = bbox.maxLat - bbox.minLat
+    const maxSpan = Math.max(lonSpan, latSpan)
+    
+    // Niveau de zoom approximatif (plus c'est grand, plus le zoom est faible)
+    let zoom = 1
+    if (maxSpan < 0.1) zoom = 13
+    else if (maxSpan < 0.5) zoom = 11
+    else if (maxSpan < 1) zoom = 10
+    else if (maxSpan < 2) zoom = 9
+    else if (maxSpan < 5) zoom = 8
+    else if (maxSpan < 10) zoom = 7
+    else if (maxSpan < 20) zoom = 6
+    else zoom = 5
+    
+    const centerLat = (bbox.minLat + bbox.maxLat) / 2
+    const centerLon = (bbox.minLon + bbox.maxLon) / 2
+    
+    // Utiliser OpenStreetMap tiles (style satellite via Esri)
+    // Note: Pour un vrai fond satellite, il faudrait une clé API Mapbox ou similaire
+    // Ici on utilise les tiles Esri WorldImagery qui sont accessibles publiquement
+    const tileUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}`
+    
+    // Convertir lat/lon en coordonnées de tuile
+    const latRad = centerLat * Math.PI / 180
+    const n = Math.pow(2, zoom)
+    const xTile = Math.floor((centerLon + 180) / 360 * n)
+    const yTile = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n)
+    
+    // Pour l'instant, on génère un fond stylisé avec indication que les tiles seraient chargées
+    // En production, il faudrait faire des appels fetch() aux URLs de tiles et les intégrer en base64
+    return `
+      <defs>
+        <radialGradient id="satelliteGradient" cx="50%" cy="50%" r="70%">
+          <stop offset="0%" style="stop-color:#4A7C8E;stop-opacity:1" />
+          <stop offset="40%" style="stop-color:#5A8C9E;stop-opacity:1" />
+          <stop offset="70%" style="stop-color:#6A9CAE;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#2A4C5E;stop-opacity:1" />
+        </radialGradient>
+        <pattern id="terrainPattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+          <rect width="100" height="100" fill="url(#satelliteGradient)"/>
+          <circle cx="20" cy="30" r="15" fill="#3A5C6E" opacity="0.3"/>
+          <circle cx="70" cy="60" r="20" fill="#5A7C8E" opacity="0.2"/>
+          <circle cx="50" cy="80" r="12" fill="#4A6C7E" opacity="0.25"/>
+        </pattern>
+      </defs>
+      <rect width="1000" height="1000" fill="url(#terrainPattern)" opacity="0.8"/>
+      <rect width="1000" height="1000" fill="#E8F4F8" opacity="0.1"/>
+      <!-- Tiles satellite: zoom=${zoom}, center=(${centerLat.toFixed(4)}, ${centerLon.toFixed(4)}), tile=(${xTile},${yTile}) -->`
+  }
+
+  async function fetchTilesForBbox(bbox: BBox): Promise<{
+    tiles: Array<{ dataUrl: string, bounds: { north: number, south: number, west: number, east: number } }>,
+    adjustedViewBox: { x: number, y: number, width: number, height: number }
+  }> {
+    // Calcul du niveau de zoom initial en fonction de l'étendue du voyage
+    const lonSpan = Math.max(1e-6, bbox.maxLon - bbox.minLon)
+    const latSpan = Math.max(1e-6, bbox.maxLat - bbox.minLat)
+    const maxSpan = Math.max(lonSpan, latSpan)
+
+    let zoom = 5
+    if (maxSpan < 0.1) zoom = 13
+    else if (maxSpan < 0.5) zoom = 11
+    else if (maxSpan < 1) zoom = 10
+    else if (maxSpan < 2) zoom = 9
+    else if (maxSpan < 5) zoom = 8
+    else if (maxSpan < 10) zoom = 7
+    else if (maxSpan < 20) zoom = 6
+
+    const MAX_TILES_PER_AXIS = 4
+
+    const latLonToTile = (lat: number, lon: number, zoomLevel: number) => {
+      const latRad = lat * Math.PI / 180
+      const n = Math.pow(2, zoomLevel)
+      const xTile = (lon + 180) / 360 * n
+      const yTile = (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n
+      return { x: xTile, y: yTile }
+    }
+
+    const tileToLatLon = (x: number, y: number, zoomLevel: number) => {
+      const n = Math.pow(2, zoomLevel)
+      const lon = x / n * 360 - 180
+      const latRad = Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n)))
+      const lat = latRad * 180 / Math.PI
+      return { lat, lon }
+    }
+
+    // Ajuster le niveau de zoom pour limiter le nombre de tuiles à télécharger
+    const computeTileRange = (zoomLevel: number) => {
+      const nw = latLonToTile(bbox.maxLat, bbox.minLon, zoomLevel)
+      const se = latLonToTile(bbox.minLat, bbox.maxLon, zoomLevel)
+      let minX = Math.floor(Math.min(nw.x, se.x))
+      let maxX = Math.floor(Math.max(nw.x, se.x))
+      let minY = Math.floor(Math.min(nw.y, se.y))
+      let maxY = Math.floor(Math.max(nw.y, se.y))
+      return { minX, maxX, minY, maxY }
+    }
+
+    let range = computeTileRange(zoom)
+    while ((range.maxX - range.minX + 1) > MAX_TILES_PER_AXIS || (range.maxY - range.minY + 1) > MAX_TILES_PER_AXIS) {
+      if (zoom <= 3) break
+      zoom -= 1
+      range = computeTileRange(zoom)
+    }
+
+    const { minX, maxX, minY, maxY } = range
+    const tilesX = maxX - minX + 1
+    const tilesY = maxY - minY + 1
+
+    DBG.log('tiles:fetching', { zoom, tilesX, tilesY, range })
+
+    const tileImages: Array<{
+      x: number, y: number,
+      dataUrl: string,
+      bounds: { north: number, south: number, west: number, east: number }
+    }> = []
+
+    const promises: Promise<void>[] = []
+    for (let tx = minX; tx <= maxX; tx++) {
+      for (let ty = minY; ty <= maxY; ty++) {
+        const tileUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${ty}/${tx}`
+        promises.push(
+          fetch(tileUrl)
+            .then(resp => resp.blob())
+            .then(blob => fileToDataUrl(new File([blob], 'tile.jpg')))
+            .then(dataUrl => {
+              const topLeft = tileToLatLon(tx, ty, zoom)
+              const bottomRight = tileToLatLon(tx + 1, ty + 1, zoom)
+              tileImages.push({
+                x: tx,
+                y: ty,
+                dataUrl,
+                bounds: {
+                  north: topLeft.lat,
+                  south: bottomRight.lat,
+                  west: topLeft.lon,
+                  east: bottomRight.lon
+                }
+              })
+              DBG.log('tiles:fetched', { x: tx, y: ty, zoom })
+            })
+            .catch(err => {
+              DBG.warn('tiles:fetch failed', { x: tx, y: ty, zoom, err })
+            })
+        )
+      }
+    }
+
+    await Promise.all(promises)
+
+    if (!tileImages.length) {
+      DBG.warn('tiles:no tiles fetched, using fallback')
+      return {
+        tiles: [],
+        adjustedViewBox: calculateViewBox(bbox, 0.15)
+      }
+    }
+
+    const tileNorthWest = tileToLatLon(minX, minY, zoom)
+    const tileSouthEast = tileToLatLon(maxX + 1, maxY + 1, zoom)
+
+    const tileNorth = tileNorthWest.lat
+    const tileWest = tileNorthWest.lon
+    const tileSouth = tileSouthEast.lat
+    const tileEast = tileSouthEast.lon
+
+    const paddingFactor = 0.12
+    const latPadding = latSpan * paddingFactor
+    const lonPadding = lonSpan * paddingFactor
+
+    const finalSouth = Math.min(tileSouth, bbox.minLat - latPadding)
+    const finalNorth = Math.max(tileNorth, bbox.maxLat + latPadding)
+    const finalWest = Math.min(tileWest, bbox.minLon - lonPadding)
+    const finalEast = Math.max(tileEast, bbox.maxLon + lonPadding)
+
+    const adjustedViewBox = {
+      x: finalWest,
+      y: finalSouth,
+      width: Math.max(0.00001, finalEast - finalWest),
+      height: Math.max(0.00001, finalNorth - finalSouth)
+    }
+
+    DBG.log('tiles:adjustedViewBox', adjustedViewBox)
+
+    const tiles = tileImages.map(t => ({
+      dataUrl: t.dataUrl,
+      bounds: t.bounds
+    }))
+
+    return { tiles, adjustedViewBox }
+  }
+
+  async function buildMapSection(): Promise<string> {
     try {
       if (!trip.steps.length) return ''
       DBG.log('map:building section')
@@ -613,14 +808,35 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
       const bbox = calculateBoundingBox(trip.steps)
       if (!bbox) return ''
 
-      const viewBox = calculateViewBox(bbox, 0.15)
-      DBG.log('map:viewBox calculated', viewBox)
+      const { tiles, adjustedViewBox: viewBox } = await fetchTilesForBbox(bbox)
+      DBG.log('map:tiles fetched', { tiles: tiles.length })
 
-      // Génération du tracé de l'itinéraire
+      let background = ''
+      if (tiles.length) {
+        const tilesLayers = tiles.map(tile => {
+          const topLeft = latLonToSvg(tile.bounds.north, tile.bounds.west, viewBox)
+          const bottomRight = latLonToSvg(tile.bounds.south, tile.bounds.east, viewBox)
+          const x = Math.min(topLeft.x, bottomRight.x)
+          const y = Math.min(topLeft.y, bottomRight.y)
+          const width = Math.abs(bottomRight.x - topLeft.x)
+          const height = Math.abs(bottomRight.y - topLeft.y)
+          if (width <= 0 || height <= 0) return ''
+          return `<image href="${tile.dataUrl}" x="${x}" y="${y}" width="${width}" height="${height}" preserveAspectRatio="none"/>`
+        }).filter(Boolean).join('\n')
+        background = `
+            <g class="map-tiles">
+              ${tilesLayers}
+            </g>
+            <rect width="1000" height="1000" fill="#E8F4F8" opacity="0.05"/>`
+      } else {
+        background = generateSatelliteBackground(bbox)
+      }
+
+      // Génération du tracé de l'itinéraire avec le viewBox ajusté
       const pathData = generatePathData(trip.steps, viewBox)
       DBG.log('map:path generated', { length: pathData.length, steps: trip.steps.length })
 
-      // Génération des vignettes d'étapes
+      // Génération des vignettes d'étapes avec le viewBox ajusté
       const markers = generateStepMarkers(trip.steps, viewBox)
       DBG.log('map:markers generated', { count: trip.steps.length })
 
@@ -628,7 +844,8 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
       <div class="break-after map-page">
         <div class="map-container">
           <svg class="map-svg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
-            ${pathData ? `<path class="map-route" d="${esc(pathData)}" fill="none" stroke="#FF6B6B" stroke-width="3" />` : ''}
+            ${background}
+            ${pathData ? `<path class="map-route" d="${esc(pathData)}" fill="none" stroke="#FF6B6B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />` : ''}
             ${markers}
           </svg>
         </div>
@@ -638,7 +855,7 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
       return ''
     }
   }
-  bodyHtml += buildMapSection()
+  bodyHtml += await buildMapSection()
 
   // Parse éventuel du plan utilisateur pour imposer cover/pages
   type StepPlan = { cover?: number, pages: number[][] }

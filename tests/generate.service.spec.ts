@@ -229,4 +229,14 @@ describe('generate.service - page carte', () => {
     expect(html).toContain('viewBox="0 0 1000 1000"')
     expect(html).toContain('preserveAspectRatio="xMidYMid meet"')
   })
+
+  it('génère un fond satellite avec tuiles', async () => {
+    const { html } = await setupMap()
+    // Vérifie la présence des tuiles satellite (images embarquées en data URL)
+    expect(html).toMatch(/map-tiles/)
+    expect(html).toMatch(/<image href="data:/)
+    // Au moins une tuile devrait être présente
+    const tileCount = (html.match(/<image href="data:/g) || []).length
+    expect(tileCount).toBeGreaterThan(0)
+  })
 })
