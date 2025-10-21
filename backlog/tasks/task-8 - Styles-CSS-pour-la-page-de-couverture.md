@@ -4,9 +4,10 @@ title: Styles CSS pour la page de couverture
 status: Done
 assignee: []
 created_date: '2025-10-11 23:23'
-updated_date: '2025-10-11 23:30'
+updated_date: '2025-10-14 08:36'
 labels: []
 dependencies: []
+ordinal: 7000
 ---
 
 ## Description

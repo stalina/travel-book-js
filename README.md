@@ -78,6 +78,7 @@ Contenu principal:
 
 Structure HTML: blocs `.stats-countries` (flex wrap) et `.stats-metrics` (grid). Chaque métrique a `.stats-metric`, les classes distance: `.stats-distance`, `.stats-distance-diagram`.
 
+
 Impression: la page conserve `break-after` via la classe de conteneur `break-after stats-page` pour rester isolée en PDF.
 
 Personnalisation:
@@ -87,3 +88,30 @@ Personnalisation:
 - Pour ajouter une nouvelle métrique: calculer la valeur dans `buildStatsSection()` (ou externaliser plus tard) et ajouter un bloc `.stats-metric`.
 
 Tests: assertions de présence de `.stats-page` et des labels (KILOMÈTRES, JOURS, ÉTAPES, PHOTOS) dans `tests/generate.service.spec.ts`.
+
+## Page Carte (3ᵉ page)
+
+Une troisième page cartographique est générée après la page de statistiques via la fonction interne `buildMapSection()` dans `generate.service.ts`. Elle affiche:
+
+- Une carte pleine page avec l'itinéraire complet du voyage
+- Un tracé rouge reliant toutes les étapes dans l'ordre chronologique
+- Des vignettes rondes pour chaque étape, positionnées selon leurs coordonnées GPS, contenant la photo principale de l'étape (ou une icône 📍 en fallback)
+
+**Fonctions internes:**
+- `calculateBoundingBox()`: calcule l'enveloppe géographique (min/max lat/lon) de toutes les étapes
+- `calculateViewBox()`: génère le viewBox SVG avec padding (15% par défaut)
+- `latLonToSvg()`: convertit coordonnées GPS en coordonnées SVG (0-1000)
+- `generatePathData()`: crée le path SVG avec commandes M (move) et L (line)
+- `generateStepMarkers()`: crée les vignettes SVG (foreignObject + HTML/CSS)
+
+Styles: classes préfixées `.map-*` dans `public/assets/style.css`. Structure racine: `div.break-after.map-page` pour la pagination à l'impression.
+
+Personnalisation:
+
+- Couleur du tracé: modifier `stroke="#FF6B6B"` dans `buildMapSection()`
+- Taille des vignettes: modifier `markerSize` dans `generateStepMarkers()`
+- Styles: section `/* --- Carte (page 3) --- */` dans `public/assets/style.css`
+- Pour désactiver: retirer l'appel `buildMapSection()` dans `generate.service.ts`
+
+Tests: assertions de présence de `.map-page`, tracé SVG path, vignettes foreignObject, dans `tests/generate.service.spec.ts`.
+

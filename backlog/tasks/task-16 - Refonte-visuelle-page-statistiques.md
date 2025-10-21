@@ -5,12 +5,13 @@ status: Done
 assignee:
   - '@stalina'
 created_date: '2025-10-12 08:55'
-updated_date: '2025-10-12 09:00'
+updated_date: '2025-10-14 08:36'
 labels:
   - stats
   - ui
 dependencies: []
 priority: medium
+ordinal: 2000
 ---
 
 ## Description

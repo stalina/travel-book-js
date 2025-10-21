@@ -1,0 +1,49 @@
+---
+id: task-17.1
+title: Calcul des coordonnées et projection de la carte
+status: Done
+assignee:
+  - '@copilot'
+created_date: '2025-10-19 17:41'
+updated_date: '2025-10-19 17:57'
+labels:
+  - carte
+  - backend
+dependencies: []
+parent_task_id: task-17
+---
+
+## Description
+
+<!-- SECTION:DESCRIPTION:BEGIN -->
+Calculer le bounding box englobant toutes les étapes du voyage et définir la projection/viewBox pour positionner correctement l'itinéraire et les points.
+<!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [x] #1 Fonction qui calcule min/max lat/lon de toutes les étapes
+- [x] #2 Calcul d'un viewBox SVG approprié avec marges (padding)
+- [x] #3 Fonction de conversion lat/lon → coordonnées SVG (pixels)
+- [x] #4 Tests unitaires validant les calculs de projection
+<!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Analyser les données de trip.json pour comprendre la structure des coordonnées
+2. Créer une fonction calculateBoundingBox() pour min/max lat/lon
+3. Créer une fonction calculateViewBox() avec marges
+4. Créer une fonction latLonToSvg() pour la conversion
+5. Ajouter tests unitaires pour valider les calculs
+<!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Implémentation complète des fonctions de calcul cartographique:
+- calculateBoundingBox(): calcule min/max lat/lon de toutes les étapes
+- calculateViewBox(): génère viewBox SVG avec padding configurable (15%)
+- latLonToSvg(): conversion lat/lon vers coordonnées SVG (0-1000)
+- buildMapSection(): structure de base de la page carte
+- Tests unitaires ajoutés et validés (8/8 passent)
+<!-- SECTION:NOTES:END -->

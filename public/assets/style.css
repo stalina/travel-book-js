@@ -287,14 +287,6 @@ html, body {
   margin-bottom: 10px;
 }
 
-.break-after:nth-child(odd) {
-  padding-left: 80px;
-}
-
-.break-after:nth-child(even) {
-  padding-right: 80px;
-}
-
 @media print {
   .break-after {
     border: none;
@@ -446,4 +438,66 @@ html, body {
 
 @media print {
   .stats-left, .stats-right { break-inside: avoid; }
+}
+
+/* --- Carte (page 3) --- */
+.map-page {
+  width: 100%;
+  height: 100vh;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+}
+
+.map-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.map-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Tracé de l'itinéraire */
+.map-route {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Vignettes d'étapes */
+.map-marker {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 3px solid #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background-color: var(--theme-color);
+}
+
+.map-marker-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+
+@media print {
+  .map-page {
+    page-break-after: always;
+    break-after: page;
+  }
 }
