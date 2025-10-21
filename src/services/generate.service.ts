@@ -703,7 +703,8 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
     else if (maxSpan < 10) zoom = 7
     else if (maxSpan < 20) zoom = 6
 
-    const MAX_TILES_PER_AXIS = 4
+  const MAX_TILES_PER_AXIS = 6
+  const EXTRA_TILE_PADDING = 1
 
     const latLonToTile = (lat: number, lon: number, zoomLevel: number) => {
       const latRad = lat * Math.PI / 180
@@ -739,11 +740,36 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
       range = computeTileRange(zoom)
     }
 
-    const { minX, maxX, minY, maxY } = range
+    const tileCount = Math.pow(2, zoom)
+    const maxIndex = tileCount - 1
+
+    let { minX, maxX, minY, maxY } = range
+
+    const expandAxis = (currentMin: number, currentMax: number): { min: number, max: number } => {
+      const currentCount = currentMax - currentMin + 1
+      const available = Math.max(0, MAX_TILES_PER_AXIS - currentCount)
+      if (!available) return { min: currentMin, max: currentMax }
+
+      const expandMin = Math.min(EXTRA_TILE_PADDING, Math.min(available, currentMin))
+      currentMin -= expandMin
+      const remaining = Math.max(0, available - expandMin)
+      const expandMax = Math.min(EXTRA_TILE_PADDING, Math.min(remaining, maxIndex - currentMax))
+      currentMax += expandMax
+      return { min: currentMin, max: currentMax }
+    }
+
+    const expandedX = expandAxis(minX, maxX)
+    minX = expandedX.min
+    maxX = expandedX.max
+
+    const expandedY = expandAxis(minY, maxY)
+    minY = expandedY.min
+    maxY = expandedY.max
+
     const tilesX = maxX - minX + 1
     const tilesY = maxY - minY + 1
 
-    DBG.log('tiles:fetching', { zoom, tilesX, tilesY, range, paddedBBox })
+  DBG.log('tiles:fetching', { zoom, tilesX, tilesY, range: { minX, maxX, minY, maxY }, paddedBBox })
 
     const tileImages: Array<{
       dataUrl: string,
