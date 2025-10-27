@@ -1,9 +1,11 @@
 ---
 id: task-18
 title: Refactorisation modulaire de generate.service.ts
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot'
 created_date: '2025-10-27 21:38'
+updated_date: '2025-10-27 21:41'
 labels:
   - refactor
   - architecture
