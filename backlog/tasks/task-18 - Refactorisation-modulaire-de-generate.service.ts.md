@@ -43,3 +43,20 @@ Mesures: Tests snapshot et unitaires, maintien signatures, logger centralisé, e
 - [ ] #9 Séparation logique vs HTML dans PageBuilders
 - [ ] #10 Performance similaire (+/-10%)
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Création structure dossiers generate/...
+2. Extraction types & logger
+3. Orchestrator + index exports compatibles
+4. Page builders cover/stats/map/steps (squelettes)
+5. Services utilitaires (assets, photo-mapping, photos-plan, metrics, elevation)
+6. Migration logique depuis generate.service.ts progressivement
+7. Adapter generate.service.ts pour re-exporter nouvelle API
+8. Créer nouveaux tests unitaires pour services & pages
+9. Adapter ancien test generate.service.spec.ts
+10. Edge cases tests supplémentaires
+11. Mise à jour README section Architecture du générateur
+12. Vérification finales: lint, tests PASS, pas régression HTML
+<!-- SECTION:PLAN:END -->
