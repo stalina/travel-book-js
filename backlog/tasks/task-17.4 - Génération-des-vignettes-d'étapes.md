@@ -5,12 +5,13 @@ status: Done
 assignee:
   - '@copilot'
 created_date: '2025-10-19 17:42'
-updated_date: '2025-10-19 18:03'
+updated_date: '2025-10-27 22:55'
 labels:
   - carte
   - svg
 dependencies: []
 parent_task_id: task-17
+ordinal: 22000
 ---
 
 ## Description

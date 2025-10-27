@@ -5,12 +5,13 @@ status: Done
 assignee:
   - '@copilot'
 created_date: '2025-10-19 17:47'
-updated_date: '2025-10-19 18:07'
+updated_date: '2025-10-27 22:55'
 labels:
   - carte
   - documentation
 dependencies: []
 parent_task_id: task-17
+ordinal: 18000
 ---
 
 ## Description
