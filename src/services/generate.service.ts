@@ -382,9 +382,9 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
   function buildCoverSection(): string {
     try {
       const year = new Date(trip.start_date * 1000).getFullYear()
-      // Sélection de la photo de couverture: priorité trip.cover_photo.path, sinon cover_photo_path, sinon première photo rencontrée dans stepPhotos
+      // Sélection de la photo de couverture: priorité trip.cover_photo.large_thumbnail_path, sinon cover_photo_path, sinon première photo rencontrée dans stepPhotos
       let coverUrl: string | null = null
-      const rawCover = (trip as any).cover_photo?.path || (trip as any).cover_photo_path || (trip as any).cover_photo_thumb_path
+      const rawCover = (trip as any).cover_photo?.large_thumbnail_path || (trip as any).cover_photo_path || (trip as any).cover_photo_thumb_path
       if (rawCover) coverUrl = rawCover
       if (!coverUrl) {
         for (const s of trip.steps) {
