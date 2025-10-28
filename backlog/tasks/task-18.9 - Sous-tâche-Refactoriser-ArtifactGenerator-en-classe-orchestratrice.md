@@ -1,9 +1,11 @@
 ---
 id: task-18.9
 title: 'Sous-tâche: Refactoriser ArtifactGenerator en classe orchestratrice'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot'
 created_date: '2025-10-28 19:36'
+updated_date: '2025-10-28 21:08'
 labels:
   - refactoring
   - typescript
