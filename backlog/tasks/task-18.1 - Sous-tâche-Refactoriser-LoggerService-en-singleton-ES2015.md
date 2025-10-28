@@ -1,7 +1,7 @@
 ---
 id: task-18.1
 title: 'Sous-tâche: Refactoriser LoggerService en singleton ES2015'
-status: In Progress
+status: Done
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:36'
