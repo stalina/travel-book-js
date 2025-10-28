@@ -1,7 +1,7 @@
 ---
 id: task-18.4
 title: 'Sous-tâche: Refactoriser CoverBuilder en classe avec contexte'
-status: In Progress
+status: Done
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:36'
