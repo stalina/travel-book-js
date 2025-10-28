@@ -1,9 +1,11 @@
 ---
 id: task-18.14
 title: 'Sous-tâche: Mettre à jour README et instructions Copilot'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot'
 created_date: '2025-10-28 19:37'
+updated_date: '2025-10-28 21:36'
 labels:
   - documentation
 dependencies: []
