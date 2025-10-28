@@ -1,9 +1,11 @@
 ---
 id: task-18.8
 title: 'Sous-tâche: Refactoriser TripParser en classe orchestratrice'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot'
 created_date: '2025-10-28 19:36'
+updated_date: '2025-10-28 21:04'
 labels:
   - refactoring
   - typescript
