@@ -27,3 +27,24 @@ Transformer stats.builder.ts en classe StatsBuilder avec injection trip/photosMa
 - [ ] #4 Migrations effectuées
 - [ ] #5 Tests adaptés
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Analyser la structure actuelle de stats.builder.ts (fonction buildStatsSection + haversineKm)
+2. Créer la classe StatsBuilder avec constructeur acceptant trip, photosMapping en readonly private
+3. Extraire la logique en méthodes privées:
+   * calculateTotalKilometers(): calcul des km avec Haversine
+   * extractUniqueCountries(): pays uniques dans l'ordre d'apparition
+   * calculateTotalPhotos(): compte total de photos
+   * calculateDays(): calcul nombre de jours
+   * findFarthestPoint(): point le plus éloigné du départ
+   * generateHtml(): génère le HTML final
+4. Implémenter méthode publique build() qui orchestre ces méthodes privées
+5. Ajouter JSDoc complète pour classe et méthodes publiques
+6. Garder haversineKm() comme fonction utilitaire exportée (réutilisable)
+7. Exporter wrapper déprécié buildStatsSection() pour compatibilité
+8. Migrer les imports dans generate.service.ts vers new StatsBuilder(...).build()
+9. Adapter les tests dans stats.builder.spec.ts pour instanciation de classe
+10. Valider avec npm run test
+<!-- SECTION:PLAN:END -->
