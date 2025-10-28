@@ -36,3 +36,21 @@ Mettre à jour README.md et .github/copilot-instructions.md pour refléter nouve
 4. Ajouter exemples d'utilisation des services
 5. Créer section Contribution pour développeurs Java
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+README.md enrichi de 118 à 415 lignes
+
+Section Architecture ES2015/OOP complète ajoutée
+
+3 patterns documentés avec exemples de code
+
+Structure du code et conventions expliquées
+
+Section Contribution pour développeurs Java
+
+Exemples d'utilisation des services
+
+Correspondances Java/Spring ↔ TypeScript
+<!-- SECTION:NOTES:END -->
