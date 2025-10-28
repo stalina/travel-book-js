@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:37'
-updated_date: '2025-10-28 21:37'
+updated_date: '2025-10-28 21:39'
 labels:
   - documentation
 dependencies: []
@@ -20,11 +20,11 @@ Mettre à jour README.md et .github/copilot-instructions.md pour refléter nouve
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 README.md mis à jour avec section Architecture
-- [ ] #2 Conventions de code OOP documentées (nommage classes, méthodes)
-- [ ] #3 Instructions Copilot mises à jour avec patterns ES2015
-- [ ] #4 Exemples d'utilisation des services en mode classe
-- [ ] #5 Guide de contribution adapté pour développeurs Java
+- [x] #1 README.md mis à jour avec section Architecture
+- [x] #2 Conventions de code OOP documentées (nommage classes, méthodes)
+- [x] #3 Instructions Copilot mises à jour avec patterns ES2015
+- [x] #4 Exemples d'utilisation des services en mode classe
+- [x] #5 Guide de contribution adapté pour développeurs Java
 <!-- AC:END -->
 
 ## Implementation Plan
