@@ -1,7 +1,7 @@
 ---
 id: task-18.8
 title: 'Sous-tâche: Refactoriser TripParser en classe orchestratrice'
-status: In Progress
+status: Done
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:36'
