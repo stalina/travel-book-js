@@ -1,9 +1,11 @@
 ---
 id: task-18.10
 title: 'Sous-tâche: Refactoriser composants Vue avec Composition API structurée'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot'
 created_date: '2025-10-28 19:37'
+updated_date: '2025-10-28 21:16'
 labels:
   - refactoring
   - vue
