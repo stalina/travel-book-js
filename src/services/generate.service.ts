@@ -14,16 +14,6 @@ export type GenerateOptions = {
   photosPlan?: string // contenu texte de photos_by_pages.txt permettant d'écraser la pagination auto
 }
 
-
-/**
- * Escapes a string for inclusion inside a single-quoted CSS url('...') value.
- * Escapes both backslash and single quote.
- * E.g., O'Reilly\foo  ->  O\\'Reilly\\\\foo
- */
-function escapeForCssUrlSingleQuotes(str: string): string {
-  return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-}
-
 // Logger minimaliste pour le debug (prefixé), centralise l'usage de console
 const DBG = {
   log: (...args: any[]) => {
@@ -127,32 +117,6 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
     } catch {}
   }
 
-  // Images folder
-  // Simple country-name mapping to French (uppercased)
-  const COUNTRY_FR: Record<string, string> = {
-    fr: 'FRANCE', de: 'ALLEMAGNE', it: 'ITALIE', si: 'SLOVENIE', at: 'AUTRICHE',
-    be: 'BELGIQUE', nl: 'PAYS-BAS', es: 'ESPAGNE', pt: 'PORTUGAL', ch: 'SUISSE',
-    gb: 'ROYAUME-UNI', uk: 'ROYAUME-UNI', cz: 'REPUBLIQUE TCHEQUE', sk: 'SLOVAQUIE',
-    hu: 'HONGRIE', hr: 'CROATIE', ba: 'BOSNIE-HERZEGOVINE', rs: 'SERBIE', me: 'MONTENEGRO',
-    mk: 'MACEDOINE DU NORD', gr: 'GRECE', pl: 'POLOGNE', ro: 'ROUMANIE', bg: 'BULGARIE',
-    dk: 'DANEMARK', no: 'NORVEGE', se: 'SUEDE', fi: 'FINLANDE', ee: 'ESTONIE',
-    lv: 'LETTONIE', lt: 'LITUANIE', ie: 'IRLANDE', is: 'ISLANDE', lu: 'LUXEMBOURG',
-    li: 'LIECHTENSTEIN', sm: 'SAINT-MARIN', va: 'VATICAN'
-  }
-
-  // Weather translations (normalized keys)
-  const WEATHER_FR: Record<string, string> = {
-    clear: 'ENSOLEILLEE', sunny: 'ENSOLEILLEE', clear_day: 'ENSOLEILLEE', clear_night: 'NUIT CLAIRE',
-    mostly_sunny: 'PLUTOT ENSOLEILLE', partly_cloudy: 'PARTIELLEMENT NUAGEUX', partly_cloudy_day: 'PARTIELLEMENT NUAGEUX',
-    cloudy: 'NUAGEUX', overcast: 'COUVERT', rain: 'PLUVIEUX', light_rain: 'PLUIE LEGERE', heavy_rain: 'FORTES PLUIES',
-    drizzle: 'BRUINE', snow: 'NEIGE', sleet: 'NEIGE FONDUE', hail: 'GRELE', fog: 'BROUILLARD', wind: 'VENTEUX',
-    thunderstorm: 'ORAGE'
-  }
-
-  function normKey(s: any): string {
-    return String(s || '').toLowerCase().replace(/[^a-z]+/g, '_').replace(/^_|_$/g, '')
-  }
-
   // Pre-fetch elevations in bulk to avoid many sequential calls (and 429)
   try {
     const bulkElev = await getElevationsBulk(trip.steps.map(s => ({ lat: s.lat, lon: s.lon })))
@@ -252,15 +216,6 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
   manifest['photos_by_pages.txt'] = pagesBlob
   DBG.log('manifest:initialized', { entries: Object.keys(manifest).length })
 
-  // Build HTML that mirrors Python templates
-  function esc(s: any) {
-    return String(s)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-  }
-
   // Construire un <head> sans dépendances externes (100% offline)
   let headHtml = `
   <head>
@@ -288,59 +243,6 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
   DBG.log('html:custom head template applied')
     }
   } catch {}
-
-  // Trip-level helpers
-  const tripStart = new Date(trip.start_date * 1000)
-  const lastStepDate = new Date(Math.max(...trip.steps.map(s => s.start_time * 1000)))
-  const tripEnd = trip.end_date ? new Date(trip.end_date * 1000) : lastStepDate
-  const msPerDay = 24 * 60 * 60 * 1000
-  const tripDurationDays = Math.max(1, Math.round((+tripEnd - +tripStart) / msPerDay))
-
-  function dayNumber(step: Step) {
-    return Math.floor((step.start_time * 1000 - +tripStart) / msPerDay) + 1
-  }
-  function tripPercentage(step: Step) {
-    return (dayNumber(step) * 100) / tripDurationDays
-  }
-  function monthName(d: Date) {
-    return d.toLocaleString('fr-FR', { month: 'long' })
-  }
-  function numberFr0(n: number): string {
-    return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0, minimumFractionDigits: 0, useGrouping: true }).format(n)
-  }
-  function toDMS(lat: number, lon: number): string {
-    const fmt = (deg: number, isLat: boolean) => {
-      const d = Math.floor(Math.abs(deg))
-      const mFloat = (Math.abs(deg) - d) * 60
-      const m = Math.floor(mFloat)
-      const s = (mFloat - m) * 60
-      const hemi = isLat ? (deg >= 0 ? 'N' : 'S') : (deg >= 0 ? 'E' : 'W')
-      return `${d}°${String(m).padStart(2,'0')}'${s.toFixed(2)}"${hemi}`
-    }
-    return `${fmt(lat, true)}, ${fmt(lon, false)}`
-  }
-  function cssUrlSingleQuoted(path: string): string {
-    // Conserver le chemin tel quel pour correspondre aux clés du manifest; échapper les apostrophes ET les backslashes
-    return String(path).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-  }
-  function cssUrlValue(urlStr: string): string {
-    // Pour data: on ne met pas de quotes; sinon, quotes simples
-    return urlStr.startsWith('data:') ? urlStr : `'${cssUrlSingleQuoted(urlStr)}'`
-  }
-  function resolvedPhotoUrl(p: { path: string }) {
-    return photoDataUrlMap[p.path] || p.path
-  }
-  function countryNameFrFromCode(code: string, fallback?: string): string {
-    try {
-      const Ctor: any = (Intl as any).DisplayNames
-      if (Ctor) {
-        const dn = new Ctor(['fr'], { type: 'region' })
-        const name = dn.of(code?.toUpperCase?.())
-        if (name) return String(name).toUpperCase()
-      }
-    } catch {}
-    return (fallback || code || '').toString().toUpperCase()
-  }
 
   // Collect required map SVGs (local only, no network)
   const usedCountries = Array.from(

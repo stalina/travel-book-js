@@ -1,23 +1,5 @@
 import { Trip, Step } from '../../models/types'
-
-/**
- * Escapes a string for inclusion inside a single-quoted CSS url('...') value.
- */
-function escapeForCssUrlSingleQuotes(str: string): string {
-  return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
-}
-
-/**
- * Escape HTML special characters
- */
-function esc(s: any): string {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-}
+import { escapeForCssUrlSingleQuotes, esc } from './utils'
 
 /**
  * Helper pour convertir un File en data URL

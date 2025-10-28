@@ -1,27 +1,5 @@
 import { Trip } from '../../models/types'
-
-/**
- * Escape HTML special characters
- */
-function esc(s: any): string {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-}
-
-/**
- * Format a number in French locale without decimals
- */
-function numberFr0(n: number): string {
-  return new Intl.NumberFormat('fr-FR', { 
-    maximumFractionDigits: 0, 
-    minimumFractionDigits: 0, 
-    useGrouping: true 
-  }).format(n)
-}
+import { esc, numberFr0, COUNTRY_FR, countryNameFrFromCode } from './utils'
 
 /**
  * Calcule la distance en kilomètres entre deux points GPS en utilisant la formule de Haversine
@@ -34,35 +12,6 @@ export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: numb
   const a = Math.sin(dLat/2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) ** 2
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
   return R * c
-}
-
-/**
- * Simple country-name mapping to French (uppercased)
- */
-const COUNTRY_FR: Record<string, string> = {
-  fr: 'FRANCE', de: 'ALLEMAGNE', it: 'ITALIE', si: 'SLOVENIE', at: 'AUTRICHE',
-  be: 'BELGIQUE', nl: 'PAYS-BAS', es: 'ESPAGNE', pt: 'PORTUGAL', ch: 'SUISSE',
-  gb: 'ROYAUME-UNI', uk: 'ROYAUME-UNI', cz: 'REPUBLIQUE TCHEQUE', sk: 'SLOVAQUIE',
-  hu: 'HONGRIE', hr: 'CROATIE', ba: 'BOSNIE-HERZEGOVINE', rs: 'SERBIE', me: 'MONTENEGRO',
-  mk: 'MACEDOINE DU NORD', gr: 'GRECE', pl: 'POLOGNE', ro: 'ROUMANIE', bg: 'BULGARIE',
-  dk: 'DANEMARK', no: 'NORVEGE', se: 'SUEDE', fi: 'FINLANDE', ee: 'ESTONIE',
-  lv: 'LETTONIE', lt: 'LITUANIE', ie: 'IRLANDE', is: 'ISLANDE', lu: 'LUXEMBOURG',
-  li: 'LIECHTENSTEIN', sm: 'SAINT-MARIN', va: 'VATICAN'
-}
-
-/**
- * Get French country name from code with fallback
- */
-function countryNameFrFromCode(code: string, fallback?: string): string {
-  try {
-    const Ctor: any = (Intl as any).DisplayNames
-    if (Ctor) {
-      const dn = new Ctor(['fr'], { type: 'region' })
-      const name = dn.of(code?.toUpperCase?.())
-      if (name) return String(name).toUpperCase()
-    }
-  } catch {}
-  return (fallback || code || '').toString().toUpperCase()
 }
 
 export type StatsBuilderContext = {

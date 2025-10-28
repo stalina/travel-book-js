@@ -1,24 +1,5 @@
 import { Trip } from '../../models/types'
-
-/**
- * Escapes a string for inclusion inside a single-quoted CSS url('...') value.
- * Escapes both backslash and single quote.
- */
-function escapeForCssUrlSingleQuotes(str: string): string {
-  return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
-}
-
-/**
- * Escape HTML special characters
- */
-function esc(s: any): string {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-}
+import { escapeForCssUrlSingleQuotes, esc } from './utils'
 
 export type CoverBuilderContext = {
   trip: Trip

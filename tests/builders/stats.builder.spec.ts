@@ -246,7 +246,7 @@ describe('stats.builder - buildStatsSection', () => {
 
     const html = buildStatsSection(context)
 
-    expect(html).toContain('Un voyage à travers l&#x27;Europe')
+    expect(html).toContain('Un voyage à travers l\'Europe')
   })
 
   it('retourne une chaîne vide si aucune étape', () => {
