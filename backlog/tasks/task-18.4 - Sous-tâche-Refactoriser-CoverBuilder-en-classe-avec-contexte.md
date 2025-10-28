@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:36'
-updated_date: '2025-10-28 20:03'
+updated_date: '2025-10-28 20:06'
 labels:
   - refactoring
   - typescript
@@ -21,11 +21,11 @@ Transformer cover.builder.ts en classe CoverBuilder avec trip/photos injectés v
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Classe CoverBuilder créée avec constructeur(trip, photosMapping, photoDataUrlMap)
-- [ ] #2 Méthode publique build() retourne HTML
-- [ ] #3 Méthodes privées: extractYear, selectCoverPhoto, generateHtml
-- [ ] #4 Migrations vers new CoverBuilder(...).build()
-- [ ] #5 Tests adaptés pour instanciation de classe
+- [x] #1 Classe CoverBuilder créée avec constructeur(trip, photosMapping, photoDataUrlMap)
+- [x] #2 Méthode publique build() retourne HTML
+- [x] #3 Méthodes privées: extractYear, selectCoverPhoto, generateHtml
+- [x] #4 Migrations vers new CoverBuilder(...).build()
+- [x] #5 Tests adaptés pour instanciation de classe
 <!-- AC:END -->
 
 ## Implementation Plan
