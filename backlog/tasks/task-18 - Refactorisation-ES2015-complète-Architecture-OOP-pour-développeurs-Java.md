@@ -1,10 +1,10 @@
 ---
 id: task-18
 title: 'Refactorisation ES2015 complète : Architecture OOP pour développeurs Java'
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-10-28 19:35'
-updated_date: '2025-10-28 21:39'
+updated_date: '2025-10-28 21:40'
 labels:
   - refactoring
   - architecture
