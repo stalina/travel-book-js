@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:37'
-updated_date: '2025-10-28 21:16'
+updated_date: '2025-10-28 21:17'
 labels:
   - refactoring
   - vue
@@ -29,3 +29,24 @@ Améliorer les composants Vue (HomeView, GenerationView, ViewerView) avec compos
 - [ ] #5 Séparer logique métier (classes TS) de la présentation (templates Vue)
 - [ ] #6 Types et interfaces clairs pour props/events
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Analyser les composants Vue actuels (déjà en Composition API)
+2. Identifier la logique à extraire en composables/classes
+3. Créer useFileSelection composable pour HomeView:
+   - Gestion sélection fichiers/dossiers
+   - Drag & drop
+   - Interaction avec File System Access API
+4. Créer useGeneration composable pour GenerationView:
+   - Gestion des étapes de génération
+   - État working/error
+   - Orchestration du flux
+5. Créer ViewerController classe pour ViewerView:
+   - Gestion ouverture nouvel onglet
+   - Téléchargement fichier
+   - Gestion des URL objects
+6. Refactoriser les composants pour utiliser les composables
+7. Vérifier que tout fonctionne (tests manuels car pas de tests Vue)
+<!-- SECTION:PLAN:END -->
