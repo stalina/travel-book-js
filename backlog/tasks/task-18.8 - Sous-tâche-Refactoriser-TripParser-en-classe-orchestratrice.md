@@ -40,3 +40,36 @@ Transformer parse.service.ts en classe TripParser avec injection FileSystemServi
 7. Tests: créer parse.service.spec.ts avec mocks FileSystemService
 8. Vérifier que tous les tests passent
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Refactorisation TripParser terminée avec succès:
+
+**Classe créée** (Orchestrator):
+- Constructor(fileSystemService: FileSystemService)
+- Singleton pattern avec getInstance()
+- private readonly pour injection de dépendance
+
+**Méthode publique**:
+- async parse(input: FFInput): Promise<void>
+- Logs avec loggerService (debug, error)
+- Gestion erreurs avec try/catch
+
+**Méthodes privées**:
+- loadTripJson(): charge et parse trip.json
+- mapToTrip(): transforme JSON brut en objet Trip typé
+- loadStepPhotos(): charge toutes les photos par étape
+- saveToWindow(): stocke dans window.__parsedTrip
+
+**Export**:
+- Singleton tripParser exporté
+- Wrapper parseTrip() pour rétrocompatibilité
+
+**Tests créés**:
+- parse.service.spec.ts avec 8 tests
+- Mock FileSystemService pour isolation
+- Tests: parsing réussi, mapping étapes, chargement photos, gestion erreurs, null values, singleton
+
+**Résultats**: 92/92 tests passent ✅ (+8 nouveaux tests)
+<!-- SECTION:NOTES:END -->
