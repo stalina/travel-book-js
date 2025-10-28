@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:37'
-updated_date: '2025-10-28 21:17'
+updated_date: '2025-10-28 21:19'
 labels:
   - refactoring
   - vue
@@ -22,12 +22,12 @@ Améliorer les composants Vue (HomeView, GenerationView, ViewerView) avec compos
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Créer des composables TypeScript en classes (useFileSelection, useGeneration)
-- [ ] #2 Refactoriser HomeView avec composable useFileSelection
-- [ ] #3 Refactoriser GenerationView avec composable useGeneration
-- [ ] #4 Refactoriser ViewerView avec logique extraction en classe ViewerController
-- [ ] #5 Séparer logique métier (classes TS) de la présentation (templates Vue)
-- [ ] #6 Types et interfaces clairs pour props/events
+- [x] #1 Créer des composables TypeScript en classes (useFileSelection, useGeneration)
+- [x] #2 Refactoriser HomeView avec composable useFileSelection
+- [x] #3 Refactoriser GenerationView avec composable useGeneration
+- [x] #4 Refactoriser ViewerView avec logique extraction en classe ViewerController
+- [x] #5 Séparer logique métier (classes TS) de la présentation (templates Vue)
+- [x] #6 Types et interfaces clairs pour props/events
 <!-- AC:END -->
 
 ## Implementation Plan
