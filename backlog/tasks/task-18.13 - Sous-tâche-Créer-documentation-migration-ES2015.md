@@ -1,9 +1,11 @@
 ---
 id: task-18.13
 title: 'Sous-tâche: Créer documentation migration ES2015'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot'
 created_date: '2025-10-28 19:37'
+updated_date: '2025-10-28 21:25'
 labels:
   - documentation
   - architecture
