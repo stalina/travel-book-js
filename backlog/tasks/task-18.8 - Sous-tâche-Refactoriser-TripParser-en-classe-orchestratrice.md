@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:36'
-updated_date: '2025-10-28 21:05'
+updated_date: '2025-10-28 21:07'
 labels:
   - refactoring
   - typescript
@@ -21,11 +21,11 @@ Transformer parse.service.ts en classe TripParser avec injection FileSystemServi
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Classe TripParser créée avec constructeur(fileSystemService)
-- [ ] #2 Méthode publique parse(input)
-- [ ] #3 Méthodes privées: loadTripJson, mapToTrip, loadStepPhotos, saveToWindow
-- [ ] #4 Export singleton tripParser
-- [ ] #5 Migrations et tests adaptés
+- [x] #1 Classe TripParser créée avec constructeur(fileSystemService)
+- [x] #2 Méthode publique parse(input)
+- [x] #3 Méthodes privées: loadTripJson, mapToTrip, loadStepPhotos, saveToWindow
+- [x] #4 Export singleton tripParser
+- [x] #5 Migrations et tests adaptés
 <!-- AC:END -->
 
 ## Implementation Plan
