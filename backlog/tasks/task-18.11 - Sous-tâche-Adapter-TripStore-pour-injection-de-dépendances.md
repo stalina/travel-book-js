@@ -1,7 +1,7 @@
 ---
 id: task-18.11
 title: 'Sous-tâche: Adapter TripStore pour injection de dépendances'
-status: In Progress
+status: Done
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:37'
