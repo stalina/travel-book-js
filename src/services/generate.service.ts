@@ -5,6 +5,7 @@ import { buildCoverSection } from './builders/cover.builder'
 import { buildStatsSection } from './builders/stats.builder'
 import { buildMapSection } from './builders/map.builder'
 import { buildStepSection } from './builders/step.builder'
+import { logger } from './logger.service'
 
 export type GeneratedArtifacts = {
   manifest: Record<string, Blob>
@@ -12,35 +13,6 @@ export type GeneratedArtifacts = {
 
 export type GenerateOptions = {
   photosPlan?: string // contenu texte de photos_by_pages.txt permettant d'écraser la pagination auto
-}
-
-// Logger minimaliste pour le debug (prefixé), centralise l'usage de console
-const DBG = {
-  log: (...args: any[]) => {
-    // eslint-disable-next-line no-console
-    console.log('[TB][generate]', ...args)
-  },
-  warn: (...args: any[]) => {
-    // eslint-disable-next-line no-console
-    console.warn('[TB][generate]', ...args)
-  },
-  time: (label: string) => {
-    if (typeof performance !== 'undefined' && performance.mark) {
-      performance.mark(label + ':start')
-    }
-  },
-  timeEnd: (label: string) => {
-    if (typeof performance !== 'undefined' && performance.mark && performance.measure) {
-      try {
-        performance.mark(label + ':end')
-        performance.measure(label, label + ':start', label + ':end')
-        const entries = performance.getEntriesByName(label)
-        const last = entries[entries.length - 1]
-        // eslint-disable-next-line no-console
-        console.log('[TB][generate][timing]', label, `${Math.round(last.duration)}ms`)
-      } catch {}
-    }
-  }
 }
 
 function normalizePath(...parts: string[]) {
@@ -66,7 +38,8 @@ async function fileToDataUrl(file: File): Promise<string> {
 export async function generateArtifacts(input: FFInput, options?: GenerateOptions): Promise<GeneratedArtifacts> {
   const { trip, stepPhotos } = (window as any).__parsedTrip as { trip: Trip, stepPhotos: Record<number, File[]> }
   if (!trip) throw new Error('Trip non parsé')
-  DBG.log('generateArtifacts:start', { tripId: (trip as any).id, steps: trip.steps.length })
+  logger.info('generate', 'Début de la génération', { tripId: (trip as any).id, steps: trip.steps.length })
+  logger.time('generateArtifacts')
 
   // Compute photos mapping and default pages similar to Python (simplified):
   const photosMapping: Record<number, Record<number, any>> = {}
@@ -75,11 +48,12 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
   const photoDataUrlMap: Record<string, string> = {}
 
   // Build assets/style.css & fonts from project assets
+  logger.info('generate', 'Chargement des assets CSS et fonts')
   const cssResp = await fetch('/assets/style.css')
   const cssText = await cssResp.text()
   const fontsCssResp = await fetch('/assets/fonts/fonts.css')
   const fontsCssText = await fontsCssResp.text()
-  DBG.log('assets:css loaded', { styleLen: cssText.length, fontsLen: fontsCssText.length })
+  logger.debug('generate', 'Assets CSS chargés', { styleLen: cssText.length, fontsLen: fontsCssText.length })
 
   const manifest: Record<string, Blob> = {
     'assets/style.css': new Blob([cssText], { type: 'text/css' }),
@@ -94,10 +68,10 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
       if (!/text\/html/i.test(ct)) {
         const fontBlob = await fontResp.blob()
         manifest['assets/fonts/Brandon_Grotesque_medium.otf'] = fontBlob
-        DBG.log('assets:font Brandon_Grotesque_medium.otf included', { size: fontBlob.size })
+        logger.debug('generate', 'Font Brandon_Grotesque_medium.otf inclus', { size: fontBlob.size })
       }
     } else {
-      DBG.warn('assets:font Brandon_Grotesque_medium.otf not found (ok=false)')
+      logger.warn('generate', 'Font Brandon_Grotesque_medium.otf non trouvé')
     }
   } catch {}
 
@@ -109,15 +83,16 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
         const ct = resp.headers.get('content-type') || ''
         if (!/text\/html/i.test(ct)) {
           manifest[`assets/fonts/${f}`] = await resp.blob()
-          DBG.log('assets:font included', f)
+          logger.debug('generate', `Font inclus: ${f}`)
         }
       } else {
-        DBG.log('assets:font missing', f)
+        logger.debug('generate', `Font manquant: ${f}`)
       }
     } catch {}
   }
 
   // Pre-fetch elevations in bulk to avoid many sequential calls (and 429)
+  logger.info('generate', 'Chargement des altitudes en masse')
   try {
     const bulkElev = await getElevationsBulk(trip.steps.map(s => ({ lat: s.lat, lon: s.lon })))
     let countOk = 0
@@ -128,13 +103,14 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
         countOk++
       }
     })
-    DBG.log('elevations:bulk fetched', { total: trip.steps.length, resolved: countOk })
+    logger.debug('generate', 'Altitudes chargées', { total: trip.steps.length, resolved: countOk })
   } catch {}
 
+  logger.info('generate', `Traitement de ${trip.steps.length} étapes`)
   for (const step of trip.steps) {
-    DBG.log('step:start', { id: step.id, name: step.name })
+    logger.debug('generate', `Traitement étape: ${step.name}`, { id: step.id })
     const photos = stepPhotos[step.id] || []
-    DBG.log('step:photos selected', { count: photos.length, names: photos.map(p => p.name) })
+    logger.debug('generate', 'Photos sélectionnées', { count: photos.length })
     const mapping: Record<number, any> = {}
     let idx = 1
     for (const f of photos) {
@@ -159,7 +135,7 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
     const portrait = Object.values(mapping).filter(p => p.ratio === 'PORTRAIT')
     const landscape = Object.values(mapping).filter(p => p.ratio === 'LANDSCAPE')
     const other = Object.values(mapping).filter(p => p.ratio === 'UNKNOWN')
-    DBG.log('step:ratios', { portrait: portrait.length, landscape: landscape.length, unknown: other.length })
+    logger.debug('generate', 'Ratios calculés', { portrait: portrait.length, landscape: landscape.length, unknown: other.length })
 
     // Header
     const start = new Date(step.start_time * 1000)
@@ -168,10 +144,10 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
 
     // Cover if description short
     const useCover = !step.description || step.description.length < 800
-    DBG.log('step:cover policy', { useCover })
+    logger.debug('generate', 'Politique de couverture', { useCover })
     if (useCover && (portrait[0] || landscape[0])) {
       const cover = portrait[0] ?? landscape[0]
-      DBG.log('step:cover chosen', { index: cover.index, ratio: cover.ratio })
+      logger.debug('generate', 'Couverture choisie', { index: cover.index, ratio: cover.ratio })
       photosByPagesLines.push(`Cover photo: ${cover.index}`)
       // Remove cover from candidates
       const pIdx = portrait.indexOf(cover as any)
@@ -201,20 +177,20 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
     }
 
     photosByPagesLines.push('')
-    DBG.log('step:pages-by-lines appended')
+    logger.debug('generate', 'Pages par lignes générées')
   }
 
   // Si un plan utilisateur est fourni, on l'utilise pour remplacer photos_by_pages.txt
   const userPlanText = options?.photosPlan?.trim() ? String(options?.photosPlan) : ''
   if (userPlanText) {
-    DBG.log('user-plan:override provided')
+    logger.debug('generate', 'Plan utilisateur fourni')
   }
 
   const mappingBlob = new Blob([JSON.stringify(photosMapping, null, 4)], { type: 'application/json' })
   const pagesBlob = new Blob([userPlanText || photosByPagesLines.join('\n')], { type: 'text/plain' })
   manifest['photos_mapping.json'] = mappingBlob
   manifest['photos_by_pages.txt'] = pagesBlob
-  DBG.log('manifest:initialized', { entries: Object.keys(manifest).length })
+  logger.debug('generate', 'Manifest initialisé', { entries: Object.keys(manifest).length })
 
   // Construire un <head> sans dépendances externes (100% offline)
   let headHtml = `
@@ -240,11 +216,12 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
       if (!/assets\/style\.css/.test(h)) h = h.replace(/<\/head>/i, '<link rel="stylesheet" href="assets/style.css" />\n</head>')
       if (!/assets\/fonts\/fonts\.css/.test(h)) h = h.replace(/<\/head>/i, '<link rel="stylesheet" href="assets/fonts/fonts.css" />\n</head>')
       headHtml = h
-  DBG.log('html:custom head template applied')
+      logger.debug('generate', 'Template HTML personnalisé appliqué')
     }
   } catch {}
 
   // Collect required map SVGs (local only, no network)
+  logger.info('generate', 'Chargement des cartes SVG des pays')
   const usedCountries = Array.from(
     new Set(trip.steps.map(s => s.country_code).filter(c => c && c !== '00'))
   )
@@ -265,18 +242,18 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
       if (resp.ok) {
         const svg = await resp.blob()
         manifest[`assets/images/maps/${code.toLowerCase()}.svg`] = svg
-        DBG.log('maps:included', { code, size: svg.size })
+        logger.debug('generate', `Carte SVG incluse: ${code}`, { size: svg.size })
       } else {
         // eslint-disable-next-line no-console
         console.warn(`[maps] SVG local manquant: ${localUrl} — utilisation d'un placeholder`)
         manifest[`assets/images/maps/${code.toLowerCase()}.svg`] = placeholderSvg(code)
-        DBG.log('maps:placeholder used', { code })
+        logger.debug('generate', `Placeholder utilisé pour: ${code}`)
       }
     } catch {
       // eslint-disable-next-line no-console
       console.warn(`[maps] SVG local introuvable: ${localUrl} — utilisation d'un placeholder`)
       manifest[`assets/images/maps/${code.toLowerCase()}.svg`] = placeholderSvg(code)
-      DBG.log('maps:placeholder used (exception)', { code })
+      logger.debug('generate', `Placeholder utilisé (exception) pour: ${code}`)
     }
   }
 
@@ -284,12 +261,15 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
   let bodyHtml = ''
 
   // --- Couverture ---------------------------------------------------------
+  logger.info('generate', 'Génération de la page de couverture')
   bodyHtml += buildCoverSection({ trip, photosMapping, photoDataUrlMap })
 
   // --- Page Statistiques --------------------------------------------------
+  logger.info('generate', 'Génération de la page de statistiques')
   bodyHtml += buildStatsSection({ trip, photosMapping })
 
   // --- Page Carte ---------------------------------------------------------
+  logger.info('generate', 'Génération de la page carte')
   bodyHtml += await buildMapSection({ trip, photosMapping, photoDataUrlMap })
 
   // Parse éventuel du plan utilisateur pour imposer cover/pages
@@ -323,10 +303,11 @@ export async function generateArtifacts(input: FFInput, options?: GenerateOption
         if (nums.length) planByStep[currentId].pages.push(nums)
       }
     }
-    DBG.log('user-plan:parsed', { steps: Object.keys(planByStep).length })
+    logger.debug('generate', 'Plan utilisateur parsé', { steps: Object.keys(planByStep).length })
   }
 
   // --- Pages Étapes -------------------------------------------------------
+  logger.info('generate', `Génération des pages pour ${trip.steps.length} étapes`)
   for (const step of trip.steps) {
     const stepHtml = await buildStepSection({
       trip,
@@ -347,8 +328,9 @@ ${bodyHtml}
 </html>`
 
   manifest['travel_book.html'] = new Blob([html], { type: 'text/html' })
-  DBG.log('html:travel_book generated', { size: html.length })
-  DBG.log('generateArtifacts:done', { manifestEntries: Object.keys(manifest).length })
+  logger.debug('generate', 'HTML travel_book généré', { size: html.length })
+  logger.timeEnd('generateArtifacts', true)
+  logger.info('generate', 'Génération terminée', { manifestEntries: Object.keys(manifest).length })
 
   return { manifest }
 }
@@ -358,7 +340,8 @@ export async function buildSingleFileHtml(artifacts: GeneratedArtifacts): Promis
   const manifest = artifacts.manifest
   const tb = manifest['travel_book.html']
   if (!tb) return new Blob(['<html><body>Missing travel_book.html</body></html>'], { type: 'text/html' })
-  DBG.log('single-file:start', { assets: Object.keys(manifest).length })
+  logger.info('generate', 'Construction du fichier HTML autonome')
+  logger.time('buildSingleFileHtml')
 
   const blobToText = (b: Blob) => b.text()
   const blobToDataUrl = (b: Blob) => new Promise<string>((res, rej) => {
@@ -374,7 +357,7 @@ export async function buildSingleFileHtml(artifacts: GeneratedArtifacts): Promis
     if (key === 'travel_book.html') continue
     dataUrlMap[key] = await blobToDataUrl(blob)
   }
-  DBG.log('single-file:dataUrlMap built', { assets: Object.keys(dataUrlMap).length })
+  logger.debug('generate', 'DataURL map construite', { assets: Object.keys(dataUrlMap).length })
 
   // 1) Charger le HTML
   let html = await blobToText(tb)
@@ -413,7 +396,7 @@ export async function buildSingleFileHtml(artifacts: GeneratedArtifacts): Promis
   if (styles.length) {
     const styleTag = `<style>${styles.join('\n')}</style>`
     html = html.replace(/<head>([\s\S]*?)<\/head>/i, (m, inner) => `<head>${inner}\n${styleTag}</head>`)
-  DBG.log('single-file:styles inlined', { blocks: styles.length })
+    logger.debug('generate', 'Styles inlinés', { blocks: styles.length })
   }
 
   // 3) Réécrire tous les href/src="assets/..." et url(assets/...) inline vers data: URLs
@@ -431,8 +414,9 @@ export async function buildSingleFileHtml(artifacts: GeneratedArtifacts): Promis
     const u = dataUrlMap[path]
     return u ? `url(${JSON.stringify(u)})` : _m
   })
-  DBG.log('single-file:assets inlined')
+  logger.debug('generate', 'Assets inlinés')
 
+  logger.timeEnd('buildSingleFileHtml', true)
   return new Blob([html], { type: 'text/html' })
 }
 
@@ -440,6 +424,6 @@ export async function buildSingleFileHtml(artifacts: GeneratedArtifacts): Promis
 export async function buildSingleFileHtmlString(artifacts: GeneratedArtifacts): Promise<string> {
   const blob = await buildSingleFileHtml(artifacts)
   const text = await blob.text()
-  DBG.log('single-file:ready', { length: text.length })
+  logger.info('generate', 'Fichier HTML autonome prêt', { size: text.length })
   return text
 }

@@ -1,5 +1,6 @@
 import { Trip } from '../../models/types'
 import { escapeForCssUrlSingleQuotes, esc } from './utils'
+import { logger } from '../logger.service'
 
 export type CoverBuilderContext = {
   trip: Trip
@@ -54,8 +55,7 @@ export function buildCoverSection(context: CoverBuilderContext): string {
     
     return `\n      <div class="break-after cover-page">\n        <div class="cover-background" ${cssBg}>\n          <div class="cover-overlay">\n            <div class="cover-year">${year}</div>\n            <div class="cover-title">${title}</div>\n          </div>\n        </div>\n      </div>`
   } catch (e) {
-    // eslint-disable-next-line no-console
-    console.warn('[TB][generate][cover]', e)
+    logger.error('cover-builder', 'Erreur lors de la génération de la couverture', e)
     return ''
   }
 }

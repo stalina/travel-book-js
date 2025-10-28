@@ -1,5 +1,6 @@
 import { Trip } from '../../models/types'
 import { esc, numberFr0, COUNTRY_FR, countryNameFrFromCode } from './utils'
+import { logger } from '../logger.service'
 
 /**
  * Calcule la distance en kilomètres entre deux points GPS en utilisant la formule de Haversine
@@ -129,8 +130,7 @@ export function buildStatsSection(context: StatsBuilderContext): string {
         </div>
       </div>`
   } catch (e) {
-    // eslint-disable-next-line no-console
-    console.warn('[TB][generate][stats]', e)
+    logger.error('stats-builder', 'Erreur lors de la génération des statistiques', e)
     return ''
   }
 }

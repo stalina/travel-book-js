@@ -1,5 +1,6 @@
 import { Trip, Step } from '../../models/types'
 import { escapeForCssUrlSingleQuotes, esc } from './utils'
+import { logger } from '../logger.service'
 
 /**
  * Helper pour convertir un File en data URL
@@ -285,8 +286,7 @@ export async function fetchTilesForBbox(bbox: BBox): Promise<{
   const tilesX = maxX - minX + 1
   const tilesY = maxY - minY + 1
 
-  // eslint-disable-next-line no-console
-  console.log('[TB][generate][map][tiles:fetching]', { zoom, tilesX, tilesY, range: { minX, maxX, minY, maxY }, paddedBBox })
+  logger.debug('map-builder', 'Récupération des tuiles satellite', { zoom, tilesX, tilesY, range: { minX, maxX, minY, maxY } })
 
   const tileImages: Array<{
     dataUrl: string,
@@ -313,12 +313,10 @@ export async function fetchTilesForBbox(bbox: BBox): Promise<{
                 east: bottomRight.lon
               }
             })
-            // eslint-disable-next-line no-console
-            console.log('[TB][generate][map][tiles:fetched]', { x: tx, y: ty, zoom })
+            logger.debug('map-builder', `Tuile récupérée: ${tx},${ty}`)
           })
           .catch(err => {
-            // eslint-disable-next-line no-console
-            console.warn('[TB][generate][map][tiles:fetch failed]', { x: tx, y: ty, zoom, err })
+            logger.warn('map-builder', `Échec récupération tuile: ${tx},${ty}`, err)
           })
       )
     }
@@ -327,8 +325,7 @@ export async function fetchTilesForBbox(bbox: BBox): Promise<{
   await Promise.all(promises)
 
   if (!tileImages.length) {
-    // eslint-disable-next-line no-console
-    console.warn('[TB][generate][map][tiles:no tiles fetched, using fallback]')
+    logger.warn('map-builder', 'Aucune tuile récupérée, utilisation du fallback')
     return {
       tiles: [],
       adjustedViewBox: calculateViewBox(paddedBBox, 0)
@@ -345,8 +342,7 @@ export async function fetchTilesForBbox(bbox: BBox): Promise<{
     height: Math.max(0.00001, coverageNW.lat - coverageSE.lat)
   }
 
-  // eslint-disable-next-line no-console
-  console.log('[TB][generate][map][tiles:adjustedViewBox]', adjustedViewBox)
+  logger.debug('map-builder', 'ViewBox ajustée calculée', adjustedViewBox)
 
   return { tiles: tileImages, adjustedViewBox }
 }
@@ -367,15 +363,13 @@ export async function buildMapSection(context: MapBuilderContext): Promise<strin
     const { trip, photosMapping, photoDataUrlMap } = context
     
     if (!trip.steps.length) return ''
-    // eslint-disable-next-line no-console
-    console.log('[TB][generate][map:building section]')
+    logger.debug('map-builder', 'Construction de la section carte')
 
     const bbox = calculateBoundingBox(trip.steps)
     if (!bbox) return ''
 
     const { tiles, adjustedViewBox: viewBox } = await fetchTilesForBbox(bbox)
-    // eslint-disable-next-line no-console
-    console.log('[TB][generate][map:tiles fetched]', { tiles: tiles.length })
+    logger.debug('map-builder', 'Tuiles satellite récupérées', { count: tiles.length })
 
     let background = ''
     if (tiles.length) {
@@ -400,13 +394,11 @@ export async function buildMapSection(context: MapBuilderContext): Promise<strin
 
     // Génération du tracé de l'itinéraire avec le viewBox ajusté
     const pathData = generatePathData(trip.steps, viewBox)
-    // eslint-disable-next-line no-console
-    console.log('[TB][generate][map:path generated]', { length: pathData.length, steps: trip.steps.length })
+    logger.debug('map-builder', 'Tracé de l\'itinéraire généré', { length: pathData.length, steps: trip.steps.length })
 
     // Génération des vignettes d'étapes avec le viewBox ajusté
     const markers = generateStepMarkers(trip.steps, viewBox, photosMapping, photoDataUrlMap)
-    // eslint-disable-next-line no-console
-    console.log('[TB][generate][map:markers generated]', { count: trip.steps.length })
+    logger.debug('map-builder', 'Vignettes d\'étapes générées', { count: trip.steps.length })
 
     return `
       <div class="break-after map-page">
@@ -419,8 +411,7 @@ export async function buildMapSection(context: MapBuilderContext): Promise<strin
         </div>
       </div>`
   } catch (e) {
-    // eslint-disable-next-line no-console
-    console.warn('[TB][generate][map:build error]', e)
+    logger.error('map-builder', 'Erreur lors de la génération de la carte', e)
     return ''
   }
 }
