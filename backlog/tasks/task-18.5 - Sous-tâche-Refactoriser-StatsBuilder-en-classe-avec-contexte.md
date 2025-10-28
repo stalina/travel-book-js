@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:36'
-updated_date: '2025-10-28 20:07'
+updated_date: '2025-10-28 20:34'
 labels:
   - refactoring
   - typescript
@@ -21,11 +21,11 @@ Transformer stats.builder.ts en classe StatsBuilder avec injection trip/photosMa
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Classe StatsBuilder créée avec constructeur
-- [ ] #2 Méthode publique build() retourne HTML stats
-- [ ] #3 Méthodes privées pour calculs (haversine, pays, métriques)
-- [ ] #4 Migrations effectuées
-- [ ] #5 Tests adaptés
+- [x] #1 Classe StatsBuilder créée avec constructeur
+- [x] #2 Méthode publique build() retourne HTML stats
+- [x] #3 Méthodes privées pour calculs (haversine, pays, métriques)
+- [x] #4 Migrations effectuées
+- [x] #5 Tests adaptés
 <!-- AC:END -->
 
 ## Implementation Plan
