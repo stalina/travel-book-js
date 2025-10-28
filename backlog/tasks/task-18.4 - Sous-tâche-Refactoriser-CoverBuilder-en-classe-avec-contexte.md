@@ -41,3 +41,30 @@ Transformer cover.builder.ts en classe CoverBuilder avec trip/photos injectés v
 8. Adapter les tests dans cover.builder.spec.ts pour instanciation de classe
 9. Valider avec npm run test
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+CoverBuilder refactorisé en classe avec contexte injecté via constructeur.
+
+Transformations effectuées:
+- Création de la classe CoverBuilder avec constructeur(trip, photosMapping, photoDataUrlMap) en readonly private
+- Méthode publique build() retourne le HTML complet
+- 3 méthodes privées pour décomposer la logique:
+  * extractYear(): extrait l'année du voyage
+  * selectCoverPhoto(): sélectionne la photo de couverture selon la priorité définie
+  * generateHtml(year, coverUrl): génère le HTML final
+- Documentation JSDoc complète pour la classe et toutes les méthodes publiques
+- Export du wrapper déprécié buildCoverSection() pour compatibilité
+- Conservation du type CoverBuilderContext (déprécié)
+
+Migrations:
+- generate.service.ts: import CoverBuilder, usage new CoverBuilder(...).build()
+- cover.builder.spec.ts: tous les tests adaptés pour instanciation de classe
+
+Résultats:
+- 0 erreurs de compilation TypeScript
+- 83/83 tests unitaires passent (Vitest)
+- Pattern Builder avec contexte appliqué comme défini dans le guide
+- Code plus modulaire et testable avec méthodes privées
+<!-- SECTION:NOTES:END -->
