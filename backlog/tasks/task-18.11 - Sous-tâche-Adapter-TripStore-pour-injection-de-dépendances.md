@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:37'
-updated_date: '2025-10-28 21:21'
+updated_date: '2025-10-28 21:22'
 labels:
   - refactoring
   - pinia
@@ -22,11 +22,11 @@ Modifier trip.store.ts pour utiliser les singletons de services (tripParser, art
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Imports des singletons services ajoutés
-- [ ] #2 Actions du store utilisent tripParser.parse() au lieu de parseTrip()
-- [ ] #3 Actions du store utilisent artifactGenerator.generate() au lieu de generateArtifacts()
-- [ ] #4 Actions utilisent fileSystemService.readTripDirectory()
-- [ ] #5 Tests du store adaptés pour mocker les services
+- [x] #1 Imports des singletons services ajoutés
+- [x] #2 Actions du store utilisent tripParser.parse() au lieu de parseTrip()
+- [x] #3 Actions du store utilisent artifactGenerator.generate() au lieu de generateArtifacts()
+- [x] #4 Actions utilisent fileSystemService.readTripDirectory()
+- [x] #5 Tests du store adaptés pour mocker les services
 <!-- AC:END -->
 
 ## Implementation Plan
