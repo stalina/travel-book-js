@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:36'
-updated_date: '2025-10-28 21:12'
+updated_date: '2025-10-28 21:13'
 labels:
   - refactoring
   - typescript
@@ -47,3 +47,48 @@ Transformer generate.service.ts en classe ArtifactGenerator qui orchestre tous l
 7. Export singleton + wrapper rétrocompatible
 8. Vérifier que les tests passent (generate.service.spec.ts existe déjà avec 16 tests)
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Refactorisation ArtifactGenerator terminée avec succès:
+
+**Classe créée** (Orchestrator principal):
+- Constructor(elevationService: ElevationService, loggerService: LoggerService)
+- Singleton pattern avec getInstance()
+- private readonly pour injection de dépendances
+
+**Méthode publique**:
+- async generate(input: FFInput, options?: GenerateOptions): Promise<GeneratedArtifacts>
+- Orchestre tous les builders et services
+- Gestion complète du cycle de génération
+
+**Méthodes privées** (13 méthodes):
+- loadAssets(): charge CSS, fonts dans manifest
+- preloadElevations(): précharge altitudes en masse
+- processPhotos(): mapping, ratios, data URLs
+- generatePhotosPlan(): génération photos_by_pages.txt
+- loadCountryMaps(): charge SVG des pays
+- buildHtmlHead(): construction <head>
+- parseUserPlan(): parse plan personnalisé
+- buildHtmlBody(): orchestre Cover, Stats, Map, Step builders
+- normalizePath(), guessRatio(), fileToDataUrl(), createPlaceholderSvg()
+
+**Méthodes publiques supplémentaires**:
+- buildSingleFileHtml(): inline CSS/fonts/assets en data: URLs
+- buildSingleFileHtmlString(): retourne HTML autonome string
+
+**Utilisation des builders**:
+- CoverBuilder (maintenant en classe)
+- StatsBuilder (classe)
+- MapBuilder (classe)
+- StepBuilder (classe)
+- Tous instanciés avec new et injection de contexte
+
+**Export**:
+- Singleton artifactGenerator exporté
+- Wrappers rétrocompatibles: generateArtifacts(), buildSingleFileHtml(), buildSingleFileHtmlString()
+
+**Résultats**: 92/92 tests passent ✅
+**Réduction**: 433 lignes → classe structurée avec 13 méthodes privées
+<!-- SECTION:NOTES:END -->
