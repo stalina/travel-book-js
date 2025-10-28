@@ -1,13 +1,13 @@
 ---
 id: task-17
 title: Créer une page de résumé du voyage sous forme de carte
-status: In Progress
+status: Done
 assignee: []
 created_date: '2025-10-19 17:19'
-updated_date: '2025-10-21 21:51'
+updated_date: '2025-10-27 22:55'
 labels: []
 dependencies: []
-ordinal: 1000
+ordinal: 25000
 ---
 
 ## Description
