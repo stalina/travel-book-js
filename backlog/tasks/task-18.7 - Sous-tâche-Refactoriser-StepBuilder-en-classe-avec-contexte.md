@@ -27,3 +27,25 @@ Transformer step.builder.ts en classe StepBuilder pour génération HTML des ét
 - [x] #4 Migrations effectuées
 - [x] #5 Tests adaptés
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Refactorisation StepBuilder terminée avec succès:
+
+**Classe créée** (14 méthodes):
+- Constructor(trip, step, photosMapping, photoDataUrlMap, stepPlan?)
+- public async build(): Promise<string>
+- 13 méthodes privées: planLayout, calculateMapDotPosition, buildStepInfo, calculateTripPercentage, calculateDayNumber, ccToEmoji, resolvedPhotoUrl, buildCoverPageWithPhoto, buildCoverPageWithoutPhoto, buildPhotoPage, buildOneOrTwoPhotosPage, buildThreeOrFourPhotosPage
+
+**Migrations effectuées**:
+- generate.service.ts: utilise maintenant `new StepBuilder(...).build()`
+- Wrapper buildStepSection() conservé pour rétrocompatibilité
+
+**Tests adaptés**:
+- Tous les tests convertis pour utiliser directement la classe StepBuilder
+- Pattern: `const builder = new StepBuilder(trip, step, photosMapping, photoDataUrlMap, stepPlan?); const html = await builder.build()`
+- Imports nettoyés (suppression de buildStepSection et StepBuilderContext)
+
+**Résultats**: 84/84 tests passent ✅
+<!-- SECTION:NOTES:END -->
