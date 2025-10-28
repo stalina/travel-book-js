@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:36'
-updated_date: '2025-10-28 19:55'
+updated_date: '2025-10-28 19:58'
 labels:
   - refactoring
   - typescript
@@ -21,9 +21,9 @@ Transformer fs.service.ts en classe FileSystemService avec méthodes pour lectur
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Classe FileSystemService créée
-- [ ] #2 Méthodes publiques: readTripDirectory, readFileFromPath, readAllPhotos
-- [ ] #3 Export singleton fileSystemService
-- [ ] #4 Migrations imports effectuées
-- [ ] #5 Tests adaptés
+- [x] #1 Classe FileSystemService créée
+- [x] #2 Méthodes publiques: readTripDirectory, readFileFromPath, readAllPhotos
+- [x] #3 Export singleton fileSystemService
+- [x] #4 Migrations imports effectuées
+- [x] #5 Tests adaptés
 <!-- AC:END -->
