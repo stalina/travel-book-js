@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:36'
-updated_date: '2025-10-28 19:45'
+updated_date: '2025-10-28 19:49'
 labels:
   - refactoring
   - typescript
@@ -21,9 +21,9 @@ Transformer le service logger.service.ts en classe singleton ES2015 avec méthod
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Classe LoggerService créée avec constructeur privé
-- [ ] #2 Pattern singleton implémenté (getInstance)
-- [ ] #3 Export singleton loggerService disponible
-- [ ] #4 Tous les imports migés vers loggerService
-- [ ] #5 Tests unitaires adaptés pour la classe
+- [x] #1 Classe LoggerService créée avec constructeur privé
+- [x] #2 Pattern singleton implémenté (getInstance)
+- [x] #3 Export singleton loggerService disponible
+- [x] #4 Tous les imports migés vers loggerService
+- [x] #5 Tests unitaires adaptés pour la classe
 <!-- AC:END -->
