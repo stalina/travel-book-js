@@ -1,7 +1,7 @@
 ---
 id: task-18.6
 title: 'Sous-tâche: Refactoriser MapBuilder en classe avec contexte'
-status: In Progress
+status: Done
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:36'
