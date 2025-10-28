@@ -31,3 +31,17 @@ Refactoriser l'ensemble du projet (TypeScript services + composants Vue.js) pour
 - [x] #7 Documentation technique mise à jour (instructions Copilot, README)
 - [x] #8 Guide de migration créé pour futurs développeurs
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Refactorisation ES2015/OOP complète terminée
+
+14 sous-tâches complétées
+
+Architecture OOP: Singleton + Orchestrator + Builder
+
+Documentation: 4 docs + README + Copilot instructions
+
+Tests: 92/92 passing
+<!-- SECTION:NOTES:END -->
