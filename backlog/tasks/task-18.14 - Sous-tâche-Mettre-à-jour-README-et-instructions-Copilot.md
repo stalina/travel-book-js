@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:37'
-updated_date: '2025-10-28 21:36'
+updated_date: '2025-10-28 21:37'
 labels:
   - documentation
 dependencies: []
@@ -26,3 +26,13 @@ Mettre à jour README.md et .github/copilot-instructions.md pour refléter nouve
 - [ ] #4 Exemples d'utilisation des services en mode classe
 - [ ] #5 Guide de contribution adapté pour développeurs Java
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Ajouter section Architecture ES2015/OOP après Utilisation
+2. Documenter structure du code (couches, patterns)
+3. Ajouter conventions de code OOP
+4. Ajouter exemples d'utilisation des services
+5. Créer section Contribution pour développeurs Java
+<!-- SECTION:PLAN:END -->
