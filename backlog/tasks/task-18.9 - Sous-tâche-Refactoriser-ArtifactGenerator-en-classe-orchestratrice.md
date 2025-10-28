@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:36'
-updated_date: '2025-10-28 21:08'
+updated_date: '2025-10-28 21:12'
 labels:
   - refactoring
   - typescript
@@ -21,12 +21,12 @@ Transformer generate.service.ts en classe ArtifactGenerator qui orchestre tous l
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Classe ArtifactGenerator créée avec injection loggerService, elevationService
-- [ ] #2 Méthode publique generate(input, options)
-- [ ] #3 Méthodes privées: loadTripData, processPhotos, buildArtifacts
-- [ ] #4 Utilisation des builders via new CoverBuilder(...).build()
-- [ ] #5 Export singleton artifactGenerator + fonction wrapper rétrocompatible
-- [ ] #6 Tests adaptés
+- [x] #1 Classe ArtifactGenerator créée avec injection loggerService, elevationService
+- [x] #2 Méthode publique generate(input, options)
+- [x] #3 Méthodes privées: loadTripData, processPhotos, buildArtifacts
+- [x] #4 Utilisation des builders via new CoverBuilder(...).build()
+- [x] #5 Export singleton artifactGenerator + fonction wrapper rétrocompatible
+- [x] #6 Tests adaptés
 <!-- AC:END -->
 
 ## Implementation Plan
