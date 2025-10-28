@@ -28,3 +28,22 @@ Transformer generate.service.ts en classe ArtifactGenerator qui orchestre tous l
 - [ ] #5 Export singleton artifactGenerator + fonction wrapper rétrocompatible
 - [ ] #6 Tests adaptés
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Analyser generate.service.ts actuel (433 lignes)
+2. Identifier les sections logiques à extraire en méthodes privées
+3. Créer classe ArtifactGenerator avec constructeur(elevationService, loggerService)
+4. Créer méthode publique async generate(input, options)
+5. Extraire méthodes privées:
+   - loadAssets(): CSS, fonts
+   - processPhotos(): mapping, ratios, data URLs
+   - generatePhotosPlan(): photos_by_pages.txt logic
+   - buildHtmlHead(): head section
+   - buildHtmlBody(): orchestration builders
+   - buildSingleFileHtml(): final assembly
+6. Migrer utilisation des builders (déjà fait pour Stats, Map, Step - reste Cover)
+7. Export singleton + wrapper rétrocompatible
+8. Vérifier que les tests passent (generate.service.spec.ts existe déjà avec 16 tests)
+<!-- SECTION:PLAN:END -->
