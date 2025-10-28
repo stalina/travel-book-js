@@ -21,12 +21,12 @@ Créer un guide complet de l'architecture ES2015/OOP pour onboarding développeu
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Document backlog/docs/doc-N créé : Architecture ES2015
-- [ ] #2 Diagrammes de classes UML générés (services, builders, etc.)
-- [ ] #3 Exemples de code avant/après pour chaque pattern
-- [ ] #4 Guide d'injection de dépendances explicite
-- [ ] #5 Glossaire Java↔TypeScript (class, interface, singleton, etc.)
-- [ ] #6 Instructions Copilot mises à jour avec nouvelles conventions
+- [x] #1 Document backlog/docs/doc-N créé : Architecture ES2015
+- [x] #2 Diagrammes de classes UML générés (services, builders, etc.)
+- [x] #3 Exemples de code avant/après pour chaque pattern
+- [x] #4 Guide d'injection de dépendances explicite
+- [x] #5 Glossaire Java↔TypeScript (class, interface, singleton, etc.)
+- [x] #6 Instructions Copilot mises à jour avec nouvelles conventions
 <!-- AC:END -->
 
 ## Implementation Plan
