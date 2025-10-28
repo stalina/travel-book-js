@@ -1,7 +1,7 @@
 ---
 id: task-18.3
 title: 'Sous-tâche: Refactoriser FileSystemService en classe ES2015'
-status: In Progress
+status: Done
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:36'
