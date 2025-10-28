@@ -48,3 +48,17 @@ Transformer stats.builder.ts en classe StatsBuilder avec injection trip/photosMa
 9. Adapter les tests dans stats.builder.spec.ts pour instanciation de classe
 10. Valider avec npm run test
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Refactorisation terminée avec succès :
+- Classe StatsBuilder créée avec constructor(trip, photosMapping)
+- Méthode publique build() implémentée
+- 6 méthodes privées extraites : calculateTotalKilometers(), extractUniqueCountries(), calculateTotalPhotos(), calculateDays(), findFarthestPoint(), generateHtml()
+- haversineKm() conservée comme fonction utilitaire réutilisable
+- Migration effectuée dans generate.service.ts : new StatsBuilder(trip, photosMapping).build()
+- Tests adaptés pour la classe (17 tests passent)
+- Fonction buildStatsSection() deprecated exportée pour rétrocompatibilité
+- Tous les tests passent (85/85)
+<!-- SECTION:NOTES:END -->
