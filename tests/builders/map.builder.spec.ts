@@ -119,7 +119,11 @@ describe('map.builder - buildMapSection', () => {
   beforeAll(() => {
     // Mock fetch pour les tiles satellite
     globalThis.fetch = vi.fn((url: string) => {
-      if (url.includes('arcgisonline.com')) {
+      const hostname = (() => { try { return new URL(url).hostname } catch { return '' } })();
+      if (
+        hostname === 'arcgisonline.com' ||
+        hostname.endsWith('.arcgisonline.com')
+      ) {
         return Promise.resolve({
           blob: () => Promise.resolve(new Blob(['fake-tile'], { type: 'image/jpeg' })),
           ok: true
