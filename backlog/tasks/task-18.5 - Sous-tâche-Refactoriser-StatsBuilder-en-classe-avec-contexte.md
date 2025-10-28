@@ -1,9 +1,11 @@
 ---
 id: task-18.5
 title: 'Sous-tâche: Refactoriser StatsBuilder en classe avec contexte'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot'
 created_date: '2025-10-28 19:36'
+updated_date: '2025-10-28 20:07'
 labels:
   - refactoring
   - typescript
