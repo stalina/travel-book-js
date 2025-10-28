@@ -1,9 +1,11 @@
 ---
 id: task-18.4
 title: 'Sous-tâche: Refactoriser CoverBuilder en classe avec contexte'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot'
 created_date: '2025-10-28 19:36'
+updated_date: '2025-10-28 20:01'
 labels:
   - refactoring
   - typescript
