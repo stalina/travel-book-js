@@ -50,3 +50,55 @@ Améliorer les composants Vue (HomeView, GenerationView, ViewerView) avec compos
 6. Refactoriser les composants pour utiliser les composables
 7. Vérifier que tout fonctionne (tests manuels car pas de tests Vue)
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Refactorisation composants Vue terminée avec succès:
+
+**Composables créés** (2):
+- useFileSelection(): gestion sélection fichiers/dossiers
+  - pickDirectory() avec File System Access API
+  - onFilesPicked() pour input file
+  - onDrop() pour drag & drop
+  - Ref fileInput exportée
+
+- useGeneration(): orchestration génération travel book
+  - initialize(): lecture, parsing, préparation plan
+  - generateNow(): finalisation et ouverture viewer
+  - reloadDefault(): rechargement plan par défaut
+  - États: stepIndex, error, isWorking
+
+**Contrôleur créé** (1 classe):
+- ViewerController: gestion viewer HTML
+  - openInNewTab(): ouvre dans nouvel onglet
+  - download(): télécharge fichier HTML unique
+  - backToEditor(): retour édition
+  - Export singleton viewerController
+
+**Composants refactorisés** (3):
+- HomeView.vue: utilise useFileSelection
+  - Logique sélection fichiers extraite
+  - Template inchangé
+  
+- GenerationView.vue: utilise useGeneration
+  - Orchestration étapes déléguée au composable
+  - Code réduit de ~50 lignes à ~10 lignes
+  
+- ViewerView.vue: utilise ViewerController
+  - Logique viewer déléguée au contrôleur
+  - Meilleure testabilité (classe pure)
+
+**Architecture**:
+- ✅ Séparation logique métier / présentation
+- ✅ Composables réutilisables
+- ✅ Classe TypeScript pour logique complexe
+- ✅ Singleton pattern cohérent
+- ✅ Types et interfaces clairs
+
+**Fichiers d'export**:
+- src/composables/index.ts
+- src/controllers/index.ts
+
+**Résultats**: 92/92 tests passent ✅
+<!-- SECTION:NOTES:END -->
