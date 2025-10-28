@@ -1,9 +1,11 @@
 ---
 id: task-18.2
 title: 'Sous-tâche: Refactoriser ElevationService en singleton ES2015'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot'
 created_date: '2025-10-28 19:36'
+updated_date: '2025-10-28 19:51'
 labels:
   - refactoring
   - typescript
