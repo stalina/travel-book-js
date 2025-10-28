@@ -1,7 +1,7 @@
 ---
 id: task-18.9
 title: 'Sous-tâche: Refactoriser ArtifactGenerator en classe orchestratrice'
-status: In Progress
+status: Done
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:36'
