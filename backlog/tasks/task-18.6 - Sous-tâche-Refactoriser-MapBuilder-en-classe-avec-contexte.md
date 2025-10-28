@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-10-28 19:36'
-updated_date: '2025-10-28 20:35'
+updated_date: '2025-10-28 20:50'
 labels:
   - refactoring
   - typescript
@@ -21,9 +21,9 @@ Transformer map.builder.ts en classe MapBuilder avec méthodes projection/tracé
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Classe MapBuilder créée
-- [ ] #2 Méthodes publiques: build()
-- [ ] #3 Méthodes privées: calculateBoundingBox, calculateViewBox, latLonToSvg, generatePathData, generateStepMarkers
-- [ ] #4 Migrations effectuées
-- [ ] #5 Tests adaptés
+- [x] #1 Classe MapBuilder créée
+- [x] #2 Méthodes publiques: build()
+- [x] #3 Méthodes privées: calculateBoundingBox, calculateViewBox, latLonToSvg, generatePathData, generateStepMarkers
+- [x] #4 Migrations effectuées
+- [x] #5 Tests adaptés
 <!-- AC:END -->
