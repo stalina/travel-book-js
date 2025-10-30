@@ -122,19 +122,3 @@ export class FileSystemService {
 
 // Export singleton instance
 export const fileSystemService = FileSystemService.getInstance()
-
-// Wrappers rétrocompatibles (DEPRECATED - à supprimer après migration complète)
-/** @deprecated Utiliser fileSystemService.readTripDirectory() à la place */
-export async function readTripDirectory(): Promise<FFInput> {
-  return fileSystemService.readTripDirectory()
-}
-
-/** @deprecated Utiliser fileSystemService.readFileFromPath() à la place */
-export async function readFileFromPath(input: FFInput, pathParts: string[]): Promise<File | null> {
-  return fileSystemService.readFileFromPath(input, pathParts)
-}
-
-/** @deprecated Utiliser fileSystemService.readAllPhotos() à la place */
-export async function readAllPhotos(input: FFInput, stepSlug: string, stepId: number): Promise<File[]> {
-  return fileSystemService.readAllPhotos(input, stepSlug, stepId)
-}

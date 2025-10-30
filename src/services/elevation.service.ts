@@ -215,14 +215,3 @@ export class ElevationService {
 
 // Export singleton instance
 export const elevationService = ElevationService.getInstance()
-
-// Wrappers rétrocompatibles (DEPRECATED - à supprimer après migration complète)
-/** @deprecated Utiliser elevationService.getElevation() à la place */
-export async function getElevation(lat: number, lon: number): Promise<number | null> {
-  return elevationService.getElevation(lat, lon)
-}
-
-/** @deprecated Utiliser elevationService.getElevationsBulk() à la place */
-export async function getElevationsBulk(locs: Array<{ lat: number; lon: number }>): Promise<Array<number | null>> {
-  return elevationService.getElevationsBulk(locs)
-}

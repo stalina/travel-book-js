@@ -112,8 +112,3 @@ export class TripParser {
 
 // Export singleton instance
 export const tripParser = TripParser.getInstance()
-
-// Backward compatibility wrapper
-export async function parseTrip(input: FFInput): Promise<void> {
-  return tripParser.parse(input)
-}
