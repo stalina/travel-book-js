@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
-import { readTripDirectory, FFInput } from '../services/fs.service'
-import { parseTrip } from '../services/parse.service'
-import { generateArtifacts, GeneratedArtifacts, GenerateOptions } from '../services/generate.service'
+import { fileSystemService, FFInput } from '../services/fs.service'
+import { tripParser } from '../services/parse.service'
+import { artifactGenerator, GeneratedArtifacts, GenerateOptions } from '../services/generate.service'
 
 export const useTripStore = defineStore('trip', {
   state: () => ({
@@ -14,7 +14,7 @@ export const useTripStore = defineStore('trip', {
   },
   actions: {
     async pickDirectory() {
-      const inp = await readTripDirectory()
+      const inp = await fileSystemService.readTripDirectory()
       this.input = inp
     },
     setFiles(files: FileList) {
@@ -39,17 +39,17 @@ export const useTripStore = defineStore('trip', {
     },
     async parseAndMap() {
       if (!this.input) throw new Error('Aucun input')
-      await parseTrip(this.input)
+      await tripParser.parse(this.input)
     },
     async generateArtifacts(options?: GenerateOptions) {
       if (!this.input) throw new Error('Aucun input')
-      this.artifacts = await generateArtifacts(this.input, options)
+      this.artifacts = await artifactGenerator.generate(this.input, options)
     },
     async ensureDraftPlan() {
       if (!this.input) throw new Error('Aucun input')
       if (this.photosPlanText && this.photosPlanText.trim().length > 0) return
       // Génère une première fois pour récupérer le plan par défaut, puis on l'expose pour édition
-      const artifacts = await generateArtifacts(this.input)
+      const artifacts = await artifactGenerator.generate(this.input)
       const plan = artifacts.manifest['photos_by_pages.txt']
       if (plan) {
         this.photosPlanText = await plan.text()
@@ -60,7 +60,7 @@ export const useTripStore = defineStore('trip', {
     async finalizeWithPlanAndOpenViewer() {
       if (!this.input) throw new Error('Aucun input')
       const txt = this.photosPlanText ?? ''
-      this.artifacts = await generateArtifacts(this.input, { photosPlan: txt })
+      this.artifacts = await artifactGenerator.generate(this.input, { photosPlan: txt })
       location.hash = '#/viewer'
     },
     async openViewer() {

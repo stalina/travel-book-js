@@ -11,9 +11,9 @@
 </template>
 
 <script setup lang="ts">
-import { useTripStore } from '../stores/trip.store'
-import { buildSingleFileHtml } from '../services/generate.service'
 import { ref } from 'vue'
+import { useTripStore } from '../stores/trip.store'
+import { viewerController } from '../controllers/ViewerController'
 
 const store = useTripStore()
 const isOpening = ref(false)
@@ -22,30 +22,19 @@ async function openNewTab() {
   if (!store.artifacts) return
   try {
     isOpening.value = true
-    const blob = await buildSingleFileHtml(store.artifacts)
-    const url = URL.createObjectURL(blob)
-    window.open(url, '_blank', 'noopener,noreferrer')
-    // Astuce: ne pas révoquer immédiatement pour éviter d'invalider la page ouverte
+    await viewerController.openInNewTab(store.artifacts)
   } finally {
     isOpening.value = false
   }
 }
+
 async function download() {
   if (!store.artifacts) return
-  const blob = await buildSingleFileHtml(store.artifacts)
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'travel_book.html'
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  URL.revokeObjectURL(url)
+  await viewerController.download(store.artifacts)
 }
 
 function backToEditor() {
-  // Revenir à l'étape d'édition sans perdre le plan actuel
-  location.hash = '#/generate'
+  viewerController.backToEditor()
 }
 </script>
 

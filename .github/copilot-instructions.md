@@ -532,16 +532,196 @@ Full help available: `backlog --help`
 ---
 # Section technique du projet (Travel Book JS)
 
+## Architecture ES2015/OOP
+
+Le projet suit une architecture orientée objet (OOP) utilisant les **classes ES2015 de TypeScript**, conçue pour être familière aux développeurs Java.
+
+### Principes Architecturaux
+
+- ✅ **Classes ES2015** : Utilisation systématique des classes TypeScript avec visibilité explicite (`public`, `private`, `readonly`)
+- ✅ **Patterns de conception** : Singleton, Builder, Orchestrator
+- ✅ **Injection de dépendances** : Via constructeur (manuel, sans framework)
+- ✅ **Immutabilité** : Propriétés `readonly` pour le contexte injecté
+- ✅ **Décomposition** : Méthodes privées pour séparer la logique
+
+### Structure en Couches
+
+```
+┌─────────────────────────────────────────┐
+│         Composants Vue (Views)          │  ← Présentation
+├─────────────────────────────────────────┤
+│       Composables & Controllers         │  ← Logique UI
+│   useFileSelection, ViewerController    │
+├─────────────────────────────────────────┤
+│           Store Pinia (State)           │  ← Gestion d'état
+│            TripStore                    │
+├─────────────────────────────────────────┤
+│        Orchestrateurs (Services)        │  ← Logique métier
+│   TripParser, ArtifactGenerator         │
+├─────────────────────────────────────────┤
+│            Builders (HTML)              │  ← Construction artefacts
+│  Cover, Stats, Map, Step Builders       │
+├─────────────────────────────────────────┤
+│        Services Core (Singletons)       │  ← Utilitaires
+│  Logger, Elevation, FileSystem          │
+└─────────────────────────────────────────┘
+```
+
+### Patterns Utilisés
+
+#### 1. Pattern Singleton (Services Core)
+Services stateless avec instance unique :
+- `LoggerService.getInstance()` - Logging applicatif
+- `ElevationService.getInstance()` - Récupération altitudes
+- `FileSystemService.getInstance()` - Lecture fichiers
+
+```typescript
+export class ServiceName {
+  private static instance: ServiceName | null = null
+  
+  private constructor() {}  // Constructeur privé
+  
+  public static getInstance(): ServiceName {
+    if (!ServiceName.instance) {
+      ServiceName.instance = new ServiceName()
+    }
+    return ServiceName.instance
+  }
+}
+
+export const serviceName = ServiceName.getInstance()
+```
+
+#### 2. Pattern Orchestrator avec DI (Coordination)
+Classes qui coordonnent plusieurs services avec injection de dépendances :
+- `TripParser(fileSystemService, loggerService)` - Parse les données de voyage
+- `ArtifactGenerator(elevationService, loggerService)` - Génère le travel book
+
+```typescript
+export class Orchestrator {
+  private constructor(
+    private readonly service1: Service1,
+    private readonly service2: Service2
+  ) {}
+  
+  public async execute(): Promise<Result> {
+    // Utilise service1 et service2
+  }
+  
+  private static instance: Orchestrator | null = null
+  
+  public static getInstance(): Orchestrator {
+    if (!Orchestrator.instance) {
+      // ✅ Injection manuelle des dépendances
+      Orchestrator.instance = new Orchestrator(
+        Service1.getInstance(),
+        Service2.getInstance()
+      )
+    }
+    return Orchestrator.instance
+  }
+}
+
+export const orchestrator = Orchestrator.getInstance()
+```
+
+#### 3. Pattern Builder avec Contexte Injecté (Construction HTML)
+Classes qui construisent des artefacts avec contexte spécifique :
+- `CoverBuilder(trip, photosMapping, photoDataUrlMap)` - Page de couverture
+- `StatsBuilder(trip, photosMapping)` - Page de statistiques
+- `MapBuilder(trip, photosMapping, photoDataUrlMap)` - Page cartographique
+- `StepBuilder(trip, step, photosMapping, photoDataUrlMap, stepPlan?)` - Pages d'étapes
+
+```typescript
+export class ArtifactBuilder {
+  // ❌ PAS de singleton - nouvelle instance à chaque utilisation
+  private constructor(
+    private readonly trip: Trip,
+    private readonly data: Data
+  ) {}
+  
+  public async build(): Promise<string> {
+    // Orchestration de méthodes privées
+    const part1 = this.buildPart1()
+    const part2 = await this.buildPart2()
+    return part1 + part2
+  }
+  
+  private buildPart1(): string {
+    // Accès à this.trip, this.data
+  }
+}
+
+// Utilisation
+const builder = new ArtifactBuilder(trip, data)
+const html = await builder.build()
+```
+
+### Conventions de Code
+
+#### Visibilité explicite
+```typescript
+export class MyService {
+  // ✅ Visibilité explicite pour toutes les méthodes
+  public publicMethod(): void { }
+  private privateMethod(): void { }
+  
+  // ✅ readonly pour propriétés immuables
+  constructor(private readonly dependency: Dependency) { }
+}
+```
+
+#### Documentation JSDoc
+```typescript
+/**
+ * Description de la méthode
+ * @param param1 - Description du paramètre
+ * @returns Description du retour
+ */
+public myMethod(param1: Type1): ReturnType {
+  // ...
+}
+```
+
+#### Décomposition en méthodes privées
+```typescript
+export class ComplexService {
+  public async process(): Promise<Result> {
+    // ✅ Méthode publique = orchestration
+    const step1 = await this.executeStep1()
+    const step2 = this.executeStep2(step1)
+    return this.finalizeResult(step2)
+  }
+  
+  // ✅ Logique décomposée en méthodes privées
+  private async executeStep1(): Promise<Step1Result> { }
+  private executeStep2(input: Step1Result): Step2Result { }
+  private finalizeResult(input: Step2Result): Result { }
+}
+```
+
+### Documentation Complète
+
+Consultez la documentation détaillée dans `backlog/docs/` :
+- 📖 **doc-3 - Architecture-ES2015-OOP.md** : Vue d'ensemble, patterns, exemples avant/après
+- 📊 **doc-4 - Diagrammes-UML.md** : Diagrammes de classes, séquences, composants (Mermaid)
+- 💉 **doc-5 - Guide-Injection-Dependances.md** : Guide DI complet, comparaison Spring vs TS
+- 📚 **doc-6 - Glossaire-Java-TypeScript.md** : Correspondances Java ↔ TypeScript
+
 ## Structure du projet
 
 - **src/** : code source principal (Vue, TypeScript)
   - Organisation modulaire : `models/`, `router/`, `services/`, `stores/`, `utils/`, `views/`
+  - **services/** : Services core (Singleton) et orchestrateurs
+  - **services/builders/** : Builders HTML (CoverBuilder, StatsBuilder, MapBuilder, StepBuilder)
+  - **composables/** : Logique Vue réutilisable (useFileSelection, useGeneration)
+  - **controllers/** : Contrôleurs UI (ViewerController)
 - **public/** : ressources statiques (HTML, CSS, images, polices)
 - **tests/** : tests unitaires (Vitest)
 - **scripts/** : scripts utilitaires (ex : fetch_maps.mjs)
 - **backlog/** : gestion des tâches et documentation projet
 - **Fichiers de configuration** : `package.json`, `tsconfig.json`, `vite.config.ts`, `vitest.config.ts`, `eslint.config.js`
-- **Conventions** : TypeScript, nommage explicite, organisation claire
+- **Conventions** : TypeScript strict, classes ES2015, nommage explicite, organisation claire
 
 ## Librairies et frameworks
 

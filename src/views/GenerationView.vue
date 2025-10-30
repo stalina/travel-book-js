@@ -29,54 +29,16 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
 import { useTripStore } from '../stores/trip.store'
+import { useGeneration } from '../composables/useGeneration'
 
 const store = useTripStore()
-const stepIndex = ref(0)
-const error = ref('')
-const isWorking = ref(false)
+const { stepIndex, error, isWorking, initialize, generateNow, reloadDefault } = useGeneration()
 
 onMounted(async () => {
-  try {
-    stepIndex.value = 1
-    await store.readInput()
-    stepIndex.value = 2
-    await store.parseAndMap()
-    stepIndex.value = 3
-    // Préparer un plan par défaut puis laisser l'utilisateur l'éditer
-    await store.ensureDraftPlan()
-    stepIndex.value = 3 // rester en édition tant que l'utilisateur n'a pas lancé
-  } catch (e: any) {
-    error.value = e?.message || String(e)
-  }
+  await initialize()
 })
-
-async function generateNow() {
-  try {
-    isWorking.value = true
-    stepIndex.value = 4
-    await store.finalizeWithPlanAndOpenViewer()
-    stepIndex.value = 5
-  } catch (e: any) {
-    error.value = e?.message || String(e)
-  } finally {
-    isWorking.value = false
-  }
-}
-
-async function reloadDefault() {
-  try {
-    isWorking.value = true
-    // Recréer un plan par défaut à partir de l'entrée, puis le réinjecter dans l'éditeur
-    store.photosPlanText = ''
-    await store.ensureDraftPlan()
-  } catch (e: any) {
-    error.value = e?.message || String(e)
-  } finally {
-    isWorking.value = false
-  }
-}
 </script>
 
 <style scoped>

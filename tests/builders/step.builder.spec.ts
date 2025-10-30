@@ -1,14 +1,18 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest'
-import { buildStepSection, type StepBuilderContext } from '../../src/services/builders/step.builder'
+import { StepBuilder } from '../../src/services/builders/step.builder'
 import type { Step, Trip } from '../../src/models/types'
 
-describe('step.builder', () => {
+describe('step.builder - StepBuilder', () => {
   beforeAll(() => {
-    // Mock getPositionPercentage et getElevation
+    // Mock getPositionPercentage et elevationService
     vi.mock('../../src/services/map.service', () => ({
       getPositionPercentage: vi.fn(() => Promise.resolve({ top: 50, left: 50 }))
     }))
     vi.mock('../../src/services/elevation.service', () => ({
+      elevationService: {
+        getElevation: vi.fn(() => Promise.resolve(350))
+      },
+      // Rétrocompatibilité
       getElevation: vi.fn(() => Promise.resolve(350))
     }))
   })
@@ -39,14 +43,14 @@ describe('step.builder', () => {
   }
 
   it('génère une page d\'étape avec informations de base', async () => {
-    const context: StepBuilderContext = {
-      trip: mockTrip,
-      step: mockTrip.steps[0],
-      photosMapping: {},
-      photoDataUrlMap: {}
-    }
+    const builder = new StepBuilder(
+      mockTrip,
+      mockTrip.steps[0],
+      {},
+      {}
+    )
 
-    const html = await buildStepSection(context)
+    const html = await builder.build()
 
     expect(html).toContain('class="break-after"')
     expect(html).toContain('Paris')
@@ -60,18 +64,18 @@ describe('step.builder', () => {
       description: 'Court'
     }
 
-    const context: StepBuilderContext = {
-      trip: mockTrip,
-      step: shortDesc,
-      photosMapping: {
+    const builder = new StepBuilder(
+      mockTrip,
+      shortDesc,
+      {
         10: {
           1: { path: 'cover.jpg', index: 1, ratio: 'PORTRAIT' }
         }
       },
-      photoDataUrlMap: {}
-    }
+      {}
+    )
 
-    const html = await buildStepSection(context)
+    const html = await builder.build()
 
     expect(html).toContain('step-with-photo')
     expect(html).toContain('cover.jpg')
@@ -83,28 +87,28 @@ describe('step.builder', () => {
       description: 'a'.repeat(900)
     }
 
-    const context: StepBuilderContext = {
-      trip: mockTrip,
-      step: longDesc,
-      photosMapping: {
+    const builder = new StepBuilder(
+      mockTrip,
+      longDesc,
+      {
         10: {
           1: { path: 'photo.jpg', index: 1, ratio: 'LANDSCAPE' }
         }
       },
-      photoDataUrlMap: {}
-    }
+      {}
+    )
 
-    const html = await buildStepSection(context)
+    const html = await builder.build()
 
     // La photo n'est pas utilisée comme couverture
     expect(html).not.toContain('step-with-photo')
   })
 
   it('génère des pages de photos avec pagination automatique', async () => {
-    const context: StepBuilderContext = {
-      trip: mockTrip,
-      step: mockTrip.steps[0],
-      photosMapping: {
+    const builder = new StepBuilder(
+      mockTrip,
+      mockTrip.steps[0],
+      {
         10: {
           1: { path: 'p1.jpg', index: 1, ratio: 'LANDSCAPE' },
           2: { path: 'p2.jpg', index: 2, ratio: 'LANDSCAPE' },
@@ -112,10 +116,10 @@ describe('step.builder', () => {
           4: { path: 'p4.jpg', index: 4, ratio: 'LANDSCAPE' }
         }
       },
-      photoDataUrlMap: {}
-    }
+      {}
+    )
 
-    const html = await buildStepSection(context)
+    const html = await builder.build()
 
     // 4 photos landscape = 1 page de 4 photos
     expect(html).toContain('photo-columns')
@@ -124,24 +128,24 @@ describe('step.builder', () => {
   })
 
   it('respecte le plan utilisateur si fourni', async () => {
-    const context: StepBuilderContext = {
-      trip: mockTrip,
-      step: mockTrip.steps[0],
-      photosMapping: {
+    const builder = new StepBuilder(
+      mockTrip,
+      mockTrip.steps[0],
+      {
         10: {
           1: { path: 'p1.jpg', index: 1, ratio: 'LANDSCAPE' },
           2: { path: 'p2.jpg', index: 2, ratio: 'PORTRAIT' },
           3: { path: 'p3.jpg', index: 3, ratio: 'LANDSCAPE' }
         }
       },
-      photoDataUrlMap: {},
-      stepPlan: {
+      {},
+      {
         cover: 1,
         pages: [[2, 3]]
       }
-    }
+    )
 
-    const html = await buildStepSection(context)
+    const html = await builder.build()
 
     // Photo 1 en couverture
     expect(html).toContain('step-with-photo')
@@ -153,14 +157,14 @@ describe('step.builder', () => {
   })
 
   it('affiche les statistiques de l\'étape (date, météo, altitude)', async () => {
-    const context: StepBuilderContext = {
-      trip: mockTrip,
-      step: mockTrip.steps[0],
-      photosMapping: {},
-      photoDataUrlMap: {}
-    }
+    const builder = new StepBuilder(
+      mockTrip,
+      mockTrip.steps[0],
+      {},
+      {}
+    )
 
-    const html = await buildStepSection(context)
+    const html = await builder.build()
 
     expect(html).toContain('step-stats')
     expect(html).toContain('°C')
@@ -168,28 +172,28 @@ describe('step.builder', () => {
   })
 
   it('affiche le drapeau et la carte du pays', async () => {
-    const context: StepBuilderContext = {
-      trip: mockTrip,
-      step: mockTrip.steps[0],
-      photosMapping: {},
-      photoDataUrlMap: {}
-    }
+    const builder = new StepBuilder(
+      mockTrip,
+      mockTrip.steps[0],
+      {},
+      {}
+    )
 
-    const html = await buildStepSection(context)
+    const html = await builder.build()
 
     expect(html).toContain('flag-emoji')
     expect(html).toContain('assets/images/maps/fr.svg')
   })
 
   it('affiche la barre de progression du voyage', async () => {
-    const context: StepBuilderContext = {
-      trip: mockTrip,
-      step: mockTrip.steps[0],
-      photosMapping: {},
-      photoDataUrlMap: {}
-    }
+    const builder = new StepBuilder(
+      mockTrip,
+      mockTrip.steps[0],
+      {},
+      {}
+    )
 
-    const html = await buildStepSection(context)
+    const html = await builder.build()
 
     expect(html).toContain('step-days-bar')
     expect(html).toContain('Jour ')
