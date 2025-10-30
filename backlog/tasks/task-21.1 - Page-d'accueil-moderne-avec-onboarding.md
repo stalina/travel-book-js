@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-10-30 22:11'
-updated_date: '2025-10-30 22:55'
+updated_date: '2025-10-30 23:06'
 labels: []
 dependencies: []
 parent_task_id: task-21
@@ -20,14 +20,14 @@ Créer une landing page accueillante avec présentation du produit, fonctionnali
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Composant HeroSection avec animation gradient et parallaxe
-- [ ] #2 Composant FeaturesGrid affichant 9 fonctionnalités clés
-- [ ] #3 Composant HowItWorks avec 4 étapes visuelles
-- [ ] #4 Composant CallToAction avec boutons principaux
-- [ ] #5 Animations au scroll via Intersection Observer
-- [ ] #6 Design 100% responsive (mobile, tablet, desktop)
-- [ ] #7 Intégration au router Vue avec route /
-- [ ] #8 Tests unitaires pour chaque composant
+- [x] #1 Composant HeroSection avec animation gradient et parallaxe
+- [x] #2 Composant FeaturesGrid affichant 9 fonctionnalités clés
+- [x] #3 Composant HowItWorks avec 4 étapes visuelles
+- [x] #4 Composant CallToAction avec boutons principaux
+- [x] #5 Animations au scroll via Intersection Observer
+- [x] #6 Design 100% responsive (mobile, tablet, desktop)
+- [x] #7 Intégration au router Vue avec route /
+- [x] #8 Tests unitaires pour chaque composant
 <!-- AC:END -->
 
 ## Implementation Plan
