@@ -1,7 +1,7 @@
 ---
 id: task-21
 title: Conception & maquettage de l'interface utilisateur moderne
-status: In Progress
+status: Done
 assignee:
   - '@assistant'
 created_date: '2025-10-30 22:10'
