@@ -1,4 +1,4 @@
-import { buildSingleFileHtml } from '../services/generate.service'
+import { artifactGenerator } from '../services/generate.service'
 import type { GeneratedArtifacts } from '../services/generate.service'
 
 /**
@@ -11,7 +11,7 @@ export class ViewerController {
    * @param artifacts - Artefacts générés contenant le manifest
    */
   public async openInNewTab(artifacts: GeneratedArtifacts): Promise<void> {
-    const blob = await buildSingleFileHtml(artifacts)
+  const blob = await artifactGenerator.buildSingleFileHtml(artifacts)
     const url = URL.createObjectURL(blob)
     window.open(url, '_blank', 'noopener,noreferrer')
     // Note: URL non révoqué immédiatement pour ne pas invalider la page ouverte
@@ -23,7 +23,7 @@ export class ViewerController {
    * @param filename - Nom du fichier à télécharger (défaut: 'travel_book.html')
    */
   public async download(artifacts: GeneratedArtifacts, filename: string = 'travel_book.html'): Promise<void> {
-    const blob = await buildSingleFileHtml(artifacts)
+  const blob = await artifactGenerator.buildSingleFileHtml(artifacts)
     const url = URL.createObjectURL(blob)
     
     const a = document.createElement('a')

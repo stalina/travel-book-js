@@ -20,11 +20,6 @@ export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: numb
   return R * c
 }
 
-/** @deprecated Utiliser StatsBuilder à la place */
-export type StatsBuilderContext = {
-  trip: Trip
-  photosMapping: Record<number, Record<number, any>>
-}
 
 /**
  * Builder pour générer la page de statistiques du voyage
@@ -230,13 +225,4 @@ export class StatsBuilder {
         </div>
       </div>`
   }
-}
-
-/**
- * Wrapper rétrocompatible (DEPRECATED - à supprimer après migration complète)
- * @deprecated Utiliser new StatsBuilder(trip, photosMapping).build() à la place
- */
-export function buildStatsSection(context: StatsBuilderContext): string {
-  const builder = new StatsBuilder(context.trip, context.photosMapping)
-  return builder.build()
 }

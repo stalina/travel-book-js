@@ -1,9 +1,5 @@
-import { describe, it, expect, beforeAll, vi } from 'vitest'
-import { 
-  MapBuilder,
-  buildMapSection,
-  type MapBuilderContext 
-} from '../../src/services/builders/map.builder'
+import { describe, it, expect, vi } from 'vitest'
+import { MapBuilder } from '../../src/services/builders/map.builder'
 import type { Step, Trip } from '../../src/models/types'
 
 describe('map.builder - MapBuilder', () => {
@@ -146,73 +142,5 @@ describe('map.builder - MapBuilder', () => {
 
       expect(html).toContain('📍')
     })
-  })
-})
-
-describe('map.builder - buildMapSection (backward compatibility)', () => {
-  beforeAll(() => {
-    // Mock fetch pour les tiles satellite
-    globalThis.fetch = vi.fn((url: string) => {
-      const hostname = (() => { try { return new URL(url).hostname } catch { return '' } })();
-      if (
-        hostname === 'arcgisonline.com' ||
-        hostname.endsWith('.arcgisonline.com')
-      ) {
-        return Promise.resolve({
-          blob: () => Promise.resolve(new Blob(['fake-tile'], { type: 'image/jpeg' })),
-          ok: true
-        } as Response)
-      }
-      return Promise.reject(new Error('Not found'))
-    }) as any
-  })
-
-  it('génère une map-page avec SVG', async () => {
-    const trip: Trip = {
-      id: 1,
-      name: 'Test',
-      start_date: 0,
-      end_date: 100,
-      steps: [
-        { id: 1, name: 'A', lat: 48, lon: 2, country: 'FR', country_code: 'fr', start_time: 0, weather_condition: 'clear', weather_temperature: 20, description: '', slug: 'a' },
-        { id: 2, name: 'B', lat: 52, lon: 14, country: 'DE', country_code: 'de', start_time: 50, weather_condition: 'clear', weather_temperature: 20, description: '', slug: 'b' }
-      ],
-      summary: '',
-      cover_photo: null
-    }
-
-    const context: MapBuilderContext = {
-      trip,
-      photosMapping: {},
-      photoDataUrlMap: {}
-    }
-
-    const html = await buildMapSection(context)
-
-    expect(html).toContain('class="break-after map-page"')
-    expect(html).toContain('<svg class="map-svg"')
-    expect(html).toContain('viewBox="0 0 1000 1000"')
-  })
-
-  it('retourne une chaîne vide si aucune étape', async () => {
-    const trip: Trip = {
-      id: 1,
-      name: 'Test',
-      start_date: 0,
-      end_date: 100,
-      steps: [],
-      summary: '',
-      cover_photo: null
-    }
-
-    const context: MapBuilderContext = {
-      trip,
-      photosMapping: {},
-      photoDataUrlMap: {}
-    }
-
-    const html = await buildMapSection(context)
-
-    expect(html).toBe('')
   })
 })

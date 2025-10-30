@@ -1,5 +1,5 @@
 import { FFInput } from './fs.service'
-import { Trip, Step } from '../models/types'
+import { Trip } from '../models/types'
 import { elevationService, ElevationService } from './elevation.service'
 import { CoverBuilder } from './builders/cover.builder'
 import { StatsBuilder } from './builders/stats.builder'
@@ -540,16 +540,3 @@ ${bodyHtml}
 
 // Export singleton instance
 export const artifactGenerator = ArtifactGenerator.getInstance()
-
-// Backward compatibility wrappers
-export async function generateArtifacts(input: FFInput, options?: GenerateOptions): Promise<GeneratedArtifacts> {
-  return artifactGenerator.generate(input, options)
-}
-
-export async function buildSingleFileHtml(artifacts: GeneratedArtifacts): Promise<Blob> {
-  return artifactGenerator.buildSingleFileHtml(artifacts)
-}
-
-export async function buildSingleFileHtmlString(artifacts: GeneratedArtifacts): Promise<string> {
-  return artifactGenerator.buildSingleFileHtmlString(artifacts)
-}

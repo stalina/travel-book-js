@@ -347,35 +347,3 @@ export class StepBuilder {
         </div>`
   }
 }
-
-// ============================================================================
-// Fonctions exportées (deprecated - utiliser StepBuilder)
-// ============================================================================
-
-export type StepBuilderContext = {
-  trip: Trip
-  step: Step
-  photosMapping: Record<number, Record<number, any>>
-  photoDataUrlMap: Record<string, string>
-  stepPlan?: {
-    cover?: number
-    pages: number[][]
-  }
-}
-
-/**
- * Construit les pages HTML pour une étape du voyage
- * @deprecated Utiliser directement StepBuilder avec new StepBuilder(...).build()
- * @param context - Contexte contenant l'étape, le trip, les photos et le plan éventuel
- * @returns HTML de l'étape (page de titre + pages de photos)
- */
-export async function buildStepSection(context: StepBuilderContext): Promise<string> {
-  const builder = new StepBuilder(
-    context.trip,
-    context.step,
-    context.photosMapping,
-    context.photoDataUrlMap,
-    context.stepPlan
-  )
-  return builder.build()
-}

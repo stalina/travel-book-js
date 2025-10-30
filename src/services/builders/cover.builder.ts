@@ -120,28 +120,3 @@ export class CoverBuilder {
     return `\n      <div class="break-after cover-page">\n        <div class="cover-background" ${cssBg}>\n          <div class="cover-overlay">\n            <div class="cover-year">${year}</div>\n            <div class="cover-title">${title}</div>\n          </div>\n        </div>\n      </div>`
   }
 }
-
-// ===== DEPRECATED WRAPPER FOR BACKWARD COMPATIBILITY =====
-
-/**
- * Type de contexte pour le builder de couverture.
- * 
- * @deprecated Utilisez directement `new CoverBuilder(trip, photosMapping, photoDataUrlMap)`
- */
-export type CoverBuilderContext = {
-  trip: Trip
-  photosMapping: Record<number, Record<number, any>>
-  photoDataUrlMap: Record<string, string>
-}
-
-/**
- * Construit la page de couverture du travel book.
- * 
- * @param context - Contexte contenant le voyage, le mapping des photos et leurs data URLs
- * @returns HTML de la page de couverture
- * @deprecated Utilisez `new CoverBuilder(trip, photosMapping, photoDataUrlMap).build()` à la place
- */
-export function buildCoverSection(context: CoverBuilderContext): string {
-  const builder = new CoverBuilder(context.trip, context.photosMapping, context.photoDataUrlMap)
-  return builder.build()
-}

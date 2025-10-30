@@ -155,10 +155,6 @@ export class LoggerService {
 // Export singleton instance
 export const loggerService = LoggerService.getInstance()
 
-// Wrapper rétrocompatible (DEPRECATED - à supprimer après migration complète)
-/** @deprecated Utiliser loggerService à la place */
-export const logger = loggerService
-
 // Exposer le logger globalement pour permettre l'activation du debug depuis la console
 if (typeof window !== 'undefined') {
   (window as any).TravelBook = {

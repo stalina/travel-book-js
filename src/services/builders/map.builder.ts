@@ -1,18 +1,7 @@
-import { Trip, Step } from '../../models/types'
+import { Trip } from '../../models/types'
 import { escapeForCssUrlSingleQuotes, esc } from './utils'
 import { loggerService } from '../logger.service'
 
-/**
- * Helper pour convertir un File en data URL
- */
-async function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((res, rej) => {
-    const r = new FileReader()
-    r.onload = () => res(r.result as string)
-    r.onerror = rej
-    r.readAsDataURL(file)
-  })
-}
 
 type BBox = { 
   minLat: number
@@ -400,23 +389,5 @@ export class MapBuilder {
   }
 }
 
-// ============================================================================
-// Fonctions exportées (deprecated - utiliser MapBuilder)
-// ============================================================================
 
-export type MapBuilderContext = {
-  trip: Trip
-  photosMapping: Record<number, Record<number, any>>
-  photoDataUrlMap: Record<string, string>
-}
 
-/**
- * Construit la page carte du voyage
- * @deprecated Utiliser directement MapBuilder avec new MapBuilder(...).build()
- * @param context - Contexte contenant le voyage, le mapping des photos et leurs data URLs
- * @returns HTML de la page carte
- */
-export async function buildMapSection(context: MapBuilderContext): Promise<string> {
-  const builder = new MapBuilder(context.trip, context.photosMapping, context.photoDataUrlMap)
-  return builder.build()
-}
