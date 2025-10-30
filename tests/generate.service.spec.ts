@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest'
-import { generateArtifacts, buildSingleFileHtmlString } from '../src/services/generate.service'
+import { artifactGenerator } from '../src/services/generate.service'
 
 function mockFile(name: string, content = 'x'): File {
   return new File([content], name, { type: 'image/jpeg' })
@@ -39,8 +39,8 @@ describe('generate.service - page de couverture', () => {
     }
     const trip = { ...baseTrip, ...tripOverrides }
     ;(window as any).__parsedTrip = { trip, stepPhotos }
-    const artifacts = await generateArtifacts({} as any)
-    const html = await buildSingleFileHtmlString(artifacts)
+    const artifacts = await artifactGenerator.generate({} as any)
+    const html = await artifactGenerator.buildSingleFileHtmlString(artifacts)
     return { html, trip }
   }
 
@@ -94,8 +94,8 @@ describe('generate.service - page statistiques', () => {
       ]
     }
     ;(window as any).__parsedTrip = { trip, stepPhotos: { 1: [mockFile('a.jpg')], 2: [mockFile('b.jpg'), mockFile('c.jpg')], 3: [] } }
-    const artifacts = await generateArtifacts({} as any)
-    const html = await buildSingleFileHtmlString(artifacts)
+    const artifacts = await artifactGenerator.generate({} as any)
+    const html = await artifactGenerator.buildSingleFileHtmlString(artifacts)
     return { html }
   }
 
@@ -154,8 +154,8 @@ describe('generate.service - page carte', () => {
     }
     const trip = { ...baseTrip, ...tripOverrides, steps: tripOverrides.steps || baseTrip.steps }
     ;(window as any).__parsedTrip = { trip, stepPhotos }
-    const artifacts = await generateArtifacts({} as any)
-    const html = await buildSingleFileHtmlString(artifacts)
+    const artifacts = await artifactGenerator.generate({} as any)
+    const html = await artifactGenerator.buildSingleFileHtmlString(artifacts)
     return { html, trip }
   }
 
