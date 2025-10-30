@@ -1,11 +1,11 @@
 ---
 id: task-20
 title: Refactor header viewer en composant + confirmation avant nouveau travel book
-status: In Progress
+status: Done
 assignee:
   - '@stalina'
 created_date: '2025-10-30 20:37'
-updated_date: '2025-10-30 20:38'
+updated_date: '2025-10-30 20:41'
 labels:
   - ui
   - navigation
@@ -22,11 +22,11 @@ Extraire le header statique de viewer.html dans un composant réutilisable (Web 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Header rendu via composant <viewer-header>
-- [ ] #2 Bouton conservé avec même styles (.new-book-btn)
-- [ ] #3 Dialogue de confirmation affiché avant navigation (confirm())
-- [ ] #4 Peut bypass confirmation via attribut data-no-confirm sur lien (extensibilité)
-- [ ] #5 Tests adaptés (existants mis à jour + nouveau test composant)
+- [x] #1 Header rendu via composant <viewer-header>
+- [x] #2 Bouton conservé avec même styles (.new-book-btn)
+- [x] #3 Dialogue de confirmation affiché avant navigation (confirm())
+- [x] #4 Peut bypass confirmation via attribut data-no-confirm sur lien (extensibilité)
+- [x] #5 Tests adaptés (existants mis à jour + nouveau test composant)
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -41,3 +41,16 @@ Extraire le header statique de viewer.html dans un composant réutilisable (Web 
 7. Mettre à jour tests existants (remplacer recherche directe anchor par création composant)
 8. Lancer tests et cocher ACs
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Refactor header en Web Component <viewer-header>.
+- Intégration dans viewer.html via script module.
+- Bouton conserve texte, styles (.new-book-btn) et attributs a11y role=button, aria-label.
+- Ajout confirmation navigation (window.confirm) avant sortie.
+- Bypass possible avec attribut data-no-confirm (testé).
+- Mise à jour tests: adaptation ancien test navigation, mise à jour test bouton, ajout test spécifique composant.
+- Polyfill confirm pour happy-dom.
+- Toutes les 101 assertions passent.
+<!-- SECTION:NOTES:END -->
