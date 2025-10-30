@@ -1,7 +1,7 @@
 ---
 id: task-18.12
 title: 'Sous-tâche: Refactoriser tests unitaires pour architecture classe'
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-10-28 19:37'
 updated_date: '2025-10-30 16:24'
@@ -53,4 +53,9 @@ Adapter tous les tests unitaires (generate.service.spec.ts, logger.service.spec.
 - Tous les builders testés avec pattern classe ✅
 - Singletons testés (Logger, TripParser) ✅
 - Injection de dépendances testée (TripParser avec mock FileSystemService) ✅
+
+**AC #4 complété:**
+- Tests generate.service.spec.ts refactorisés pour utiliser artifactGenerator.generate() et artifactGenerator.buildSingleFileHtmlString() au lieu des fonctions wrappers
+- Tous les tests passent : 92/92 ✅
+- Architecture ES2015 pleinement adoptée dans tous les tests
 <!-- SECTION:NOTES:END -->
