@@ -331,6 +331,23 @@ Personnalisation:
 
 Tests: assertions de présence de `.map-page`, tracé SVG path, vignettes foreignObject, dans `tests/generate.service.spec.ts`.
 
+## 🎨 Maquettes & Design
+
+Des maquettes HTML interactives sont disponibles dans `docs/mockups/` pour visualiser l'évolution future du produit :
+
+- **Landing Page moderne** : Page d'accueil avec onboarding
+- **Éditeur avancé** : Interface d'édition avec drag & drop
+- **Galerie photos intelligente** : Gestionnaire de photos avec IA
+- **Timeline interactive** : Visualisation chronologique avec carte
+
+**Voir les maquettes** : Ouvrir `docs/mockups/mockups-index.html` dans votre navigateur
+
+Ces maquettes proposent une vision complète d'un produit web moderne avec :
+- Design system cohérent (couleurs, typographie, composants)
+- Fonctionnalités innovantes (suggestions IA, édition temps réel)
+- Interactions fluides (drag & drop, animations)
+- Documentation technique complète
+
 ## Contribution
 
 ### Pour Développeurs Java
