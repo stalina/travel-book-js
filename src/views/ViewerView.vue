@@ -1,4 +1,5 @@
 <template>
+  <ViewerHeader />
   <main class="container">
     <h2>Viewer</h2>
     <p>Ouvrez le livre dans un nouvel onglet ou téléchargez le fichier unique.</p>
@@ -14,6 +15,7 @@
 import { ref } from 'vue'
 import { useTripStore } from '../stores/trip.store'
 import { viewerController } from '../controllers/ViewerController'
+import ViewerHeader from '../components/ViewerHeader.vue'
 
 const store = useTripStore()
 const isOpening = ref(false)
