@@ -19,11 +19,11 @@ Concevoir et développer des maquettes HTML/CSS/JS interactives pour transformer
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Architecture et navigation globale définie
-- [ ] #2 Maquette de la page d'accueil créée
-- [ ] #3 Maquette de l'éditeur d'album créée
-- [ ] #4 Maquette du visualiseur créée
-- [ ] #5 Design system complet (couleurs, typographie, composants)
+- [x] #1 Architecture et navigation globale définie
+- [x] #2 Maquette de la page d'accueil créée
+- [x] #3 Maquette de l'éditeur d'album créée
+- [x] #4 Maquette du visualiseur créée
+- [x] #5 Design system complet (couleurs, typographie, composants)
 - [ ] #6 Fonctionnalités innovantes proposées et documentées
 <!-- AC:END -->
 
