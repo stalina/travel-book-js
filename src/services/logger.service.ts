@@ -10,15 +10,37 @@ export enum LogLevel {
   ERROR = 3
 }
 
-class Logger {
+/**
+ * Service de logging centralisé avec pattern Singleton
+ * Gère les logs de différents niveaux (DEBUG, INFO, WARN, ERROR) et le timing des opérations
+ */
+export class LoggerService {
+  private static instance: LoggerService
   private debugEnabled = false
   private readonly prefix = '[TravelBook]'
 
   /**
+   * Constructeur privé pour forcer l'utilisation du pattern Singleton
+   */
+  private constructor() {}
+
+  /**
+   * Obtient l'instance unique du LoggerService
+   * @returns L'instance singleton de LoggerService
+   */
+  public static getInstance(): LoggerService {
+    if (!LoggerService.instance) {
+      LoggerService.instance = new LoggerService()
+    }
+    return LoggerService.instance
+  }
+
+  /**
    * Active ou désactive le mode debug
    * Peut être appelé depuis la console: window.TravelBook.enableDebug(true)
+   * @param enabled - true pour activer, false pour désactiver
    */
-  setDebugEnabled(enabled: boolean): void {
+  public setDebugEnabled(enabled: boolean): void {
     this.debugEnabled = enabled
     if (enabled) {
       // eslint-disable-next-line no-console
@@ -28,15 +50,19 @@ class Logger {
 
   /**
    * Vérifie si le mode debug est activé
+   * @returns true si le mode debug est actif
    */
-  isDebugEnabled(): boolean {
+  public isDebugEnabled(): boolean {
     return this.debugEnabled
   }
 
   /**
    * Log de niveau DEBUG - affiché uniquement si le mode debug est activé
+   * @param module - Nom du module émettant le log
+   * @param message - Message à logger
+   * @param data - Données optionnelles à afficher
    */
-  debug(module: string, message: string, data?: any): void {
+  public debug(module: string, message: string, data?: any): void {
     if (!this.debugEnabled) return
     
     const args = data !== undefined 
@@ -49,8 +75,11 @@ class Logger {
 
   /**
    * Log de niveau INFO - toujours affiché (étapes importantes)
+   * @param module - Nom du module émettant le log
+   * @param message - Message à logger
+   * @param data - Données optionnelles à afficher
    */
-  info(module: string, message: string, data?: any): void {
+  public info(module: string, message: string, data?: any): void {
     const args = data !== undefined
       ? [`${this.prefix}[${module}]`, message, data]
       : [`${this.prefix}[${module}]`, message]
@@ -61,8 +90,11 @@ class Logger {
 
   /**
    * Log de niveau WARN - toujours affiché
+   * @param module - Nom du module émettant le log
+   * @param message - Message à logger
+   * @param data - Données optionnelles à afficher
    */
-  warn(module: string, message: string, data?: any): void {
+  public warn(module: string, message: string, data?: any): void {
     const args = data !== undefined
       ? [`${this.prefix}[WARN][${module}]`, message, data]
       : [`${this.prefix}[WARN][${module}]`, message]
@@ -73,8 +105,11 @@ class Logger {
 
   /**
    * Log de niveau ERROR - toujours affiché
+   * @param module - Nom du module émettant le log
+   * @param message - Message à logger
+   * @param error - Erreur optionnelle à afficher
    */
-  error(module: string, message: string, error?: any): void {
+  public error(module: string, message: string, error?: any): void {
     const args = error !== undefined
       ? [`${this.prefix}[ERROR][${module}]`, message, error]
       : [`${this.prefix}[ERROR][${module}]`, message]
@@ -84,9 +119,10 @@ class Logger {
   }
 
   /**
-   * Mesure le temps d'exécution d'une opération
+   * Mesure le temps d'exécution d'une opération (début)
+   * @param label - Label unique pour identifier l'opération
    */
-  time(label: string): void {
+  public time(label: string): void {
     if (typeof performance !== 'undefined' && performance.mark) {
       performance.mark(`${label}:start`)
     }
@@ -94,8 +130,10 @@ class Logger {
 
   /**
    * Termine la mesure de temps et affiche le résultat
+   * @param label - Label de l'opération à mesurer
+   * @param showInProduction - Si true, affiche même en production
    */
-  timeEnd(label: string, showInProduction = false): void {
+  public timeEnd(label: string, showInProduction = false): void {
     if (typeof performance !== 'undefined' && performance.mark && performance.measure) {
       try {
         performance.mark(`${label}:end`)
@@ -107,18 +145,24 @@ class Logger {
           // eslint-disable-next-line no-console
           console.log(`${this.prefix}[TIMING]`, label, `${Math.round(last.duration)}ms`)
         }
-      } catch {}
+      } catch {
+        // Ignore errors silently
+      }
     }
   }
 }
 
-// Instance singleton
-export const logger = new Logger()
+// Export singleton instance
+export const loggerService = LoggerService.getInstance()
+
+// Wrapper rétrocompatible (DEPRECATED - à supprimer après migration complète)
+/** @deprecated Utiliser loggerService à la place */
+export const logger = loggerService
 
 // Exposer le logger globalement pour permettre l'activation du debug depuis la console
 if (typeof window !== 'undefined') {
   (window as any).TravelBook = {
-    enableDebug: (enabled: boolean) => logger.setDebugEnabled(enabled),
-    isDebugEnabled: () => logger.isDebugEnabled()
+    enableDebug: (enabled: boolean) => loggerService.setDebugEnabled(enabled),
+    isDebugEnabled: () => loggerService.isDebugEnabled()
   }
 }

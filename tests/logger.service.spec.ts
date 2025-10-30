@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { logger } from '../src/services/logger.service';
+import { LoggerService, loggerService } from '../src/services/logger.service';
 
 // Déclarer le type pour window.TravelBook
 declare global {
@@ -23,7 +23,7 @@ describe('logger.service', () => {
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     
     // Réinitialiser le mode debug
-    logger.setDebugEnabled(false);
+    loggerService.setDebugEnabled(false);
   });
 
   afterEach(() => {
@@ -33,10 +33,23 @@ describe('logger.service', () => {
     consoleErrorSpy.mockRestore();
   });
 
+  describe('Singleton Pattern', () => {
+    it('devrait retourner toujours la même instance', () => {
+      const instance1 = LoggerService.getInstance();
+      const instance2 = LoggerService.getInstance();
+      expect(instance1).toBe(instance2);
+    });
+
+    it('devrait avoir la même instance que loggerService exporté', () => {
+      const instance = LoggerService.getInstance();
+      expect(instance).toBe(loggerService);
+    });
+  });
+
   describe('setDebugEnabled', () => {
     it('devrait activer le mode debug', () => {
-      logger.setDebugEnabled(true);
-      logger.debug('test', 'message debug');
+      loggerService.setDebugEnabled(true);
+      loggerService.debug('test', 'message debug');
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('[TravelBook][DEBUG][test]'),
         expect.stringContaining('message debug')
@@ -44,23 +57,23 @@ describe('logger.service', () => {
     });
 
     it('devrait désactiver le mode debug', () => {
-      logger.setDebugEnabled(true);
+      loggerService.setDebugEnabled(true);
       consoleLogSpy.mockClear(); // Nettoyer le message de confirmation
-      logger.setDebugEnabled(false);
-      logger.debug('test', 'message debug');
+      loggerService.setDebugEnabled(false);
+      loggerService.debug('test', 'message debug');
       expect(consoleLogSpy).not.toHaveBeenCalled();
     });
   });
 
   describe('debug', () => {
     it('ne devrait rien afficher en mode normal', () => {
-      logger.debug('test', 'message debug');
+      loggerService.debug('test', 'message debug');
       expect(consoleLogSpy).not.toHaveBeenCalled();
     });
 
     it('devrait afficher les logs debug quand le mode est activé', () => {
-      logger.setDebugEnabled(true);
-      logger.debug('test', 'message debug');
+      loggerService.setDebugEnabled(true);
+      loggerService.debug('test', 'message debug');
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('[TravelBook][DEBUG][test]'),
         expect.stringContaining('message debug')
@@ -68,9 +81,9 @@ describe('logger.service', () => {
     });
 
     it('devrait supporter les objets dans les logs debug', () => {
-      logger.setDebugEnabled(true);
+      loggerService.setDebugEnabled(true);
       const data = { count: 5, items: ['a', 'b'] };
-      logger.debug('test', 'message', data);
+      loggerService.debug('test', 'message', data);
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('[TravelBook][DEBUG][test]'),
         expect.stringContaining('message'),
@@ -81,7 +94,7 @@ describe('logger.service', () => {
 
   describe('info', () => {
     it('devrait toujours afficher les logs info', () => {
-      logger.info('test', 'message info');
+      loggerService.info('test', 'message info');
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('[TravelBook][test]'),
         expect.stringContaining('message info')
@@ -90,7 +103,7 @@ describe('logger.service', () => {
 
     it('devrait supporter les objets dans les logs info', () => {
       const data = { status: 'ok' };
-      logger.info('test', 'message', data);
+      loggerService.info('test', 'message', data);
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('[TravelBook][test]'),
         expect.stringContaining('message'),
@@ -99,8 +112,8 @@ describe('logger.service', () => {
     });
 
     it('devrait afficher les logs info même en mode debug', () => {
-      logger.setDebugEnabled(true);
-      logger.info('test', 'message info');
+      loggerService.setDebugEnabled(true);
+      loggerService.info('test', 'message info');
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('[TravelBook][test]'),
         expect.stringContaining('message info')
@@ -110,7 +123,7 @@ describe('logger.service', () => {
 
   describe('warn', () => {
     it('devrait toujours afficher les warnings', () => {
-      logger.warn('test', 'message warning');
+      loggerService.warn('test', 'message warning');
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('[TravelBook][WARN][test]'),
         expect.stringContaining('message warning')
@@ -119,7 +132,7 @@ describe('logger.service', () => {
 
     it('devrait supporter les objets dans les warnings', () => {
       const error = { code: 404 };
-      logger.warn('test', 'erreur', error);
+      loggerService.warn('test', 'erreur', error);
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('[TravelBook][WARN][test]'),
         expect.stringContaining('erreur'),
@@ -130,7 +143,7 @@ describe('logger.service', () => {
 
   describe('error', () => {
     it('devrait toujours afficher les erreurs', () => {
-      logger.error('test', 'message erreur');
+      loggerService.error('test', 'message erreur');
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining('[TravelBook][ERROR][test]'),
         expect.stringContaining('message erreur')
@@ -139,7 +152,7 @@ describe('logger.service', () => {
 
     it('devrait supporter les objets Error', () => {
       const err = new Error('test error');
-      logger.error('test', 'erreur critique', err);
+      loggerService.error('test', 'erreur critique', err);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining('[TravelBook][ERROR][test]'),
         expect.stringContaining('erreur critique'),
@@ -149,7 +162,7 @@ describe('logger.service', () => {
 
     it('devrait supporter les objets dans les erreurs', () => {
       const context = { file: 'test.ts', line: 42 };
-      logger.error('test', 'erreur', context);
+      loggerService.error('test', 'erreur', context);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining('[TravelBook][ERROR][test]'),
         expect.stringContaining('erreur'),
@@ -160,9 +173,9 @@ describe('logger.service', () => {
 
   describe('time et timeEnd', () => {
     it('devrait mesurer et afficher le temps écoulé', () => {
-      logger.time('operation-test');
+      loggerService.time('operation-test');
       // Simuler un délai
-      logger.timeEnd('operation-test', true);
+      loggerService.timeEnd('operation-test', true);
       
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('[TravelBook][TIMING]'),
@@ -172,10 +185,10 @@ describe('logger.service', () => {
     });
 
     it('devrait gérer plusieurs timers simultanés', () => {
-      logger.time('op1');
-      logger.time('op2');
-      logger.timeEnd('op1', true);
-      logger.timeEnd('op2', true);
+      loggerService.time('op1');
+      loggerService.time('op2');
+      loggerService.timeEnd('op1', true);
+      loggerService.timeEnd('op2', true);
       
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('[TravelBook][TIMING]'),
@@ -190,8 +203,8 @@ describe('logger.service', () => {
     });
 
     it('ne devrait pas afficher le timing sans showInProduction ni debug', () => {
-      logger.time('hidden-op');
-      logger.timeEnd('hidden-op', false);
+      loggerService.time('hidden-op');
+      loggerService.timeEnd('hidden-op', false);
       
       // Le log de timing ne devrait pas être appelé
       const timingCalls = consoleLogSpy.mock.calls.filter(
@@ -201,9 +214,9 @@ describe('logger.service', () => {
     });
 
     it('devrait afficher le timing en mode debug même sans showInProduction', () => {
-      logger.setDebugEnabled(true);
-      logger.time('debug-op');
-      logger.timeEnd('debug-op', false);
+      loggerService.setDebugEnabled(true);
+      loggerService.time('debug-op');
+      loggerService.timeEnd('debug-op', false);
       
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('[TravelBook][TIMING]'),
@@ -221,7 +234,7 @@ describe('logger.service', () => {
 
     it('devrait permettre d\'activer le debug via window.TravelBook', () => {
       window.TravelBook.enableDebug(true);
-      logger.debug('test', 'debug via API globale');
+      loggerService.debug('test', 'debug via API globale');
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('[TravelBook][DEBUG][test]'),
         expect.stringContaining('debug via API globale')
@@ -232,14 +245,14 @@ describe('logger.service', () => {
       window.TravelBook.enableDebug(true);
       consoleLogSpy.mockClear(); // Nettoyer le message de confirmation
       window.TravelBook.enableDebug(false);
-      logger.debug('test', 'ne devrait pas apparaître');
+      loggerService.debug('test', 'ne devrait pas apparaître');
       expect(consoleLogSpy).not.toHaveBeenCalled();
     });
   });
 
   describe('formatage des messages', () => {
     it('devrait formater correctement avec un seul argument', () => {
-      logger.info('test', 'message simple');
+      loggerService.info('test', 'message simple');
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('[TravelBook][test]'),
         expect.stringContaining('message simple')
@@ -248,7 +261,7 @@ describe('logger.service', () => {
 
     it('devrait formater correctement avec un objet de données', () => {
       const obj = { a: 1, b: 2 };
-      logger.info('test', 'message', obj);
+      loggerService.info('test', 'message', obj);
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('[TravelBook][test]'),
         expect.stringContaining('message'),
@@ -257,7 +270,7 @@ describe('logger.service', () => {
     });
 
     it('devrait gérer les messages vides', () => {
-      logger.info('test', '');
+      loggerService.info('test', '');
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('[TravelBook][test]'),
         ''
@@ -265,7 +278,7 @@ describe('logger.service', () => {
     });
 
     it('devrait gérer les contextes vides', () => {
-      logger.info('', 'message sans contexte');
+      loggerService.info('', 'message sans contexte');
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('[TravelBook][]'),
         expect.stringContaining('message sans contexte')

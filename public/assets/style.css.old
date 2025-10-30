@@ -440,9 +440,9 @@ html, body {
   .stats-left, .stats-right { break-inside: avoid; }
 }
 
-/* --- Carte (page 3) --- */
+/* --- Carte (page 3) --------------------------------------------------- */
 .map-page {
-  width: 100%;
+  width: 100vw;
   height: 100vh;
   min-height: 100vh;
   position: relative;
@@ -451,20 +451,30 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 !important;
+  padding: 0 !important;  /* Surcharge le padding de .break-after */
   margin: 0;
+  box-sizing: border-box;
 }
 
 .map-container {
-  width: 100%;
-  height: 100%;
-  position: relative;
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  box-sizing: border-box;
 }
 
 .map-svg {
   width: 100%;
   height: 100%;
   display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
 }
 
 /* Tracé de l'itinéraire */

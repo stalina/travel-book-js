@@ -19,33 +19,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useTripStore } from '../stores/trip.store'
+import { useFileSelection } from '../composables/useFileSelection'
 
 const store = useTripStore()
-const fileInput = ref<HTMLInputElement | null>(null)
+const { fileInput, pickDirectory, onFilesPicked, onDrop } = useFileSelection()
 
 const ready = computed(() => store.hasInput)
-
-function pickDirectory() {
-  // Prefer File System Access API
-  if ('showDirectoryPicker' in window) {
-    store.pickDirectory()
-  } else {
-    fileInput.value?.click()
-  }
-}
-
-function onFilesPicked(e: Event) {
-  const input = e.target as HTMLInputElement
-  if (input.files) store.setFiles(input.files)
-}
-
-function onDrop(e: DragEvent) {
-  const items = e.dataTransfer?.items
-  if (!items) return
-  store.handleDropItems(items)
-}
 
 function goGenerate() {
   store.startGeneration()
