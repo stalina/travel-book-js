@@ -4,6 +4,7 @@ title: 'Sous-tâche: Refactoriser tests unitaires pour architecture classe'
 status: To Do
 assignee: []
 created_date: '2025-10-28 19:37'
+updated_date: '2025-10-30 16:20'
 labels:
   - refactoring
   - testing
@@ -20,10 +21,10 @@ Adapter tous les tests unitaires (generate.service.spec.ts, logger.service.spec.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Tests LoggerService adaptés avec instanciation classe
-- [ ] #2 Tests ElevationService adaptés avec mock du cache
-- [ ] #3 Tests builders adaptés avec new Builder(...)
+- [x] #1 Tests LoggerService adaptés avec instanciation classe
+- [x] #2 Tests ElevationService adaptés avec mock du cache
+- [x] #3 Tests builders adaptés avec new Builder(...)
 - [ ] #4 Tests services métier adaptés avec injection dépendances mockées
-- [ ] #5 Helpers de test créés (builders de mocks réutilisables)
-- [ ] #6 Couverture de tests maintenue > 80%
+- [x] #5 Helpers de test créés (builders de mocks réutilisables)
+- [x] #6 Couverture de tests maintenue > 80%
 <!-- AC:END -->
