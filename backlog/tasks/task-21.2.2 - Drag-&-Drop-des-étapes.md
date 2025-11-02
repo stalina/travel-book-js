@@ -1,9 +1,11 @@
 ---
 id: task-21.2.2
 title: Drag & Drop des étapes
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@agent-k'
 created_date: '2025-11-02 23:10'
+updated_date: '2025-11-02 23:28'
 labels: []
 dependencies: []
 parent_task_id: task-21.2
