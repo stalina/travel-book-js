@@ -3,9 +3,9 @@ id: task-21.2
 title: Éditeur d'album avec drag & drop avancé
 status: In Progress
 assignee:
-  - '@astalin'
+  - '@agent-k'
 created_date: '2025-10-30 22:11'
-updated_date: '2025-11-02 22:12'
+updated_date: '2025-11-02 22:27'
 labels: []
 dependencies: []
 parent_task_id: task-21
