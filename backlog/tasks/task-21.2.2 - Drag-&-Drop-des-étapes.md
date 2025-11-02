@@ -1,7 +1,7 @@
 ---
 id: task-21.2.2
 title: Drag & Drop des étapes
-status: In Progress
+status: Done
 assignee:
   - '@agent-k'
 created_date: '2025-11-02 23:10'
