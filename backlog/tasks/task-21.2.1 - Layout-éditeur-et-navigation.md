@@ -1,9 +1,11 @@
 ---
 id: task-21.2.1
 title: Layout éditeur et navigation
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@agent-k'
 created_date: '2025-11-02 23:09'
+updated_date: '2025-11-02 23:12'
 labels: []
 dependencies: []
 parent_task_id: task-21.2
