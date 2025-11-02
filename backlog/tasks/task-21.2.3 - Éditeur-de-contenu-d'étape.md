@@ -1,7 +1,7 @@
 ---
 id: task-21.2.3
 title: Éditeur de contenu d'étape
-status: In Progress
+status: Done
 assignee:
   - '@agent-k'
 created_date: '2025-11-02 23:10'
