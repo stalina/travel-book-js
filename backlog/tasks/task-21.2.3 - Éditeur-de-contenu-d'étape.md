@@ -1,9 +1,11 @@
 ---
 id: task-21.2.3
 title: Éditeur de contenu d'étape
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@agent-k'
 created_date: '2025-11-02 23:10'
+updated_date: '2025-11-02 23:38'
 labels: []
 dependencies: []
 parent_task_id: task-21.2
