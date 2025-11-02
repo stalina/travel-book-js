@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@agent-k'
 created_date: '2025-10-30 22:11'
-updated_date: '2025-11-02 22:29'
+updated_date: '2025-11-02 22:33'
 labels: []
 dependencies: []
 parent_task_id: task-21
@@ -57,4 +57,8 @@ Interface d'édition visuelle permettant de réorganiser les étapes, photos, et
 - Parsing trip.json et photos via TripParser existant (AC #2/#4)
 - Gestion erreurs (phase error + message)
 - Préparation future pour éditeur d'album (composable extensible)
+
+- Ajout composant AlbumImportPanel.vue avec previews et progression
+- Refactor HomeView pour utiliser panel
+- Tests globaux OK (122 PASS)
 <!-- SECTION:NOTES:END -->
