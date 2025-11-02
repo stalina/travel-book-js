@@ -1,7 +1,7 @@
 ---
 id: task-21.2.1
 title: Layout éditeur et navigation
-status: In Progress
+status: Done
 assignee:
   - '@agent-k'
 created_date: '2025-11-02 23:09'
