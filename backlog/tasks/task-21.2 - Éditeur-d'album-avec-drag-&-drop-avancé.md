@@ -28,7 +28,7 @@ Interface d'édition visuelle permettant de réorganiser les étapes, photos, et
 
 - [x] #6 L'import supporte les sous-dossiers et conserve la structure
 - [x] #7 Un feedback visuel indique la progression de l'upload
-- [ ] #8 Les erreurs (fichiers non supportés, trop volumineux, etc.) sont gérées et affichées
+- [x] #8 Les erreurs (fichiers non supportés, trop volumineux, etc.) sont gérées et affichées
 <!-- AC:END -->
 
 ## Implementation Plan
