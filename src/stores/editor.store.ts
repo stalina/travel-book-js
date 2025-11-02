@@ -1,0 +1,107 @@
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import type { Trip, Step } from '../models/types'
+
+/**
+ * Store de l'éditeur d'album
+ * Gère l'état de l'édition: voyage actuel, étape sélectionnée, mode preview, etc.
+ */
+export const useEditorStore = defineStore('editor', () => {
+  // State
+  const currentTrip = ref<Trip | null>(null)
+  const currentStepIndex = ref<number>(0)
+  const autoSaveStatus = ref<'idle' | 'saving' | 'saved'>('idle')
+  const previewMode = ref<'mobile' | 'desktop' | 'pdf'>('desktop')
+  const activeSidebarTab = ref<'steps' | 'themes' | 'options'>('steps')
+
+  // Getters
+  const currentStep = computed(() => {
+    if (!currentTrip.value || !currentTrip.value.steps) return null
+    return currentTrip.value.steps[currentStepIndex.value] || null
+  })
+
+  const totalSteps = computed(() => currentTrip.value?.steps?.length || 0)
+
+  const totalDays = computed(() => {
+    if (!currentTrip.value?.start_date || !currentTrip.value?.end_date) return 0
+    const start = new Date(currentTrip.value.start_date * 1000)
+    const end = new Date(currentTrip.value.end_date * 1000)
+    const diffTime = Math.abs(end.getTime() - start.getTime())
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  })
+
+  // TODO: Ces stats seront calculées depuis le photosMapping dans une version future
+  const totalPhotos = computed(() => 0)
+  const estimatedPages = computed(() => {
+    // Estimation: 1 page couverture + 1 page stats + 1 page carte + 2-3 pages par étape
+    const coverPages = 3
+    const stepPages = totalSteps.value * 2.5
+    return Math.ceil(coverPages + stepPages)
+  })
+
+  // Actions
+  const setTrip = (trip: Trip) => {
+    currentTrip.value = trip
+    currentStepIndex.value = 0
+  }
+
+  const setCurrentStep = (index: number) => {
+    if (currentTrip.value?.steps && index >= 0 && index < currentTrip.value.steps.length) {
+      currentStepIndex.value = index
+    }
+  }
+
+  const updateStepTitle = (stepIndex: number, title: string) => {
+    if (currentTrip.value?.steps && stepIndex >= 0 && stepIndex < currentTrip.value.steps.length) {
+      currentTrip.value.steps[stepIndex].name = title
+      triggerAutoSave()
+    }
+  }
+
+  const updateStepDescription = (stepIndex: number, description: string) => {
+    if (currentTrip.value?.steps && stepIndex >= 0 && stepIndex < currentTrip.value.steps.length) {
+      currentTrip.value.steps[stepIndex].description = description
+      triggerAutoSave()
+    }
+  }
+
+  const setPreviewMode = (mode: 'mobile' | 'desktop' | 'pdf') => {
+    previewMode.value = mode
+  }
+
+  const setActiveSidebarTab = (tab: 'steps' | 'themes' | 'options') => {
+    activeSidebarTab.value = tab
+  }
+
+  const triggerAutoSave = () => {
+    autoSaveStatus.value = 'saving'
+    // Auto-save sera géré par le composable useAutoSave dans task 21.2.4
+    // Pour l'instant on simule juste
+    setTimeout(() => {
+      autoSaveStatus.value = 'saved'
+    }, 1000)
+  }
+
+  return {
+    // State
+    currentTrip,
+    currentStepIndex,
+    autoSaveStatus,
+    previewMode,
+    activeSidebarTab,
+    // Getters
+    currentStep,
+    totalPhotos,
+    totalSteps,
+    totalDays,
+    estimatedPages,
+    // Actions
+    setTrip,
+    setCurrentStep,
+    updateStepTitle,
+    updateStepDescription,
+    setPreviewMode,
+    setActiveSidebarTab,
+    triggerAutoSave
+  }
+})
