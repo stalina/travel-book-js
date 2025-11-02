@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@agent-k'
 created_date: '2025-11-02 23:10'
-updated_date: '2025-11-02 23:38'
+updated_date: '2025-11-02 23:50'
 labels: []
 dependencies: []
 parent_task_id: task-21.2
@@ -20,13 +20,13 @@ Implémenter l'éditeur de contenu d'une étape: titre, photos, texte avec toolb
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Titre d'étape éditable inline avec validation
-- [ ] #2 Grille de photos responsive (auto-fill, minmax(200px, 1fr))
-- [ ] #3 Ajout de photos via slot + avec sélecteur de fichier
-- [ ] #4 Overlay d'actions sur photos au hover (éditer, réorganiser, supprimer)
-- [ ] #5 Éditeur de texte riche (contenteditable) avec placeholder
-- [ ] #6 Toolbar sticky avec groupes d'outils de formatage
-- [ ] #7 Application du formatage texte fonctionnelle
-- [ ] #8 Composable useTextFormatting() pour logique de formatage
-- [ ] #9 Tests unitaires de l'éditeur, toolbar et formatage
+- [x] #1 Titre d'étape éditable inline avec validation
+- [x] #2 Grille de photos responsive (auto-fill, minmax(200px, 1fr))
+- [x] #3 Ajout de photos via slot + avec sélecteur de fichier
+- [x] #4 Overlay d'actions sur photos au hover (éditer, réorganiser, supprimer)
+- [x] #5 Éditeur de texte riche (contenteditable) avec placeholder
+- [x] #6 Toolbar sticky avec groupes d'outils de formatage
+- [x] #7 Application du formatage texte fonctionnelle
+- [x] #8 Composable useTextFormatting() pour logique de formatage
+- [x] #9 Tests unitaires de l'éditeur, toolbar et formatage
 <!-- AC:END -->
