@@ -20,13 +20,13 @@ Interface d'édition visuelle permettant de réorganiser les étapes, photos, et
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 L'import supporte les sous-dossiers et conserve la structure
+- [x] #1 L'import supporte les sous-dossiers et conserve la structure
 - [x] #2 Le parsing du dossier extrait automatiquement trip.json et les photos associées
 - [x] #3 L'utilisateur peut uploader un dossier Polarsteps complet (incluant trip.json, photos, etc.) via drag & drop
 - [x] #4 Le parsing du dossier extrait automatiquement trip.json et les photos associées
 - [x] #5 Les fichiers sont listés et prévisualisés avant import
 
-- [ ] #6 L'import supporte les sous-dossiers et conserve la structure
+- [x] #6 L'import supporte les sous-dossiers et conserve la structure
 - [x] #7 Un feedback visuel indique la progression de l'upload
 - [ ] #8 Les erreurs (fichiers non supportés, trop volumineux, etc.) sont gérées et affichées
 <!-- AC:END -->
