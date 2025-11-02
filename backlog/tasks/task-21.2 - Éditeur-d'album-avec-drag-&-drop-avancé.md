@@ -1,10 +1,11 @@
 ---
 id: task-21.2
 title: Éditeur d'album avec drag & drop avancé
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@astalin'
 created_date: '2025-10-30 22:11'
-updated_date: '2025-11-02 22:11'
+updated_date: '2025-11-02 22:12'
 labels: []
 dependencies: []
 parent_task_id: task-21
@@ -29,3 +30,16 @@ Interface d'édition visuelle permettant de réorganiser les étapes, photos, et
 - [ ] #7 Un feedback visuel indique la progression de l'upload
 - [ ] #8 Les erreurs (fichiers non supportés, trop volumineux, etc.) sont gérées et affichées
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Analyse des besoins et des formats du dossier Polarsteps (structure, fichiers clés, sous-dossiers)
+2. Développement du composable ou service d’upload drag & drop (support du DirectoryHandle et FileList)
+3. Extraction automatique de trip.json et des photos, mapping des fichiers
+4. Affichage de la liste des fichiers et prévisualisation (miniatures, infos)
+5. Gestion de la progression d’upload et feedback visuel
+6. Gestion des erreurs (fichiers non supportés, volumineux, etc.)
+7. Tests unitaires et validation sur plusieurs dossiers Polarsteps
+8. Documentation et notes d’implémentation
+<!-- SECTION:PLAN:END -->
