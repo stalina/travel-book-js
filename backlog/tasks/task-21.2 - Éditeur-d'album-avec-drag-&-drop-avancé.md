@@ -1,7 +1,7 @@
 ---
 id: task-21.2
 title: Éditeur d'album avec drag & drop avancé
-status: In Progress
+status: Done
 assignee:
   - '@agent-k'
 created_date: '2025-10-30 22:11'
