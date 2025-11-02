@@ -47,3 +47,14 @@ Interface d'édition visuelle permettant de réorganiser les étapes, photos, et
 11. Cocher ACs au fur et à mesure
 12. Notes d’implémentation finales
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+- Implémentation composable usePolarstepsImport avec phases et previews
+- Intégration dans HomeView (dropzone améliorée, feedback progression, miniatures)
+- Support drag & drop + showDirectoryPicker + input webkitdirectory fallback
+- Parsing trip.json et photos via TripParser existant (AC #2/#4)
+- Gestion erreurs (phase error + message)
+- Préparation future pour éditeur d'album (composable extensible)
+<!-- SECTION:NOTES:END -->
