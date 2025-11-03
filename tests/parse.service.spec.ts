@@ -187,6 +187,22 @@ describe('parse.service - TripParser', () => {
     expect((window as any).__parsedTrip.stepPhotos).toBeDefined()
   })
 
+  it('retourne le Trip parsé', async () => {
+    const mockFile = new File([JSON.stringify(mockTripJson)], 'trip.json', { type: 'application/json' })
+    vi.mocked(mockFileSystemService.readFileFromPath).mockResolvedValue(mockFile)
+    vi.mocked(mockFileSystemService.readAllPhotos).mockResolvedValue([])
+
+    const input: FFInput = { kind: 'files', files: [mockFile] }
+
+    const trip = await tripParser.parse(input)
+
+    expect(trip).toBeDefined()
+    expect(trip.name).toBe('Mon Voyage')
+    expect(trip.steps).toHaveLength(2)
+    expect(trip.steps[0].name).toBe('Paris')
+    expect(trip.steps[1].name).toBe('Lyon')
+  })
+
   it('utilise le singleton getInstance()', () => {
     const instance1 = TripParser.getInstance()
     const instance2 = TripParser.getInstance()
