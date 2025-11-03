@@ -1,9 +1,11 @@
 ---
 id: task-21.2.5
 title: Preview temps réel
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@agent-k'
 created_date: '2025-11-02 23:11'
+updated_date: '2025-11-03 00:01'
 labels: []
 dependencies: []
 parent_task_id: task-21.2
