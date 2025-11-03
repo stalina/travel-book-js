@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Trip, Step } from '../models/types'
+import type { SaveStatus } from '../composables/useAutoSave'
 
 /**
  * Store de l'éditeur d'album
@@ -10,7 +11,8 @@ export const useEditorStore = defineStore('editor', () => {
   // State
   const currentTrip = ref<Trip | null>(null)
   const currentStepIndex = ref<number>(0)
-  const autoSaveStatus = ref<'idle' | 'saving' | 'saved'>('idle')
+  const autoSaveStatus = ref<SaveStatus>('idle')
+  const lastSaveTime = ref<Date | null>(null)
   const previewMode = ref<'mobile' | 'desktop' | 'pdf'>('desktop')
   const activeSidebarTab = ref<'steps' | 'themes' | 'options'>('steps')
 
@@ -65,6 +67,13 @@ export const useEditorStore = defineStore('editor', () => {
     }
   }
 
+  const reorderSteps = (newSteps: Step[]) => {
+    if (currentTrip.value) {
+      currentTrip.value.steps = newSteps
+      triggerAutoSave()
+    }
+  }
+
   const setPreviewMode = (mode: 'mobile' | 'desktop' | 'pdf') => {
     previewMode.value = mode
   }
@@ -75,11 +84,22 @@ export const useEditorStore = defineStore('editor', () => {
 
   const triggerAutoSave = () => {
     autoSaveStatus.value = 'saving'
-    // Auto-save sera géré par le composable useAutoSave dans task 21.2.4
-    // Pour l'instant on simule juste
+    // Simule une sauvegarde (sera géré par useAutoSave dans EditorView)
     setTimeout(() => {
       autoSaveStatus.value = 'saved'
-    }, 1000)
+      lastSaveTime.value = new Date()
+      
+      // Retour à idle après 2 secondes
+      setTimeout(() => {
+        if (autoSaveStatus.value === 'saved') {
+          autoSaveStatus.value = 'idle'
+        }
+      }, 2000)
+    }, 500)
+  }
+
+  const setAutoSaveStatus = (status: SaveStatus) => {
+    autoSaveStatus.value = status
   }
 
   return {
@@ -87,6 +107,7 @@ export const useEditorStore = defineStore('editor', () => {
     currentTrip,
     currentStepIndex,
     autoSaveStatus,
+    lastSaveTime,
     previewMode,
     activeSidebarTab,
     // Getters
@@ -100,8 +121,10 @@ export const useEditorStore = defineStore('editor', () => {
     setCurrentStep,
     updateStepTitle,
     updateStepDescription,
+    reorderSteps,
     setPreviewMode,
     setActiveSidebarTab,
-    triggerAutoSave
+    triggerAutoSave,
+    setAutoSaveStatus
   }
 })

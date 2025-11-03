@@ -15,9 +15,9 @@ export class TripParser {
    * Parse les données du voyage à partir de l'entrée (FileList ou répertoire)
    * 
    * @param input - Source de données (FileList ou DirectoryHandle)
-   * @returns Promise<void> - Stocke le résultat dans window.__parsedTrip
+   * @returns Promise<Trip> - Retourne le Trip parsé et le stocke aussi dans window.__parsedTrip
    */
-  public async parse(input: FFInput): Promise<void> {
+  public async parse(input: FFInput): Promise<Trip> {
     try {
       loggerService.debug('trip-parser', 'Début du parsing')
       
@@ -28,6 +28,8 @@ export class TripParser {
       this.saveToWindow(trip, stepPhotos)
       
       loggerService.debug('trip-parser', `Parsing terminé: ${trip.steps.length} étapes`)
+      
+      return trip
     } catch (error) {
       loggerService.error('trip-parser', 'Erreur lors du parsing', error)
       throw error

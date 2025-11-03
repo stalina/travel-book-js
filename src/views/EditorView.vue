@@ -13,35 +13,67 @@
       </template>
     </EditorSidebar>
     <main class="editor-main">
-      <div class="editor-placeholder">
-        <div class="placeholder-content">
-          <h2>🎨 Éditeur d'album</h2>
-          <p>Sélectionnez une étape dans la liste pour commencer l'édition</p>
-        </div>
-      </div>
+      <StepEditor />
     </main>
     <PreviewPanel />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
 import { useEditorStore } from '../stores/editor.store'
 import { useTripStore } from '../stores/trip.store'
+import { useHistory } from '../composables/useHistory'
 import EditorHeader from '../components/editor/EditorHeader.vue'
 import EditorSidebar from '../components/editor/EditorSidebar.vue'
 import PreviewPanel from '../components/editor/PreviewPanel.vue'
 import StepList from '../components/editor/StepList.vue'
+import StepEditor from '../components/editor/StepEditor.vue'
+import type { Trip } from '../models/types'
 
 const editorStore = useEditorStore()
 const tripStore = useTripStore()
 
+// Undo/Redo avec useHistory
+const {
+  canUndo,
+  canRedo,
+  record
+} = useHistory<Trip | null>({
+  maxSize: 20,
+  initialState: null,
+  onApply: (state) => {
+    if (state) {
+      editorStore.setTrip(state)
+    }
+  }
+})
+
+// Enregistrer les changements dans l'historique
+watch(() => editorStore.currentTrip, (newTrip, oldTrip) => {
+  if (oldTrip && newTrip && oldTrip !== newTrip) {
+    // Clone deep pour éviter les références
+    const beforeState = JSON.parse(JSON.stringify(oldTrip))
+    const afterState = JSON.parse(JSON.stringify(newTrip))
+    record(beforeState, afterState, 'Trip update')
+  }
+}, { deep: true })
+
 onMounted(async () => {
-  // Si on a un input, on parse le voyage pour l'éditer
-  if (tripStore.hasInput) {
+  // Si on a déjà un voyage parsé dans le tripStore, on l'utilise
+  if (tripStore.hasParsedTrip && tripStore.parsedTrip) {
+    // Le Trip a déjà été chargé et passé à l'editor par HomeView
+    // Rien à faire ici
+    return
+  }
+  
+  // Sinon, si on a un input mais pas de Trip parsé (accès direct à /editor)
+  if (tripStore.hasInput && !tripStore.hasParsedTrip) {
     await tripStore.parseAndMap()
-    // TODO: Récupérer le Trip depuis le parser et le passer au store editor
-    // Pour l'instant on laisse vide, sera implémenté quand on aura accès au Trip parsé
+    const trip = tripStore.parsedTrip
+    if (trip) {
+      editorStore.setTrip(trip)
+    }
   }
 })
 </script>

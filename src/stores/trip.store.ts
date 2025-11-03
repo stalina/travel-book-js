@@ -2,15 +2,18 @@ import { defineStore } from 'pinia'
 import { fileSystemService, FFInput } from '../services/fs.service'
 import { tripParser } from '../services/parse.service'
 import { artifactGenerator, GeneratedArtifacts, GenerateOptions } from '../services/generate.service'
+import type { Trip } from '../models/types'
 
 export const useTripStore = defineStore('trip', {
   state: () => ({
     input: null as FFInput | null,
-  artifacts: null as GeneratedArtifacts | null,
-  photosPlanText: '' as string
+    artifacts: null as GeneratedArtifacts | null,
+    photosPlanText: '' as string,
+    parsedTrip: null as Trip | null,
   }),
   getters: {
-    hasInput: (s) => !!s.input
+    hasInput: (s) => !!s.input,
+    hasParsedTrip: (s) => !!s.parsedTrip,
   },
   actions: {
     async pickDirectory() {
@@ -39,7 +42,8 @@ export const useTripStore = defineStore('trip', {
     },
     async parseAndMap() {
       if (!this.input) throw new Error('Aucun input')
-      await tripParser.parse(this.input)
+      const trip = await tripParser.parse(this.input)
+      this.parsedTrip = trip
     },
     async generateArtifacts(options?: GenerateOptions) {
       if (!this.input) throw new Error('Aucun input')

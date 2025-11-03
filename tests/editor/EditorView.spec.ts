@@ -20,12 +20,11 @@ describe('EditorView', () => {
     expect(wrapper.find('.preview-panel').exists()).toBe(true)
   })
 
-  it('shows placeholder when no step is selected', () => {
+  it('shows StepEditor component', () => {
     const wrapper = mount(EditorView)
-    const placeholder = wrapper.find('.editor-placeholder')
+    const stepEditor = wrapper.find('.step-editor')
     
-    expect(placeholder.exists()).toBe(true)
-    expect(placeholder.text()).toContain('Éditeur d\'album')
+    expect(stepEditor.exists()).toBe(true)
   })
 
   it('uses EditorStore for state management', () => {

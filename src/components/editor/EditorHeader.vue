@@ -11,10 +11,10 @@
       />
     </div>
     <div class="header-right">
-      <div class="save-status">
-        <span :class="['save-indicator', saveStatusClass]"></span>
-        <span>{{ saveStatusText }}</span>
-      </div>
+      <SaveStatus 
+        :status="editorStore.autoSaveStatus"
+        :last-save-time="editorStore.lastSaveTime"
+      />
       <BaseButton variant="outline" size="sm" @click="onImport">📥 Importer</BaseButton>
       <BaseButton variant="secondary" size="sm" @click="onPreview">👁️ Prévisualiser</BaseButton>
       <BaseButton variant="primary" size="sm" @click="onExport">📤 Exporter</BaseButton>
@@ -23,9 +23,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useEditorStore } from '../../stores/editor.store'
 import BaseButton from '../BaseButton.vue'
+import SaveStatus from './SaveStatus.vue'
 
 const editorStore = useEditorStore()
 const projectTitle = ref('')
@@ -34,22 +35,6 @@ const projectTitle = ref('')
 watch(() => editorStore.currentTrip?.name, (newName) => {
   if (newName) projectTitle.value = newName
 }, { immediate: true })
-
-const saveStatusClass = computed(() => {
-  switch (editorStore.autoSaveStatus) {
-    case 'saving': return 'saving'
-    case 'saved': return 'saved'
-    default: return 'idle'
-  }
-})
-
-const saveStatusText = computed(() => {
-  switch (editorStore.autoSaveStatus) {
-    case 'saving': return 'Enregistrement...'
-    case 'saved': return 'Enregistré'
-    default: return ''
-  }
-})
 
 const onTitleBlur = () => {
   if (editorStore.currentTrip && projectTitle.value !== editorStore.currentTrip.name) {
@@ -133,36 +118,6 @@ const onExport = () => {
   gap: var(--spacing-md, 16px);
 }
 
-.save-status {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs, 4px);
-  font-size: var(--font-size-sm, 14px);
-  color: var(--color-text-secondary, #666);
-}
-
-.save-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-border, #e0e0e0);
-  transition: background 0.3s;
-}
-
-.save-indicator.saving {
-  background: var(--color-warning, #f0ad00);
-}
-
-.save-indicator.saved {
-  background: var(--color-success, #28a745);
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
 @media (max-width: 768px) {
   .header-left {
     gap: var(--spacing-md, 16px);
@@ -171,10 +126,6 @@ const onExport = () => {
   .project-title {
     min-width: 150px;
     font-size: var(--font-size-base, 16px);
-  }
-  
-  .save-status span {
-    display: none;
   }
 }
 </style>

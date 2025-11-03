@@ -80,12 +80,11 @@ describe('PreviewPanel', () => {
     expect(parseInt(statValues[3].text())).toBeGreaterThan(0)
   })
 
-  it('shows placeholder when no trip loaded', () => {
+  it('shows preview content', () => {
     const wrapper = mount(PreviewPanel)
-    const placeholder = wrapper.find('.preview-placeholder')
+    const previewContent = wrapper.find('.preview-content')
     
-    expect(placeholder.exists()).toBe(true)
-    expect(placeholder.text()).toContain('Aucun voyage chargé')
+    expect(previewContent.exists()).toBe(true)
   })
 
   it('applies correct CSS class for preview mode', async () => {

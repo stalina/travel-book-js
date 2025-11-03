@@ -17,11 +17,11 @@ describe('EditorHeader', () => {
     expect(wrapper.find('.project-title').exists()).toBe(true)
   })
 
-  it('displays save status indicator', () => {
+  it('renders SaveStatus component', () => {
     const wrapper = mount(EditorHeader)
     
-    expect(wrapper.find('.save-status').exists()).toBe(true)
-    expect(wrapper.find('.save-indicator').exists()).toBe(true)
+    const saveStatus = wrapper.findComponent({ name: 'SaveStatus' })
+    expect(saveStatus.exists()).toBe(true)
   })
 
   it('renders action buttons', () => {
@@ -29,24 +29,6 @@ describe('EditorHeader', () => {
     const buttons = wrapper.findAllComponents({ name: 'BaseButton' })
     
     expect(buttons.length).toBeGreaterThanOrEqual(3)
-  })
-
-  it('shows correct save status text', async () => {
-    const wrapper = mount(EditorHeader)
-    const store = useEditorStore()
-    
-    // Initial: idle
-    expect(wrapper.find('.save-status').text()).toBe('')
-    
-    // Saving
-    store.autoSaveStatus = 'saving'
-    await wrapper.vm.$nextTick()
-    expect(wrapper.find('.save-status').text()).toContain('Enregistrement')
-    
-    // Saved
-    store.autoSaveStatus = 'saved'
-    await wrapper.vm.$nextTick()
-    expect(wrapper.find('.save-status').text()).toContain('Enregistré')
   })
 
   it('updates project title in store on blur', async () => {
@@ -71,23 +53,21 @@ describe('EditorHeader', () => {
     expect(store.currentTrip?.name).toBe('Nouveau titre')
   })
 
-  it('applies correct CSS class for save status', async () => {
+  it('shows SaveStatus component', async () => {
+    const wrapper = mount(EditorHeader)
+    
+    const saveStatus = wrapper.findComponent({ name: 'SaveStatus' })
+    expect(saveStatus.exists()).toBe(true)
+  })
+
+  it('passes correct props to SaveStatus', async () => {
     const wrapper = mount(EditorHeader)
     const store = useEditorStore()
     
-    const indicator = wrapper.find('.save-indicator')
-    
-    // Idle
-    expect(indicator.classes()).toContain('idle')
-    
-    // Saving
-    store.autoSaveStatus = 'saving'
+    store.setAutoSaveStatus('saving')
     await wrapper.vm.$nextTick()
-    expect(indicator.classes()).toContain('saving')
     
-    // Saved
-    store.autoSaveStatus = 'saved'
-    await wrapper.vm.$nextTick()
-    expect(indicator.classes()).toContain('saved')
+    const saveStatus = wrapper.findComponent({ name: 'SaveStatus' })
+    expect(saveStatus.props('status')).toBe('saving')
   })
 })

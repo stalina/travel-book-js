@@ -15,9 +15,14 @@
     </div>
     
     <div class="preview-content" :class="`mode-${activeMode}`">
-      <div class="preview-placeholder">
-        <p v-if="!hasTrip">Aucun voyage chargé</p>
-        <p v-else>Preview {{ activeMode }}</p>
+      <div 
+        class="preview-container"
+        :style="containerStyles"
+      >
+        <div 
+          class="preview-render"
+          v-html="previewContent"
+        ></div>
       </div>
     </div>
     
@@ -45,6 +50,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useEditorStore } from '../../stores/editor.store'
+import { usePreview } from '../../composables/usePreview'
 
 const editorStore = useEditorStore()
 
@@ -54,17 +60,30 @@ const modes = [
   { id: 'pdf' as const, label: 'PDF', icon: '📄' }
 ]
 
+// Utiliser usePreview pour la synchronisation temps réel
+const {
+  mode: previewMode,
+  containerStyles,
+  content: previewContent,
+  stats: previewStats,
+  setMode: setPreviewMode
+} = usePreview({
+  trip: computed(() => editorStore.currentTrip),
+  initialMode: editorStore.previewMode
+})
+
 const activeMode = computed(() => editorStore.previewMode)
 
 const switchMode = (mode: 'mobile' | 'desktop' | 'pdf') => {
   editorStore.setPreviewMode(mode)
+  setPreviewMode(mode)
 }
 
-const hasTrip = computed(() => !!editorStore.currentTrip)
-const totalPhotos = computed(() => editorStore.totalPhotos)
-const totalSteps = computed(() => editorStore.totalSteps)
-const totalDays = computed(() => editorStore.totalDays)
-const estimatedPages = computed(() => editorStore.estimatedPages)
+// Utiliser les stats du composable usePreview (temps réel)
+const totalPhotos = computed(() => previewStats.value.photos)
+const totalSteps = computed(() => previewStats.value.steps)
+const totalDays = computed(() => previewStats.value.days)
+const estimatedPages = computed(() => previewStats.value.pages)
 </script>
 
 <style scoped>
@@ -120,28 +139,79 @@ const estimatedPages = computed(() => editorStore.estimatedPages)
   padding: var(--spacing-lg, 24px);
   overflow-y: auto;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
 }
 
-.preview-placeholder {
+.preview-container {
+  background: white;
+  border-radius: var(--radius-md, 8px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.preview-render {
+  padding: var(--spacing-lg, 24px);
+  min-height: 200px;
+}
+
+/* Styles pour le contenu de preview */
+.preview-render :deep(.empty-preview) {
   text-align: center;
   color: var(--color-text-secondary, #666);
+  padding: var(--spacing-xl, 32px);
   font-size: var(--font-size-base, 16px);
 }
 
-.preview-content.mode-mobile {
-  max-width: 375px;
-  margin: 0 auto;
+.preview-render :deep(.trip-title) {
+  font-size: var(--font-size-2xl, 24px);
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--color-primary, #FF6B6B);
+  margin-bottom: var(--spacing-lg, 24px);
+  text-align: center;
 }
 
-.preview-content.mode-desktop {
-  max-width: 100%;
+.preview-render :deep(.preview-step) {
+  padding: var(--spacing-md, 16px);
+  margin-bottom: var(--spacing-sm, 8px);
+  border-left: 3px solid var(--color-primary, #FF6B6B);
+  background: var(--color-background, #f5f5f5);
+  border-radius: var(--radius-sm, 4px);
+  display: flex;
+  gap: var(--spacing-md, 16px);
+  align-items: center;
 }
 
-.preview-content.mode-pdf {
-  max-width: 210mm; /* A4 width */
-  margin: 0 auto;
+.preview-render :deep(.step-number) {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-primary, #FF6B6B);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-bold, 700);
+  flex-shrink: 0;
+}
+
+.preview-render :deep(.step-name) {
+  font-size: var(--font-size-lg, 18px);
+  font-weight: var(--font-weight-semibold, 600);
+  margin: 0;
+}
+
+.preview-render :deep(.step-location) {
+  font-size: var(--font-size-sm, 14px);
+  color: var(--color-text-secondary, #666);
+  margin: var(--spacing-xs, 4px) 0 0 0;
+}
+
+.preview-render :deep(.no-steps) {
+  text-align: center;
+  color: var(--color-text-secondary, #666);
+  padding: var(--spacing-lg, 24px);
 }
 
 .preview-stats {

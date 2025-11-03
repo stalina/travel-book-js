@@ -10,7 +10,15 @@
       :step="step"
       :index="index"
       :is-active="index === currentStepIndex"
+      :is-dragged="isItemDragged(index)"
+      :is-drag-over="isItemDraggedOver(index)"
       @select="selectStep(index)"
+      @dragstart="handleDragStart($event, index)"
+      @dragover="handleDragOver($event, index)"
+      @dragenter="handleDragEnter($event, index)"
+      @dragleave="handleDragLeave($event)"
+      @drop="handleDrop($event, index)"
+      @dragend="handleDragEnd($event)"
     />
   </div>
 </template>
@@ -18,6 +26,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useEditorStore } from '../../stores/editor.store'
+import { useDragAndDrop } from '../../composables/useDragAndDrop'
 import StepItem from './StepItem.vue'
 
 const editorStore = useEditorStore()
@@ -25,6 +34,20 @@ const editorStore = useEditorStore()
 const steps = computed(() => editorStore.currentTrip?.steps || [])
 const hasSteps = computed(() => steps.value.length > 0)
 const currentStepIndex = computed(() => editorStore.currentStepIndex)
+
+// Drag & Drop
+const { 
+  handleDragStart, 
+  handleDragOver, 
+  handleDragEnter,
+  handleDragLeave,
+  handleDrop, 
+  handleDragEnd,
+  isItemDragged,
+  isItemDraggedOver
+} = useDragAndDrop(steps, (newOrder) => {
+  editorStore.reorderSteps(newOrder)
+})
 
 const selectStep = (index: number) => {
   editorStore.setCurrentStep(index)

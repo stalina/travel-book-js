@@ -1,7 +1,18 @@
 <template>
   <div 
-    :class="['step-item', { active: isActive }]"
+    :class="['step-item', { 
+      active: isActive, 
+      dragging: isDragged,
+      'drag-over': isDragOver
+    }]"
+    draggable="true"
     @click="$emit('select')"
+    @dragstart="$emit('dragstart', $event)"
+    @dragover="$emit('dragover', $event)"
+    @dragenter="$emit('dragenter', $event)"
+    @dragleave="$emit('dragleave', $event)"
+    @drop="$emit('drop', $event)"
+    @dragend="$emit('dragend', $event)"
   >
     <div class="drag-handle">⋮⋮</div>
     <div class="step-content">
@@ -35,12 +46,23 @@ interface Props {
   step: Step
   index: number
   isActive: boolean
+  isDragged?: boolean
+  isDragOver?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  isDragged: false,
+  isDragOver: false
+})
 
 defineEmits<{
   select: []
+  dragstart: [event: DragEvent]
+  dragover: [event: DragEvent]
+  dragenter: [event: DragEvent]
+  dragleave: [event: DragEvent]
+  drop: [event: DragEvent]
+  dragend: [event: DragEvent]
 }>()
 
 const formattedDate = computed(() => {
@@ -75,6 +97,25 @@ const photosCount = computed(() => 0)
   border-color: var(--color-primary, #FF6B6B);
   background: linear-gradient(to right, #fff5f5, white);
   box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+}
+
+/* Drag & Drop styles */
+.step-item.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg) scale(0.98);
+  cursor: grabbing;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.step-item.drag-over {
+  border-color: var(--color-secondary, #4ECDC4);
+  background: linear-gradient(to right, #f0fffe, white);
+  border-style: dashed;
+  transform: translateY(-4px);
+}
+
+.step-item.dragging .drag-handle {
+  cursor: grabbing;
 }
 
 .drag-handle {
