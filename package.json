@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest --run",
+    "test:coverage": "vitest --coverage",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "fetch:maps": "node ./scripts/fetch_maps.mjs"
   },
