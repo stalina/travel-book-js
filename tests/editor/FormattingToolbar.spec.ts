@@ -65,7 +65,9 @@ describe('FormattingToolbar', () => {
   it('exposes updateActiveFormats method', () => {
     const wrapper = mount(FormattingToolbar)
 
-    expect(typeof wrapper.vm.updateActiveFormats).toBe('function')
+    // wrapper.vm est typé génériquement par Vue Test Utils; caster en any pour vérifier l'existence
+    const vmAny = wrapper.vm as any
+    expect(typeof vmAny.updateActiveFormats).toBe('function')
   })
 
   it('has sticky positioning', () => {

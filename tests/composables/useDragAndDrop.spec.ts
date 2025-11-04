@@ -4,11 +4,11 @@ import { useDragAndDrop } from '../../src/composables/useDragAndDrop'
 
 describe('useDragAndDrop', () => {
   let items: ReturnType<typeof ref<string[]>>
-  let onReorder: ReturnType<typeof vi.fn>
+  let onReorder: (newOrder: string[]) => void
 
   beforeEach(() => {
     items = ref(['Item 1', 'Item 2', 'Item 3', 'Item 4'])
-    onReorder = vi.fn()
+    onReorder = vi.fn<(newOrder: string[]) => void>() as unknown as (newOrder: string[]) => void
   })
 
   it('initializes with correct default state', () => {

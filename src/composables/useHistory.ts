@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, UnwrapRef } from 'vue'
 
 /**
  * Action dans l'historique
@@ -23,7 +23,7 @@ export interface HistoryOptions<T> {
   /** État initial */
   initialState: T
   /** Callback pour appliquer un état */
-  onApply: (state: T) => void
+  onApply: (state: UnwrapRef<T>) => void
 }
 
 /**
@@ -51,15 +51,17 @@ export interface HistoryOptions<T> {
  */
 export function useHistory<T>(options: HistoryOptions<T>) {
   const { maxSize = 20, initialState, onApply } = options
+  // Internal stored state type (unwrapped for refs)
+  type S = UnwrapRef<T>
   
   // Stack d'actions (undo)
-  const undoStack = ref<HistoryAction<T>[]>([])
+  const undoStack = ref<HistoryAction<S>[]>([])
   
   // Stack de redo
-  const redoStack = ref<HistoryAction<T>[]>([])
+  const redoStack = ref<HistoryAction<S>[]>([])
   
   // État actuel
-  const currentState = ref<T>(initialState) as { value: T }
+  const currentState = ref<S>(initialState as unknown as S) as { value: S }
   
   /**
    * Vérifie si undo est possible
@@ -82,8 +84,8 @@ export function useHistory<T>(options: HistoryOptions<T>) {
   /**
    * Enregistre une nouvelle action dans l'historique
    */
-  const record = (before: T, after: T, description?: string): void => {
-    const action: HistoryAction<T> = {
+  const record = (before: S, after: S, description?: string): void => {
+    const action: HistoryAction<S> = {
       before,
       after,
       timestamp: Date.now(),
@@ -91,7 +93,8 @@ export function useHistory<T>(options: HistoryOptions<T>) {
     }
     
     // Ajouter à la stack undo
-    undoStack.value.push(action)
+  // cast forcé pour éviter les incompatibilités de UnwrapRef dans les signatures génériques
+  undoStack.value.push(action as unknown as HistoryAction<any>)
     
     // Limiter la taille
     if (undoStack.value.length > maxSize) {
@@ -102,7 +105,7 @@ export function useHistory<T>(options: HistoryOptions<T>) {
     redoStack.value = []
     
     // Mettre à jour l'état
-    currentState.value = after
+  currentState.value = after
     
     updateFlags()
   }
@@ -115,14 +118,15 @@ export function useHistory<T>(options: HistoryOptions<T>) {
       return
     }
     
-    const action = undoStack.value.pop()!
+  const action = undoStack.value.pop()!
     
     // Ajouter à la stack redo
-    redoStack.value.push(action)
+  redoStack.value.push(action)
     
     // Appliquer l'état before
-    currentState.value = action.before
-    onApply(action.before)
+  // Appliquer l'état before (cast pour satisfaire TS)
+  currentState.value = action.before as unknown as S
+  onApply(action.before as unknown as S)
     
     updateFlags()
   }
@@ -135,14 +139,16 @@ export function useHistory<T>(options: HistoryOptions<T>) {
       return
     }
     
-    const action = redoStack.value.pop()!
+  const action = redoStack.value.pop()!
     
     // Ajouter à la stack undo
-    undoStack.value.push(action)
+  // push vers undo (cast similaire)
+  undoStack.value.push(action as unknown as HistoryAction<any>)
     
     // Appliquer l'état after
-    currentState.value = action.after
-    onApply(action.after)
+  // Appliquer l'état after (cast pour satisfaire TS)
+  currentState.value = action.after as unknown as S
+  onApply(action.after as unknown as S)
     
     updateFlags()
   }

@@ -10,9 +10,11 @@ describe('StepTitleEditor', () => {
       }
     })
 
-    const input = wrapper.find('input[type="text"]')
-    expect(input.exists()).toBe(true)
-    expect(input.element.value).toBe('Test Title')
+  const input = wrapper.find('input[type="text"]')
+  expect(input.exists()).toBe(true)
+  // caster element pour accéder à .value sans erreur TS
+  const inputEl = input.element as HTMLInputElement
+  expect(inputEl.value).toBe('Test Title')
   })
 
   it('emits update:modelValue on valid blur', async () => {
@@ -22,7 +24,7 @@ describe('StepTitleEditor', () => {
       }
     })
 
-    const input = wrapper.find('input')
+  const input = wrapper.find('input')
     await input.setValue('New Title')
     await input.trigger('blur')
 
@@ -83,7 +85,7 @@ describe('StepTitleEditor', () => {
     })
 
     const input = wrapper.find('input')
-    const blurSpy = vi.spyOn(input.element, 'blur')
+  const blurSpy = vi.spyOn(input.element as HTMLInputElement, 'blur')
     
     await input.trigger('keydown.enter')
 
