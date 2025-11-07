@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@github-copilot'
 created_date: '2025-11-07 20:19'
-updated_date: '2025-11-07 20:21'
+updated_date: '2025-11-07 20:36'
 labels: []
 dependencies: []
 ---
@@ -18,9 +18,9 @@ Ajouter l'intégration entre l'éditeur et les services de génération existant
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Un bouton ou action de l\'éditeur déclenche ArtifactGenerator et met à jour l\'aperçu avec le travel book généré.
-- [ ] #2 L\'utilisateur reçoit un retour visuel en cas de succès ou d\'échec.
-- [ ] #3 Les actions de génération sont verrouillées le temps du traitement pour éviter les doubles requêtes.
+- [x] #1 Un bouton ou action de l\'éditeur déclenche ArtifactGenerator et met à jour l\'aperçu avec le travel book généré.
+- [x] #2 L\'utilisateur reçoit un retour visuel en cas de succès ou d\'échec.
+- [x] #3 Les actions de génération sont verrouillées le temps du traitement pour éviter les doubles requêtes.
 <!-- AC:END -->
 
 ## Implementation Plan
