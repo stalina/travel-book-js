@@ -31,3 +31,14 @@ Ajouter l'intégration entre l'éditeur et les services de génération existant
 3. Propager l'état de chargement et gérer les erreurs côté UI (notif/toast).
 4. Vérifier l'aperçu et ajouter des tests unitaires ou d'intégration pertinents.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+- Connecté les boutons de l'éditeur aux services de génération via le nouveau composable useEditorGeneration.
+- Étendu editor.store avec l'état de preview et verrouillé les actions pendant la génération.
+- Mise à jour de usePreview/PreviewPanel pour utiliser l'iframe srcdoc, afficher le statut et le loader.
+- Ajouté les tests unitaires couvrant EditorHeader et PreviewPanel.
+
+Tests: vitest --run tests/editor/EditorHeader.spec.ts tests/editor/PreviewPanel.spec.ts
+<!-- SECTION:NOTES:END -->
