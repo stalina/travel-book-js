@@ -1,12 +1,24 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import EditorHeader from '../../src/components/editor/EditorHeader.vue'
 import { useEditorStore } from '../../src/stores/editor.store'
 import type { Trip } from '../../src/models/types'
 
+const previewMock = vi.fn()
+const exportMock = vi.fn()
+
+vi.mock('../../src/composables/useEditorGeneration', () => ({
+  useEditorGeneration: () => ({
+    previewTravelBook: previewMock,
+    exportTravelBook: exportMock
+  })
+}))
+
 describe('EditorHeader', () => {
   beforeEach(() => {
+    previewMock.mockReset()
+    exportMock.mockReset()
     setActivePinia(createPinia())
   })
 
@@ -29,6 +41,24 @@ describe('EditorHeader', () => {
     const buttons = wrapper.findAllComponents({ name: 'BaseButton' })
     
     expect(buttons.length).toBeGreaterThanOrEqual(3)
+  })
+
+  it('triggers preview generation when clicking preview button', async () => {
+    const wrapper = mount(EditorHeader)
+    const buttons = wrapper.findAllComponents({ name: 'BaseButton' })
+    const previewButton = buttons.find(btn => btn.text().includes('Prévisualiser'))
+    expect(previewButton).toBeDefined()
+    await previewButton!.trigger('click')
+    expect(previewMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('triggers export when clicking export button', async () => {
+    const wrapper = mount(EditorHeader)
+    const buttons = wrapper.findAllComponents({ name: 'BaseButton' })
+    const exportButton = buttons.find(btn => btn.text().includes('Exporter'))
+    expect(exportButton).toBeDefined()
+    await exportButton!.trigger('click')
+    expect(exportMock).toHaveBeenCalledTimes(1)
   })
 
   it('updates project title in store on blur', async () => {
@@ -69,5 +99,15 @@ describe('EditorHeader', () => {
     
     const saveStatus = wrapper.findComponent({ name: 'SaveStatus' })
     expect(saveStatus.props('status')).toBe('saving')
+  })
+
+  it('disables preview button while exporting', async () => {
+    const wrapper = mount(EditorHeader)
+    const store = useEditorStore()
+    store.setExporting(true)
+    await wrapper.vm.$nextTick()
+    const buttons = wrapper.findAllComponents({ name: 'BaseButton' })
+    const previewButton = buttons.find(btn => btn.text().includes('Prévisualiser'))
+    expect(previewButton?.props('disabled')).toBe(true)
   })
 })

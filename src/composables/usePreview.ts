@@ -21,6 +21,8 @@ export interface PreviewDimensions {
 export interface PreviewOptions {
   /** Trip à prévisualiser */
   trip: Ref<Trip | null>
+  /** HTML généré (single file) à utiliser pour la preview */
+  generatedHtml?: Ref<string | null>
   /** Mode initial */
   initialMode?: PreviewMode
 }
@@ -40,7 +42,7 @@ export interface PreviewOptions {
  * ```
  */
 export function usePreview(options: PreviewOptions) {
-  const { trip, initialMode = 'desktop' } = options
+  const { trip, generatedHtml, initialMode = 'desktop' } = options
   
   const mode = ref<PreviewMode>(initialMode)
   const content = ref<string>('')
@@ -83,6 +85,7 @@ export function usePreview(options: PreviewOptions) {
    */
   const containerStyles = computed(() => ({
     width: `${dimensions.value.width}px`,
+    height: `${dimensions.value.height}px`,
     maxWidth: '100%',
     transform: `scale(${dimensions.value.scale})`,
     transformOrigin: 'top center',
@@ -92,39 +95,128 @@ export function usePreview(options: PreviewOptions) {
   /**
    * Génère le contenu HTML de la preview
    */
+  const escapeHtml = (value: string): string => {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+  }
+
+  const buildPlaceholderDocument = (): string => {
+    const currentTrip = trip.value
+    const title = currentTrip?.name ? escapeHtml(currentTrip.name) : 'Aucun voyage sélectionné'
+    const steps = currentTrip?.steps ?? []
+
+    const stepsMarkup = steps.length
+      ? steps
+          .map((step, index) => `
+            <li class="placeholder-step">
+              <span class="step-badge">${index + 1}</span>
+              <div class="step-infos">
+                <h3>${escapeHtml(step.name || 'Étape sans titre')}</h3>
+                <p>${escapeHtml([step.city, step.country].filter(Boolean).join(', ') || 'Localisation inconnue')}</p>
+              </div>
+            </li>
+          `)
+          .join('')
+      : '<p class="placeholder-empty">Ajoutez des étapes pour générer votre travel book.</p>'
+
+    return `<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      :root { color-scheme: light; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 0;
+        padding: 32px;
+        background: #f6f7fb;
+        color: #1f2933;
+      }
+      .placeholder-wrapper {
+        max-width: 640px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 18px 60px rgba(15, 23, 42, 0.12);
+      }
+      h1 {
+        font-size: 24px;
+        margin: 0 0 12px;
+        color: #ff6b6b;
+        text-align: center;
+      }
+      p.description {
+        text-align: center;
+        margin: 0 0 24px;
+        color: #52606d;
+      }
+      ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 16px;
+      }
+      .placeholder-step {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        padding: 16px;
+        border-radius: 12px;
+        background: #f8fafc;
+        border: 1px solid #e3e8ee;
+      }
+      .step-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #ff6b6b, #f5576c);
+        color: white;
+        font-weight: 700;
+      }
+      .step-infos h3 {
+        margin: 0 0 4px;
+        font-size: 18px;
+      }
+      .step-infos p {
+        margin: 0;
+        color: #8692a6;
+        font-size: 14px;
+      }
+      .placeholder-empty {
+        margin: 0;
+        padding: 24px;
+        text-align: center;
+        color: #8692a6;
+        border: 1px dashed #cbd2d9;
+        border-radius: 12px;
+        background: #f8fafc;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="placeholder-wrapper">
+      <h1>${title || 'Travel Book'}</h1>
+      <p class="description">Cliquez sur « Prévisualiser » pour générer l'aperçu complet.</p>
+      <ul>${stepsMarkup}</ul>
+    </div>
+  </body>
+</html>`
+  }
+
   const generatePreviewContent = (): string => {
-    if (!trip.value) {
-      return '<div class="empty-preview">Aucun voyage chargé</div>'
+    if (generatedHtml?.value && generatedHtml.value.trim().length > 0) {
+      return generatedHtml.value
     }
-    
-    const { name, steps } = trip.value
-    
-    let html = `
-      <div class="preview-trip">
-        <h1 class="trip-title">${name || 'Sans titre'}</h1>
-        <div class="trip-steps">
-    `
-    
-    if (steps && steps.length > 0) {
-      steps.forEach((step, index) => {
-        html += `
-          <div class="preview-step">
-            <div class="step-number">${index + 1}</div>
-            <h2 class="step-name">${step.name}</h2>
-            <p class="step-location">${step.city || ''}, ${step.country || ''}</p>
-          </div>
-        `
-      })
-    } else {
-      html += '<p class="no-steps">Aucune étape</p>'
-    }
-    
-    html += `
-        </div>
-      </div>
-    `
-    
-    return html
+    return buildPlaceholderDocument()
   }
   
   /**
@@ -176,7 +268,7 @@ export function usePreview(options: PreviewOptions) {
   
   // Watch le trip et met à jour la preview automatiquement
   watch(
-    trip,
+    [trip, generatedHtml ?? ref(null)],
     () => {
       updatePreview()
     },

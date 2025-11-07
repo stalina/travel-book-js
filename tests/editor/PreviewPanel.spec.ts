@@ -82,9 +82,9 @@ describe('PreviewPanel', () => {
 
   it('shows preview content', () => {
     const wrapper = mount(PreviewPanel)
-    const previewContent = wrapper.find('.preview-content')
-    
-    expect(previewContent.exists()).toBe(true)
+    const frame = wrapper.find('iframe.preview-frame')
+
+    expect(frame.exists()).toBe(true)
   })
 
   it('applies correct CSS class for preview mode', async () => {
@@ -104,5 +104,37 @@ describe('PreviewPanel', () => {
     store.setPreviewMode('pdf')
     await wrapper.vm.$nextTick()
     expect(content.classes()).toContain('mode-pdf')
+  })
+
+  it('shows success status when preview is generated', async () => {
+    const wrapper = mount(PreviewPanel)
+    const store = useEditorStore()
+    store.setPreviewHtml('<!DOCTYPE html><html><head></head><body><p>Preview</p></body></html>')
+    await wrapper.vm.$nextTick()
+
+    const status = wrapper.find('.status-message')
+    expect(status.classes()).toContain('type-success')
+    expect(status.text()).toContain('Aperçu généré le')
+  })
+
+  it('shows loading overlay while generating', async () => {
+    const wrapper = mount(PreviewPanel)
+    const store = useEditorStore()
+    store.setPreviewLoading(true)
+    await wrapper.vm.$nextTick()
+
+    const overlay = wrapper.find('.preview-overlay')
+    expect(overlay.exists()).toBe(true)
+  })
+
+  it('shows error status when preview fails', async () => {
+    const wrapper = mount(PreviewPanel)
+    const store = useEditorStore()
+    store.setPreviewError('Erreur de génération')
+    await wrapper.vm.$nextTick()
+
+    const status = wrapper.find('.status-message')
+    expect(status.classes()).toContain('type-error')
+    expect(status.text()).toContain('Erreur de génération')
   })
 })

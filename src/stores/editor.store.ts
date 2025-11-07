@@ -15,6 +15,12 @@ export const useEditorStore = defineStore('editor', () => {
   const lastSaveTime = ref<Date | null>(null)
   const previewMode = ref<'mobile' | 'desktop' | 'pdf'>('desktop')
   const activeSidebarTab = ref<'steps' | 'themes' | 'options'>('steps')
+  const previewHtml = ref<string | null>(null)
+  const previewError = ref<string | null>(null)
+  const previewUpdatedAt = ref<Date | null>(null)
+  const isPreviewLoading = ref(false)
+  const isExporting = ref(false)
+  const isPreviewStale = ref(true)
 
   // Getters
   const currentStep = computed(() => {
@@ -42,9 +48,42 @@ export const useEditorStore = defineStore('editor', () => {
   })
 
   // Actions
+  const setPreviewLoading = (loading: boolean) => {
+    isPreviewLoading.value = loading
+  }
+
+  const setExporting = (loading: boolean) => {
+    isExporting.value = loading
+  }
+
+  const setPreviewHtml = (html: string | null) => {
+    previewHtml.value = html
+    previewUpdatedAt.value = html ? new Date() : null
+    previewError.value = null
+    isPreviewStale.value = !html
+  }
+
+  const setPreviewError = (message: string | null) => {
+    previewError.value = message
+  }
+
+  const markPreviewStale = () => {
+    if (!isPreviewStale.value) {
+      isPreviewStale.value = true
+    }
+  }
+
+  const invalidatePreview = () => {
+    previewHtml.value = null
+    previewUpdatedAt.value = null
+    previewError.value = null
+    isPreviewStale.value = true
+  }
+
   const setTrip = (trip: Trip) => {
     currentTrip.value = trip
     currentStepIndex.value = 0
+    invalidatePreview()
   }
 
   const setCurrentStep = (index: number) => {
@@ -57,6 +96,7 @@ export const useEditorStore = defineStore('editor', () => {
     if (currentTrip.value?.steps && stepIndex >= 0 && stepIndex < currentTrip.value.steps.length) {
       currentTrip.value.steps[stepIndex].name = title
       triggerAutoSave()
+      markPreviewStale()
     }
   }
 
@@ -64,6 +104,7 @@ export const useEditorStore = defineStore('editor', () => {
     if (currentTrip.value?.steps && stepIndex >= 0 && stepIndex < currentTrip.value.steps.length) {
       currentTrip.value.steps[stepIndex].description = description
       triggerAutoSave()
+      markPreviewStale()
     }
   }
 
@@ -71,6 +112,7 @@ export const useEditorStore = defineStore('editor', () => {
     if (currentTrip.value) {
       currentTrip.value.steps = newSteps
       triggerAutoSave()
+      markPreviewStale()
     }
   }
 
@@ -110,6 +152,12 @@ export const useEditorStore = defineStore('editor', () => {
     lastSaveTime,
     previewMode,
     activeSidebarTab,
+    previewHtml,
+    previewError,
+    previewUpdatedAt,
+    isPreviewLoading,
+    isExporting,
+    isPreviewStale,
     // Getters
     currentStep,
     totalPhotos,
@@ -125,6 +173,12 @@ export const useEditorStore = defineStore('editor', () => {
     setPreviewMode,
     setActiveSidebarTab,
     triggerAutoSave,
-    setAutoSaveStatus
+    setAutoSaveStatus,
+    setPreviewLoading,
+    setExporting,
+    setPreviewHtml,
+    setPreviewError,
+    markPreviewStale,
+    invalidatePreview
   }
 })

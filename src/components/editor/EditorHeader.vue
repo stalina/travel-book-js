@@ -15,9 +15,25 @@
         :status="editorStore.autoSaveStatus"
         :last-save-time="editorStore.lastSaveTime"
       />
-      <BaseButton variant="outline" size="sm" @click="onImport">📥 Importer</BaseButton>
-      <BaseButton variant="secondary" size="sm" @click="onPreview">👁️ Prévisualiser</BaseButton>
-      <BaseButton variant="primary" size="sm" @click="onExport">📤 Exporter</BaseButton>
+      <BaseButton
+        variant="outline"
+        size="sm"
+        @click="onImport"
+      >📥 Importer</BaseButton>
+      <BaseButton
+        variant="secondary"
+        size="sm"
+        :loading="editorStore.isPreviewLoading"
+        :disabled="editorStore.isExporting"
+        @click="onPreview"
+      >👁️ Prévisualiser</BaseButton>
+      <BaseButton
+        variant="primary"
+        size="sm"
+        :loading="editorStore.isExporting"
+        :disabled="editorStore.isPreviewLoading"
+        @click="onExport"
+      >📤 Exporter</BaseButton>
     </div>
   </header>
 </template>
@@ -25,11 +41,13 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useEditorStore } from '../../stores/editor.store'
+import { useEditorGeneration } from '../../composables/useEditorGeneration'
 import BaseButton from '../BaseButton.vue'
 import SaveStatus from './SaveStatus.vue'
 
 const editorStore = useEditorStore()
 const projectTitle = ref('')
+const { previewTravelBook, exportTravelBook } = useEditorGeneration()
 
 // Synchroniser le titre avec le store
 watch(() => editorStore.currentTrip?.name, (newName) => {
@@ -41,6 +59,7 @@ const onTitleBlur = () => {
     // Mise à jour du titre du voyage
     editorStore.currentTrip.name = projectTitle.value
     editorStore.triggerAutoSave()
+    editorStore.markPreviewStale()
   }
 }
 
@@ -49,14 +68,12 @@ const onImport = () => {
   window.location.hash = '#/'
 }
 
-const onPreview = () => {
-  // TODO: Ouvrir le viewer en mode preview
-  console.log('Preview clicked')
+const onPreview = async () => {
+  await previewTravelBook()
 }
 
-const onExport = () => {
-  // TODO: Déclencher l'export
-  console.log('Export clicked')
+const onExport = async () => {
+  await exportTravelBook()
 }
 </script>
 

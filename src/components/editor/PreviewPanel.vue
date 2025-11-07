@@ -19,11 +19,24 @@
         class="preview-container"
         :style="containerStyles"
       >
-        <div 
-          class="preview-render"
-          v-html="previewContent"
-        ></div>
+        <div v-if="isGenerating" class="preview-overlay">
+          <span class="overlay-spinner"></span>
+          <p>Génération en cours…</p>
+        </div>
+        <iframe
+          v-else
+          class="preview-frame"
+          :style="frameStyles"
+          :srcdoc="previewContent"
+          title="Prévisualisation du travel book"
+        ></iframe>
       </div>
+    </div>
+
+    <div class="preview-status">
+      <p :class="['status-message', `type-${previewStatus.type}`]">
+        {{ previewStatus.message }}
+      </p>
     </div>
     
     <div class="preview-stats">
@@ -62,13 +75,14 @@ const modes = [
 
 // Utiliser usePreview pour la synchronisation temps réel
 const {
-  mode: previewMode,
   containerStyles,
   content: previewContent,
   stats: previewStats,
-  setMode: setPreviewMode
+  setMode: setPreviewMode,
+  dimensions
 } = usePreview({
   trip: computed(() => editorStore.currentTrip),
+  generatedHtml: computed(() => editorStore.previewHtml),
   initialMode: editorStore.previewMode
 })
 
@@ -78,6 +92,51 @@ const switchMode = (mode: 'mobile' | 'desktop' | 'pdf') => {
   editorStore.setPreviewMode(mode)
   setPreviewMode(mode)
 }
+
+const frameStyles = computed(() => ({
+  width: `${dimensions.value.width}px`,
+  height: `${dimensions.value.height}px`,
+  border: 'none',
+  background: 'white'
+}))
+
+const isGenerating = computed(() => editorStore.isPreviewLoading)
+
+const previewStatus = computed(() => {
+  if (editorStore.previewError) {
+    return {
+      type: 'error' as const,
+      message: editorStore.previewError
+    }
+  }
+
+  if (editorStore.previewUpdatedAt) {
+    const formatted = editorStore.previewUpdatedAt.toLocaleString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+
+    if (editorStore.isPreviewStale) {
+      return {
+        type: 'warning' as const,
+        message: `Aperçu généré le ${formatted}. Modifications en attente d'une nouvelle génération.`
+      }
+    }
+
+    return {
+      type: 'success' as const,
+      message: `Aperçu généré le ${formatted}.`
+    }
+  }
+
+  return {
+    type: 'hint' as const,
+    message: 'Cliquez sur « Prévisualiser » pour générer un premier rendu.'
+  }
+})
 
 // Utiliser les stats du composable usePreview (temps réel)
 const totalPhotos = computed(() => previewStats.value.photos)
@@ -151,67 +210,67 @@ const estimatedPages = computed(() => previewStats.value.pages)
   margin: 0 auto;
 }
 
-.preview-render {
-  padding: var(--spacing-lg, 24px);
-  min-height: 200px;
+.preview-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: var(--radius-md, 8px);
+  background: white;
 }
 
-/* Styles pour le contenu de preview */
-.preview-render :deep(.empty-preview) {
-  text-align: center;
-  color: var(--color-text-secondary, #666);
-  padding: var(--spacing-xl, 32px);
-  font-size: var(--font-size-base, 16px);
-}
-
-.preview-render :deep(.trip-title) {
-  font-size: var(--font-size-2xl, 24px);
-  font-weight: var(--font-weight-bold, 700);
-  color: var(--color-primary, #FF6B6B);
-  margin-bottom: var(--spacing-lg, 24px);
-  text-align: center;
-}
-
-.preview-render :deep(.preview-step) {
-  padding: var(--spacing-md, 16px);
-  margin-bottom: var(--spacing-sm, 8px);
-  border-left: 3px solid var(--color-primary, #FF6B6B);
-  background: var(--color-background, #f5f5f5);
-  border-radius: var(--radius-sm, 4px);
+.preview-overlay {
   display: flex;
-  gap: var(--spacing-md, 16px);
-  align-items: center;
-}
-
-.preview-render :deep(.step-number) {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--color-primary, #FF6B6B);
-  color: white;
-  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-weight: var(--font-weight-bold, 700);
-  flex-shrink: 0;
+  gap: var(--spacing-md, 16px);
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-md, 8px);
+  color: var(--color-text-primary, #333);
+  font-weight: var(--font-weight-medium, 500);
 }
 
-.preview-render :deep(.step-name) {
-  font-size: var(--font-size-lg, 18px);
-  font-weight: var(--font-weight-semibold, 600);
+.overlay-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-top-color: var(--color-primary, #FF6B6B);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.preview-status {
+  padding: 0 var(--spacing-lg, 24px) var(--spacing-lg, 24px);
+  background: white;
+  border-top: 1px solid var(--color-border, #e0e0e0);
+}
+
+.status-message {
   margin: 0;
-}
-
-.preview-render :deep(.step-location) {
   font-size: var(--font-size-sm, 14px);
   color: var(--color-text-secondary, #666);
-  margin: var(--spacing-xs, 4px) 0 0 0;
 }
 
-.preview-render :deep(.no-steps) {
-  text-align: center;
+.status-message.type-success {
+  color: #2a9d4b;
+}
+
+.status-message.type-warning {
+  color: #e9a700;
+}
+
+.status-message.type-error {
+  color: #d1433c;
+}
+
+.status-message.type-hint {
   color: var(--color-text-secondary, #666);
-  padding: var(--spacing-lg, 24px);
 }
 
 .preview-stats {
