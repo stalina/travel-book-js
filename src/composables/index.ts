@@ -7,3 +7,4 @@
 
 export { useFileSelection } from './useFileSelection'
 export { useGeneration } from './useGeneration'
+export { useEditorGeneration } from './useEditorGeneration'
