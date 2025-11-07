@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@agent-k'
 created_date: '2025-10-30 22:11'
-updated_date: '2025-11-07 22:52'
+updated_date: '2025-11-07 22:54'
 labels: []
 dependencies: []
 parent_task_id: task-21
@@ -39,3 +39,14 @@ Gestionnaire de photos avec preview, crop, filtres, réorganisation, et suggesti
 5. Intégrer l’édition (filtres CSS, sliders, rotation, recadrage ratios, historique d’actions) et appliquer les modifications aux vignettes.
 6. Écrire les tests Vitest (store, composables, composant principal) pour filtrage, sélection, édition ; ajouter scénarios de snapshot/interaction.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+- Vue Gallery accessible depuis l'éditeur avec boutons navigation et route /gallery.
+- Store Pinia photo-gallery avec métadonnées (IA, filtres, sélection, suggestions) et JSZip pour téléchargements.
+- Service PhotoMetadataService pour analyser les photos (palette, qualité, orientation).
+- Composants UI complets (header, filtres, grille/liste, barre de sélection, suggestions, éditeur photo).
+- Tests Vitest sur le store (filtres, sélection, favoris, ajustements).
+- Reste à fusionner l'expérience galerie directement dans l'éditeur (nouvelles tâches 21.8→21.12).
+<!-- SECTION:NOTES:END -->
