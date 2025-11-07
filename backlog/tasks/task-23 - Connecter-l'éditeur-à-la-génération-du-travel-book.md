@@ -1,9 +1,11 @@
 ---
 id: task-23
 title: Connecter l'éditeur à la génération du travel book
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@github-copilot'
 created_date: '2025-11-07 20:19'
+updated_date: '2025-11-07 20:19'
 labels: []
 dependencies: []
 ---
