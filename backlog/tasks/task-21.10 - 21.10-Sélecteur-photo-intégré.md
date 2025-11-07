@@ -1,0 +1,25 @@
+---
+id: task-21.10
+title: 21.10 - Sélecteur photo intégré
+status: To Do
+assignee: []
+created_date: '2025-11-07 22:53'
+labels: []
+dependencies: []
+parent_task_id: task-21
+priority: medium
+---
+
+## Description
+
+<!-- SECTION:DESCRIPTION:BEGIN -->
+Remplacer la modale séparée par un sélecteur de photos intégré à chaque slot de page, avec filtrage et upload.
+<!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Chaque slot photo propose un panel latéral de sélection listant les photos de l'étape avec recherche et filtres basiques.
+- [ ] #2 Possibilité d'uploader une nouvelle image depuis le slot et de l'associer à l'étape.
+- [ ] #3 Les photos sélectionnées s'affichent immédiatement dans la page et dans la preview.
+- [ ] #4 Tests Vitest sur le sélecteur (composable/store) et scénarios de remplissage de slots.
+<!-- AC:END -->
