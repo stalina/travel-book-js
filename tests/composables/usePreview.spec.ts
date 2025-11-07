@@ -104,7 +104,9 @@ describe('usePreview', () => {
     const trip = ref<Trip | null>(null)
     const { content } = usePreview({ trip })
 
-    expect(content.value).toContain('Aucun voyage chargé')
+    expect(content.value).toContain('Aucun voyage sélectionné')
+    expect(content.value).toContain('Cliquez sur « Prévisualiser »')
+    expect(content.value.startsWith('<!DOCTYPE html>')).toBe(true)
   })
 
   it('generates preview content for trip', async () => {
@@ -122,7 +124,7 @@ describe('usePreview', () => {
     const trip = ref<Trip | null>(null)
     const { content } = usePreview({ trip })
 
-    expect(content.value).toContain('Aucun voyage')
+    expect(content.value).toContain('Aucun voyage sélectionné')
 
     trip.value = createMockTrip()
     await new Promise(resolve => setTimeout(resolve, 0))
