@@ -28,3 +28,14 @@ Gestionnaire de photos avec preview, crop, filtres, réorganisation, et suggesti
 - [ ] #5 Modal d'édition photo avec filtres prédéfinis, sliders luminosité/contraste/saturation, rotation 90°, recadrage multi-ratios, undo/redo et prévisualisation en direct.
 - [ ] #6 Jeux de tests unitaires couvrant filtres, sélection et application des réglages d'édition.
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Modéliser les photos (types, service PhotoMetadataService) pour extraire métadonnées, ratio et scores IA à partir de window.__parsedTrip.stepPhotos.
+2. Créer un store Pinia photoGallery.store pour charger les assets, gérer filtres, tris, sélection, favoris et suggestions (undo/redo sur réglages inclus).
+3. Développer les composables et utilitaires (useGalleryFilters, useSelectionShortcuts, layoutSuggestions.ts) alimentant la vue.
+4. Implémenter la vue GalleryView + composants (GalleryHeader, GalleryFilters, GalleryGrid/Compact/List, FloatingActions, SuggestionsPanel, PhotoEditorModal) avec navigation depuis l’éditeur et retour.
+5. Intégrer l’édition (filtres CSS, sliders, rotation, recadrage ratios, historique d’actions) et appliquer les modifications aux vignettes.
+6. Écrire les tests Vitest (store, composables, composant principal) pour filtrage, sélection, édition ; ajouter scénarios de snapshot/interaction.
+<!-- SECTION:PLAN:END -->
