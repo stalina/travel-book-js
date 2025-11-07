@@ -1,9 +1,11 @@
 ---
 id: task-21.8
 title: '21.8 - Éditeur étape : proposition auto + preview'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@agent-k'
 created_date: '2025-11-07 22:53'
+updated_date: '2025-11-07 22:55'
 labels: []
 dependencies: []
 parent_task_id: task-21
