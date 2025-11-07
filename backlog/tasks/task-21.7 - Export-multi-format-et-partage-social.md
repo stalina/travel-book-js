@@ -4,10 +4,12 @@ title: Export multi-format et partage social
 status: To Do
 assignee: []
 created_date: '2025-10-30 22:12'
+updated_date: '2025-11-07 20:15'
 labels: []
 dependencies: []
 parent_task_id: task-21
 priority: low
+ordinal: 4000
 ---
 
 ## Description

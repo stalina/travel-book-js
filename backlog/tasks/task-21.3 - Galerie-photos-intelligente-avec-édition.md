@@ -1,15 +1,16 @@
 ---
 id: task-21.3
 title: Galerie photos intelligente avec édition
-status: In Progress
+status: To Do
 assignee:
   - '@agent-k'
 created_date: '2025-10-30 22:11'
-updated_date: '2025-11-02 23:00'
+updated_date: '2025-11-07 20:15'
 labels: []
 dependencies: []
 parent_task_id: task-21
 priority: medium
+ordinal: 5000
 ---
 
 ## Description
