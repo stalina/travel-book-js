@@ -34,3 +34,12 @@ Brancher l'éditeur photo existant sur les slots de page et assurer la persistan
 3. Étendre le store pour persister filtres/crop/rotation par photo + wire preview regen
 4. Couvrir par tests store et composant (undo/redo, persistance)
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+- Branché PhotoEditorModal sur les vignettes de l'étape et passage de l'historique undo/redo.
+- Étendu le store éditeur pour persister filtres/crop/rotation et éviter les doubles reconstructions de preview.
+- Normalisé les valeurs par défaut côté StepBuilder pour refléter les ajustements dans le rendu.
+- Couverture Vitest ajoutée/ajustée (StepEditor + editor.store) et campagne `npm test` complète.
+<!-- SECTION:NOTES:END -->
