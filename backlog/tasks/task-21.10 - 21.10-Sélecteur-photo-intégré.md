@@ -41,4 +41,6 @@ Remplacer la modale séparée par un sélecteur de photos intégré à chaque sl
 - Intégration du panneau de bibliothèque directement dans StepEditor avec recherche, filtres orientation et slots interactifs
 - Nouveau composable usePhotoLibrary, constantes de capacité et enrichissement du store pour clamp et import d'images
 - Upload photo inline disponible et regen preview via notifyPageChange
+
+Tests : npm run test
 <!-- SECTION:NOTES:END -->
