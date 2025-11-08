@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@agent-k'
 created_date: '2025-11-07 22:53'
-updated_date: '2025-11-08 08:49'
+updated_date: '2025-11-08 10:17'
 labels: []
 dependencies: []
 parent_task_id: task-21
@@ -20,10 +20,10 @@ Remplacer la modale séparée par un sélecteur de photos intégré à chaque sl
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Chaque slot photo propose un panel latéral de sélection listant les photos de l'étape avec recherche et filtres basiques.
-- [ ] #2 Possibilité d'uploader une nouvelle image depuis le slot et de l'associer à l'étape.
-- [ ] #3 Les photos sélectionnées s'affichent immédiatement dans la page et dans la preview.
-- [ ] #4 Tests Vitest sur le sélecteur (composable/store) et scénarios de remplissage de slots.
+- [x] #1 Chaque slot photo propose un panel latéral de sélection listant les photos de l'étape avec recherche et filtres basiques.
+- [x] #2 Possibilité d'uploader une nouvelle image depuis le slot et de l'associer à l'étape.
+- [x] #3 Les photos sélectionnées s'affichent immédiatement dans la page et dans la preview.
+- [x] #4 Tests Vitest sur le sélecteur (composable/store) et scénarios de remplissage de slots.
 <!-- AC:END -->
 
 ## Implementation Plan
