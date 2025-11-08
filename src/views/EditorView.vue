@@ -14,13 +14,21 @@
     </EditorSidebar>
     <main class="editor-main">
       <StepEditor />
+
+      <div v-if="!editorStore.currentTrip" class="editor-placeholder">
+        <div class="placeholder-content">
+          <h2>Aucun voyage chargé</h2>
+          <p>Importez un fichier GPX/ZIP ou revenez à l'accueil pour sélectionner un voyage.</p>
+          <BaseButton variant="primary" size="sm" @click="goHome">📥 Importer</BaseButton>
+        </div>
+      </div>
     </main>
     <PreviewPanel />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { onMounted, watch, nextTick } from 'vue'
 import { useEditorStore } from '../stores/editor.store'
 import { useTripStore } from '../stores/trip.store'
 import { useHistory } from '../composables/useHistory'
@@ -29,10 +37,13 @@ import EditorSidebar from '../components/editor/EditorSidebar.vue'
 import PreviewPanel from '../components/editor/PreviewPanel.vue'
 import StepList from '../components/editor/StepList.vue'
 import StepEditor from '../components/editor/StepEditor.vue'
+import BaseButton from '../components/BaseButton.vue'
+import { useEditorGeneration } from '../composables/useEditorGeneration'
 import type { Trip } from '../models/types'
 
 const editorStore = useEditorStore()
 const tripStore = useTripStore()
+const { previewTravelBook } = useEditorGeneration()
 
 // Undo/Redo avec useHistory
 const {
@@ -76,6 +87,52 @@ onMounted(async () => {
     }
   }
 })
+
+  // Lancer en tâche de fond la génération des previews pour toutes les étapes
+  const generateAllPreviewsInBackground = async () => {
+    const trip = editorStore.currentTrip
+    if (!trip?.steps?.length) return
+    // Garder l'index courant pour restaurer ensuite
+    const originalIndex = editorStore.currentStepIndex
+    for (let i = 0; i < trip.steps.length; i++) {
+      try {
+        editorStore.setCurrentStep(i)
+        // Attendre la génération de la preview pour l'étape
+        // eslint-disable-next-line no-await-in-loop
+        await editorStore.regenerateCurrentStepPreview()
+        // Petite pause pour libérer le thread UI
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((r) => setTimeout(r, 200))
+      } catch {
+        // noop - on continue la génération des autres étapes
+      }
+    }
+    // Restaurer l'étape initiale
+    editorStore.setCurrentStep(originalIndex)
+  }
+
+  // Démarrer sans await pour ne pas bloquer l'UI
+  void generateAllPreviewsInBackground()
+
+  // Lancer la génération de la prévisualisation globale lorsque
+  // le voyage est initialisé (important pour la preview PDF / iframe)
+  watch(() => editorStore.currentTrip, (trip) => {
+    if (trip) {
+      // Ne pas await pour ne pas bloquer l'UI
+      void previewTravelBook()
+    }
+  })
+
+  // Après une sauvegarde automatique (status 'saved'), relancer la prévisualisation
+  watch(() => editorStore.autoSaveStatus, (status) => {
+    if (status === 'saved') {
+      void previewTravelBook()
+    }
+  })
+
+const goHome = () => {
+  window.location.hash = '#/'
+}
 </script>
 
 <style scoped>
@@ -84,7 +141,7 @@ onMounted(async () => {
   grid-template-areas: 
     "header header header"
     "sidebar main preview";
-  grid-template-columns: 280px 1fr 400px;
+  grid-template-columns: var(--editor-sidebar-width, 280px) 1fr var(--editor-preview-width, 400px);
   grid-template-rows: 60px 1fr;
   height: 100vh;
   background: var(--color-background, #f5f5f5);
@@ -135,9 +192,8 @@ onMounted(async () => {
       "sidebar main";
     grid-template-columns: 250px 1fr;
   }
-  
   /* Masquer le preview sur tablette */
-  .editor-layout > :nth-child(4) {
+  .preview-panel {
     display: none;
   }
 }
@@ -152,7 +208,7 @@ onMounted(async () => {
   }
   
   /* Masquer sidebar sur mobile (sera accessible via menu) */
-  .editor-layout > :nth-child(2) {
+  .editor-sidebar {
     display: none;
   }
   

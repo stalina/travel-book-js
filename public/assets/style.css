@@ -7,6 +7,9 @@
   --grey-19: #b7c0cd;
   --grey-23: #e7eaee;
 
+  /* Header height used by the preview overlay positioning */
+  --header-height: 64px;
+
   --content-padding: 202px;
   --full-to-relative: 0.35;
   --country-shape-size: 348px;

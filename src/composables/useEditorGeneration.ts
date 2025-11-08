@@ -3,6 +3,9 @@ import { useEditorStore } from '../stores/editor.store'
 import { artifactGenerator, type GenerateOptions, type GeneratedArtifacts } from '../services/generate.service'
 import { viewerController } from '../controllers/ViewerController'
 
+// Module-level lock to prevent concurrent preview generations
+let previewLock = false
+
 /**
  * Gestion centralisée de la génération depuis l'éditeur.
  * Facilite la prévisualisation et l'export tout en synchronisant les états UI.
@@ -30,10 +33,13 @@ export function useEditorGeneration() {
   }
 
   const previewTravelBook = async (): Promise<GeneratedArtifacts | null> => {
-    if (editorStore.isPreviewLoading || editorStore.isExporting) {
+    // Prevent concurrent preview generations using a module-level lock.
+    // This avoids race conditions when multiple components trigger preview at the same time.
+    if (previewLock || editorStore.isPreviewLoading || editorStore.isExporting) {
       return null
     }
 
+    previewLock = true
     editorStore.setPreviewError(null)
     editorStore.setPreviewLoading(true)
 
@@ -48,6 +54,7 @@ export function useEditorGeneration() {
       return null
     } finally {
       editorStore.setPreviewLoading(false)
+      previewLock = false
     }
   }
 
