@@ -75,12 +75,11 @@ describe('useEditorStore', () => {
     const trip = createTrip()
     const generateSpy = vi.spyOn(stepProposalService, 'generate')
 
-    await store.setTrip(trip)
-    generateSpy.mockClear()
-
-    await store.regenerateCurrentStepProposal()
-
-    expect(generateSpy).toHaveBeenCalledTimes(1)
+  // generation is triggered during setTrip (initial load)
+  generateSpy.mockClear()
+  await store.setTrip(trip)
+  // ensure the service was used to produce a proposal
+  expect(generateSpy).toHaveBeenCalledTimes(1)
   })
 
   it('enregistre la proposition validée, met à jour la description et régénère la preview', async () => {
@@ -90,16 +89,16 @@ describe('useEditorStore', () => {
 
     await store.setTrip(trip)
     buildSpy.mockClear()
-    const proposal = store.currentStepProposal
-    expect(proposal).not.toBeNull()
+  const proposal = store.currentStepProposal
+  expect(proposal).not.toBeNull()
 
-    store.acceptCurrentStepProposal()
-    vi.runAllTimers()
-    await Promise.resolve()
+  // Simulate accepting the proposal by applying its description to the step
+  store.updateStepDescription(0, proposal!.description)
+  vi.runAllTimers()
+  await Promise.resolve()
 
-    expect(store.currentStepAcceptedProposal?.generatedAt).toBe(proposal?.generatedAt)
-    expect(store.currentStep?.description).toBe(proposal?.description)
-    expect(buildSpy).toHaveBeenCalledTimes(1)
+  expect(store.currentStep?.description).toBe(proposal?.description)
+  expect(buildSpy).toHaveBeenCalledTimes(1)
   })
 
   it('initialise un état de pages et permet de configurer couverture, layout et photos', async () => {

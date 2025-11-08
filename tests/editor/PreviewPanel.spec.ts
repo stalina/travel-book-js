@@ -34,11 +34,15 @@ describe('PreviewPanel', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
   })
+  let store: ReturnType<typeof useEditorStore>
+  beforeEach(() => {
+    store = useEditorStore()
+  })
 
   it('renders preview modes buttons', async () => {
     const wrapper = mount(PreviewPanel)
-    // Simulate toggle event to open the panel
-    window.dispatchEvent(new CustomEvent('toggle-preview', { detail: { open: true } }))
+  // Open the panel via the store
+  store.setPreviewOpen(true)
     await wrapper.vm.$nextTick()
     const modeButtons = wrapper.findAll('.mode-button')
     expect(modeButtons.length).toBe(3)
@@ -56,10 +60,9 @@ describe('PreviewPanel', () => {
 
   it('switches preview mode on button click', async () => {
     const wrapper = mount(PreviewPanel)
-    const store = useEditorStore()
-    // Open the panel
-    window.dispatchEvent(new CustomEvent('toggle-preview', { detail: { open: true } }))
-    await wrapper.vm.$nextTick()
+  // Open the panel
+  store.setPreviewOpen(true)
+  await wrapper.vm.$nextTick()
     const modeButtons = wrapper.findAll('.mode-button')
 
     // Initial mode: desktop
@@ -81,7 +84,6 @@ describe('PreviewPanel', () => {
 
   it('displays correct stats from store', async () => {
     const wrapper = mount(PreviewPanel)
-    const store = useEditorStore()
     
     const mockTrip: Trip = {
 		id: 1,
@@ -105,8 +107,8 @@ describe('PreviewPanel', () => {
 
   it('shows preview content', async () => {
     const wrapper = mount(PreviewPanel)
-    window.dispatchEvent(new CustomEvent('toggle-preview', { detail: { open: true } }))
-    await wrapper.vm.$nextTick()
+  store.setPreviewOpen(true)
+  await wrapper.vm.$nextTick()
     const frame = wrapper.find('iframe.preview-frame')
     // When expanded the class may be different (preview-frame-expanded); accept either
     const frameExpanded = wrapper.find('iframe.preview-frame-expanded')
@@ -121,8 +123,8 @@ describe('PreviewPanel', () => {
     expect(initiallyMounted).toBe(false)
 
     // Open the panel and expect the iframe to appear
-    window.dispatchEvent(new CustomEvent('toggle-preview', { detail: { open: true } }))
-    await wrapper.vm.$nextTick()
+  store.setPreviewOpen(true)
+  await wrapper.vm.$nextTick()
     const mountedAfterOpen = wrapper.find('iframe.preview-frame').exists() || wrapper.find('iframe.preview-frame-expanded').exists()
     expect(mountedAfterOpen).toBe(true)
   })
@@ -144,10 +146,9 @@ describe('PreviewPanel', () => {
 
   it('applies correct CSS class for preview mode', async () => {
     const wrapper = mount(PreviewPanel)
-    const store = useEditorStore()
     // Open the panel so .preview-content is present
-    window.dispatchEvent(new CustomEvent('toggle-preview', { detail: { open: true } }))
-    await wrapper.vm.$nextTick()
+  store.setPreviewOpen(true)
+  await wrapper.vm.$nextTick()
     const content = wrapper.find('.preview-content')
 
     // Desktop
@@ -166,10 +167,9 @@ describe('PreviewPanel', () => {
 
   it('shows success status when preview is generated', async () => {
     const wrapper = mount(PreviewPanel)
-    const store = useEditorStore()
     // Open panel
-    window.dispatchEvent(new CustomEvent('toggle-preview', { detail: { open: true } }))
-    await wrapper.vm.$nextTick()
+  store.setPreviewOpen(true)
+  await wrapper.vm.$nextTick()
     store.setPreviewHtml('<!DOCTYPE html><html><head></head><body><p>Preview</p></body></html>')
     await wrapper.vm.$nextTick()
 
@@ -180,10 +180,9 @@ describe('PreviewPanel', () => {
 
   it('shows loading overlay while generating', async () => {
     const wrapper = mount(PreviewPanel)
-    const store = useEditorStore()
     // Open panel
-    window.dispatchEvent(new CustomEvent('toggle-preview', { detail: { open: true } }))
-    await wrapper.vm.$nextTick()
+  store.setPreviewOpen(true)
+  await wrapper.vm.$nextTick()
     store.setPreviewLoading(true)
     await wrapper.vm.$nextTick()
 
@@ -193,9 +192,8 @@ describe('PreviewPanel', () => {
 
   it('shows error status when preview fails', async () => {
     const wrapper = mount(PreviewPanel)
-    const store = useEditorStore()
     // Open panel
-    window.dispatchEvent(new CustomEvent('toggle-preview', { detail: { open: true } }))
+    store.setPreviewOpen(true)
     await wrapper.vm.$nextTick()
     store.setPreviewError('Erreur de génération')
     await wrapper.vm.$nextTick()
@@ -207,10 +205,8 @@ describe('PreviewPanel', () => {
 
   it('renders print button and triggers print when clicked', async () => {
     const wrapper = mount(PreviewPanel)
-    const store = useEditorStore()
-
     // Open panel and provide preview content
-    window.dispatchEvent(new CustomEvent('toggle-preview', { detail: { open: true } }))
+    store.setPreviewOpen(true)
     await wrapper.vm.$nextTick()
     store.setPreviewHtml('<!DOCTYPE html><html><body><p>Preview</p></body></html>')
     await wrapper.vm.$nextTick()
@@ -230,10 +226,8 @@ describe('PreviewPanel', () => {
 
   it('renders open-in-new-tab button and opens a new window when clicked', async () => {
     const wrapper = mount(PreviewPanel)
-    const store = useEditorStore()
-
     // Open panel and provide preview content
-    window.dispatchEvent(new CustomEvent('toggle-preview', { detail: { open: true } }))
+    store.setPreviewOpen(true)
     await wrapper.vm.$nextTick()
     store.setPreviewHtml('<!DOCTYPE html><html><body><p>Preview</p></body></html>')
     await wrapper.vm.$nextTick()
@@ -250,10 +244,8 @@ describe('PreviewPanel', () => {
 
   it('renders download HTML button and triggers download when clicked', async () => {
     const wrapper = mount(PreviewPanel)
-    const store = useEditorStore()
-
     // Open panel and provide preview content
-    window.dispatchEvent(new CustomEvent('toggle-preview', { detail: { open: true } }))
+    store.setPreviewOpen(true)
     await wrapper.vm.$nextTick()
     store.setPreviewHtml('<!DOCTYPE html><html><body><p>Preview</p></body></html>')
     await wrapper.vm.$nextTick()

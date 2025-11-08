@@ -262,6 +262,8 @@ export const useEditorStore = defineStore('editor', () => {
 	const isPreviewLoading = ref(false)
 	const isExporting = ref(false)
 	const isPreviewStale = ref(true)
+	// Whether the right-side preview panel is open/expanded
+	const isPreviewOpen = ref(false)
 
 	const stepPhotosByStep = reactive<Record<number, EditorStepPhoto[]>>({})
 	const photoHistoriesByStep = reactive<Record<number, Record<number, PhotoEditHistory>>>({})
@@ -540,6 +542,10 @@ export const useEditorStore = defineStore('editor', () => {
 		isPreviewLoading.value = loading
 	}
 
+	const setPreviewOpen = (open: boolean) => {
+		isPreviewOpen.value = !!open
+	}
+
 	const setExporting = (loading: boolean) => {
 		isExporting.value = loading
 	}
@@ -659,31 +665,6 @@ export const useEditorStore = defineStore('editor', () => {
 		autoSaveStatus.value = status
 	}
 
-	const regenerateCurrentStepProposal = async () => {
-		const step = currentStep.value
-		if (!step) return
-		await ensureStepProposal(step.id, true)
-	}
-
-	const acceptCurrentStepProposal = () => {
-		const step = currentStep.value
-		if (!step) return
-		const state = proposalStates[step.id]
-		if (!state?.draft) return
-		const alreadyAccepted = state.accepted?.generatedAt === state.draft.generatedAt
-		if (alreadyAccepted) {
-			return
-		}
-		const acceptedCopy = cloneProposal(state.draft)
-		proposalStates[step.id] = {
-			draft: state.draft,
-			accepted: acceptedCopy
-		}
-		step.description = acceptedCopy.description
-		triggerAutoSave()
-		markPreviewStale()
-		schedulePreviewRegeneration(step.id, 0)
-	}
 
 	const regenerateCurrentStepPreview = async () => {
 		const step = currentStep.value
@@ -869,6 +850,7 @@ export const useEditorStore = defineStore('editor', () => {
 		isPreviewLoading,
 		isExporting,
 		isPreviewStale,
+		isPreviewOpen,
 		currentStepPhotos,
 		currentStepPageState,
 		currentStepPages,
@@ -897,12 +879,11 @@ export const useEditorStore = defineStore('editor', () => {
 		setAutoSaveStatus,
 		setPreviewLoading,
 		setExporting,
+		setPreviewOpen,
 		setPreviewHtml,
 		setPreviewError,
 		markPreviewStale,
 		invalidatePreview,
-		regenerateCurrentStepProposal,
-		acceptCurrentStepProposal,
 		regenerateCurrentStepPreview,
 		addPageToCurrentStep,
 		removePageFromCurrentStep,

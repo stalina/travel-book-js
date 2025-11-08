@@ -15,29 +15,8 @@
 
       <section class="editor-section proposal-section">
         <header class="section-header">
-          <h3 class="section-title">Proposition automatique</h3>
           <div class="section-actions">
-            <BaseButton
-              variant="outline"
-              size="sm"
-              class="section-action-button"
-              data-test="proposal-regenerate"
-              :disabled="isProposalLoading"
-              :loading="isProposalLoading"
-              @click="regenerateProposal"
-            >
-              Régénérer
-            </BaseButton>
-            <BaseButton
-              variant="primary"
-              size="sm"
-              class="section-action-button"
-              data-test="proposal-accept"
-              :disabled="isAcceptDisabled"
-              @click="acceptProposal"
-            >
-              Valider la proposition
-            </BaseButton>
+            <!-- actions removed: regenerate / accept buttons intentionally retired -->
           </div>
           <p v-if="acceptedProposal" class="proposal-accepted">
             Dernière validation : {{ formatTimestamp(acceptedProposal.generatedAt) }}
@@ -586,16 +565,6 @@ const remainingSlots = computed(() => {
   return available > 0 ? available : 0
 })
 
-const isAcceptDisabled = computed(() => {
-  if (isProposalLoading.value) {
-    return true
-  }
-  if (!proposal.value) {
-    return true
-  }
-  return acceptedProposal.value?.generatedAt === proposal.value.generatedAt
-})
-
 const updateTitle = (newTitle: string) => {
   if (!step.value) return
   editorStore.updateStepTitle(editorStore.currentStepIndex, newTitle)
@@ -606,13 +575,7 @@ const updateDescription = (newDescription: string) => {
   editorStore.updateStepDescription(editorStore.currentStepIndex, newDescription)
 }
 
-const regenerateProposal = () => {
-  void editorStore.regenerateCurrentStepProposal()
-}
 
-const acceptProposal = () => {
-  editorStore.acceptCurrentStepProposal()
-}
 
 const refreshPreview = () => {
   void editorStore.regenerateCurrentStepPreview()

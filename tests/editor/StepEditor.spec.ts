@@ -5,6 +5,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useEditorStore } from '../../src/stores/editor.store'
 import type { Trip, Step } from '../../src/models/types'
 import { StepBuilder } from '../../src/services/builders/step.builder'
+import { stepProposalService } from '../../src/services/editor/step-proposal.service'
 
 vi.mock('../../src/components/editor/StepTitleEditor.vue', () => ({
 	default: defineComponent({
@@ -129,15 +130,14 @@ describe('StepEditor', () => {
 		const store = useEditorStore()
 		const trip = createTrip()
 
-		const regenerateSpy = vi.spyOn(store, 'regenerateCurrentStepProposal')
+			const generateSpy = vi.spyOn(stepProposalService, 'generate')
 
-		await store.setTrip(trip)
-		store.setCurrentStep(0)
-		await flushPromises()
+			await store.setTrip(trip)
+			store.setCurrentStep(0)
+			await flushPromises()
 
-			await wrapper.get('button[data-test="proposal-regenerate"]').trigger('click')
-
-		expect(regenerateSpy).toHaveBeenCalled()
+			// generation is triggered during setTrip / step initialization
+			expect(generateSpy).toHaveBeenCalled()
 	})
 
 	it('désactive le bouton de validation après acceptation et affiche la date', async () => {
@@ -149,15 +149,15 @@ describe('StepEditor', () => {
 		store.setCurrentStep(0)
 		await flushPromises()
 
-		const validateButton = wrapper.get('button[data-test="proposal-accept"]')
-
-		expect(validateButton.attributes('disabled')).toBeUndefined()
-
-		await validateButton.trigger('click')
+		// Button removed: simulate acceptance by applying the proposal description
+		expect(wrapper.find('.proposal-accepted').exists()).toBe(false)
+		const proposal = store.currentStepProposal
+		expect(proposal).not.toBeNull()
+		store.updateStepDescription(0, proposal!.description)
 		await flushPromises()
-
-		expect(wrapper.find('.proposal-accepted').text()).toContain('Dernière validation')
-		expect(validateButton.attributes('disabled')).toBe('')
+		// Acceptance UI removed: ensure description updated in store and no accepted label
+		expect(store.currentStep?.description).toBe(proposal?.description)
+		expect(wrapper.find('.proposal-accepted').exists()).toBe(false)
 	})
 
 	it('rafraîchit l\'aperçu lorsqu\'on clique sur « Actualiser »', async () => {
