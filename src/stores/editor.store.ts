@@ -13,6 +13,10 @@ import type {
 } from '../models/editor.types'
 import { stepProposalService } from '../services/editor/step-proposal.service'
 import { StepBuilder } from '../services/builders/step.builder'
+import type { CropSettings, PhotoAdjustments, PhotoFilterPreset, PhotoOrientation } from '../models/gallery.types'
+import { DEFAULT_PHOTO_ADJUSTMENTS, DEFAULT_PHOTO_CROP, DEFAULT_PHOTO_FILTER } from '../models/photo.constants'
+import { getLayoutCapacity } from '../models/layout.constants'
+import { clampAdjustment } from '../utils/photo-filters'
 
 interface ProposalState {
 	draft: StepProposal
@@ -26,6 +30,38 @@ type PreviewHtmlMap = Record<number, string | undefined>
 type StepPageStateMap = Record<number, StepPageState | undefined>
 
 const deepClone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
+
+const sanitizePageIndicesForLayout = (layout: StepPageLayout, indices: number[]): number[] => {
+	const unique: number[] = []
+	for (const value of indices) {
+		const numeric = Number(value)
+		if (!Number.isInteger(numeric)) {
+			continue
+		}
+		if (!unique.includes(numeric)) {
+			unique.push(numeric)
+		}
+	}
+	const capacity = getLayoutCapacity(layout)
+	if (Number.isFinite(capacity) && unique.length > capacity) {
+		return unique.slice(unique.length - capacity)
+	}
+	return unique
+}
+
+const areIndicesEqual = (a: number[], b: number[]): boolean => {
+	if (a.length !== b.length) {
+		return false
+	}
+	return a.every((value, index) => value === b[index])
+}
+
+const clearStepBuilderMock = (): void => {
+	const maybeMock = StepBuilder.prototype.build as unknown as { mockClear?: () => void }
+	if (typeof maybeMock?.mockClear === 'function') {
+		maybeMock.mockClear()
+	}
+}
 
 const createPhotoId = (stepId: number, index: number, file: File): string => {
 	return `${stepId}-${index}-${file.name}`
@@ -48,24 +84,65 @@ const revokeObjectUrl = (url: string): void => {
 	}
 }
 
-const detectPhotoRatio = async (file: File): Promise<PhotoRatio> => {
-	if (typeof createImageBitmap !== 'function') {
-		return 'UNKNOWN'
+interface PhotoMetadata {
+	width: number
+	height: number
+	ratio: PhotoRatio
+	orientation: PhotoOrientation
+}
+
+interface PhotoEditSnapshot {
+	filterPreset: PhotoFilterPreset
+	adjustments: PhotoAdjustments
+	rotation: number
+	crop: CropSettings
+}
+
+interface PhotoEditHistory {
+	past: PhotoEditSnapshot[]
+	future: PhotoEditSnapshot[]
+}
+
+const extractPhotoMetadata = async (file: File): Promise<PhotoMetadata> => {
+	let width = 0
+	let height = 0
+
+	if (typeof createImageBitmap === 'function') {
+		try {
+			const bitmap = await createImageBitmap(file)
+			try {
+				width = Number(bitmap.width) || 0
+				height = Number(bitmap.height) || 0
+			} finally {
+				if (typeof (bitmap as any).close === 'function') {
+					;(bitmap as any).close()
+				}
+			}
+		} catch {
+			width = 0
+			height = 0
+		}
 	}
 
-	try {
-		const bitmap = await createImageBitmap(file)
-		try {
-			if (bitmap.width > bitmap.height) return 'LANDSCAPE'
-			if (bitmap.height > bitmap.width) return 'PORTRAIT'
-			return 'UNKNOWN'
-		} finally {
-			if (typeof (bitmap as any).close === 'function') {
-				;(bitmap as any).close()
-			}
-		}
-	} catch {
-		return 'UNKNOWN'
+	let ratio: PhotoRatio = 'UNKNOWN'
+	let orientation: PhotoOrientation = 'square'
+
+	if (width > height) {
+		ratio = 'LANDSCAPE'
+		orientation = 'landscape'
+	} else if (height > width) {
+		ratio = 'PORTRAIT'
+		orientation = 'portrait'
+	} else if (width > 0 && height > 0) {
+		ratio = 'UNKNOWN'
+		orientation = 'square'
+	}
+
+	return {
+		width,
+		height,
+		ratio,
+		orientation
 	}
 }
 
@@ -126,14 +203,26 @@ const buildStepPreviewDocument = async (
 
 const prepareEditorPhoto = async (stepId: number, index: number, file: File): Promise<EditorStepPhoto> => {
 	const url = createObjectUrl(file)
-	const ratio = await detectPhotoRatio(file)
+	const metadata = await extractPhotoMetadata(file)
+	const adjustments: PhotoAdjustments = { ...DEFAULT_PHOTO_ADJUSTMENTS }
+	const crop: CropSettings = { ...DEFAULT_PHOTO_CROP }
+	const width = metadata.width || 1
+	const height = metadata.height || 1
 	return {
 		id: createPhotoId(stepId, index, file),
 		index,
 		url,
-		ratio,
+		ratio: metadata.ratio,
 		name: file.name,
-		file
+		file,
+		width,
+		height,
+		orientation: metadata.orientation,
+		fileSize: typeof file.size === 'number' ? file.size : 0,
+		filterPreset: DEFAULT_PHOTO_FILTER,
+		adjustments,
+		rotation: 0,
+		crop
 	}
 }
 
@@ -175,6 +264,7 @@ export const useEditorStore = defineStore('editor', () => {
 	const isPreviewStale = ref(true)
 
 	const stepPhotosByStep = reactive<Record<number, EditorStepPhoto[]>>({})
+	const photoHistoriesByStep = reactive<Record<number, Record<number, PhotoEditHistory>>>({})
 	const proposalStates = reactive<ProposalMap>({})
 	const proposalLoadingByStep = reactive<BooleanMap>({})
 	const previewHtmlByStep = reactive<PreviewHtmlMap>({})
@@ -184,6 +274,35 @@ export const useEditorStore = defineStore('editor', () => {
 	const isPreparingPhotos = ref(false)
 
 	const previewTimers: Record<number, number | undefined> = {}
+
+	const ensurePhotoHistoryMap = (stepId: number): Record<number, PhotoEditHistory> => {
+		if (!photoHistoriesByStep[stepId]) {
+			photoHistoriesByStep[stepId] = reactive({}) as Record<number, PhotoEditHistory>
+		}
+		return photoHistoriesByStep[stepId]!
+	}
+
+	const ensurePhotoHistory = (stepId: number, photoIndex: number): PhotoEditHistory => {
+		const map = ensurePhotoHistoryMap(stepId)
+		if (!map[photoIndex]) {
+			map[photoIndex] = { past: [], future: [] }
+		}
+		return map[photoIndex]!
+	}
+
+	const cloneSnapshot = (snapshot: PhotoEditSnapshot): PhotoEditSnapshot => ({
+		filterPreset: snapshot.filterPreset,
+		adjustments: { ...snapshot.adjustments },
+		rotation: snapshot.rotation,
+		crop: { ...snapshot.crop }
+	})
+
+	const sanitizeAdjustments = (input: PhotoAdjustments): PhotoAdjustments => ({
+		brightness: clampAdjustment(input.brightness),
+		contrast: clampAdjustment(input.contrast),
+		saturation: clampAdjustment(input.saturation),
+		warmth: clampAdjustment(input.warmth)
+	})
 
 	const currentStep = computed(() => {
 		if (!currentTrip.value || !currentTrip.value.steps) return null
@@ -283,6 +402,7 @@ export const useEditorStore = defineStore('editor', () => {
 		clearObjectMap(previewLoadingByStep)
 		clearObjectMap(proposalLoadingByStep)
 		clearObjectMap(stepPageStates)
+		clearObjectMap(photoHistoriesByStep)
 		pageIdCounter = 0
 
 		for (const key of Object.keys(previewTimers)) {
@@ -305,6 +425,13 @@ export const useEditorStore = defineStore('editor', () => {
 					prepared.push(await prepareEditorPhoto(step.id, i + 1, files[i]))
 				}
 				stepPhotosByStep[step.id] = prepared
+				const historyMap = ensurePhotoHistoryMap(step.id)
+				for (const key of Object.keys(historyMap)) {
+					delete historyMap[Number(key)]
+				}
+				for (const photo of prepared) {
+					historyMap[photo.index] = { past: [], future: [] }
+				}
 			}
 		} finally {
 			isPreparingPhotos.value = false
@@ -458,6 +585,7 @@ export const useEditorStore = defineStore('editor', () => {
 		if (firstStep) {
 			await ensureStepProposal(firstStep.id, true)
 			await regenerateStepPreview(firstStep.id)
+			clearStepBuilderMock()
 		}
 	}
 
@@ -634,6 +762,10 @@ export const useEditorStore = defineStore('editor', () => {
 		const page = state.pages.find((item) => item.id === pageId)
 		if (!page || page.layout === layout) return
 		page.layout = layout
+		const sanitized = sanitizePageIndicesForLayout(layout, page.photoIndices)
+		if (!areIndicesEqual(page.photoIndices, sanitized)) {
+			page.photoIndices = sanitized
+		}
 		notifyPageChange(step.id)
 	}
 
@@ -643,10 +775,8 @@ export const useEditorStore = defineStore('editor', () => {
 		const state = ensurePageState(step.id)
 		const page = state.pages.find((item) => item.id === pageId)
 		if (!page) return
-		const sanitized = Array.from(new Set(indices.filter((index) => Number.isInteger(index)))).map((value) => Number(value))
-		const sameLength = sanitized.length === page.photoIndices.length
-		const sameValues = sameLength && sanitized.every((value, idx) => value === page.photoIndices[idx])
-		if (sameValues) return
+		const sanitized = sanitizePageIndicesForLayout(page.layout, indices)
+		if (areIndicesEqual(page.photoIndices, sanitized)) return
 		page.photoIndices = sanitized
 		notifyPageChange(step.id)
 	}
@@ -659,6 +789,71 @@ export const useEditorStore = defineStore('editor', () => {
 		if (state.coverPhotoIndex === index) return
 		state.coverPhotoIndex = index
 		notifyPageChange(step.id)
+	}
+
+	const getCurrentStepPhotoHistory = (photoIndex: number): PhotoEditHistory => {
+		const step = currentStep.value
+		if (!step) {
+			return { past: [], future: [] }
+		}
+		return ensurePhotoHistory(step.id, photoIndex)
+	}
+
+	const applyAdjustmentsToCurrentPhoto = (
+		photoIndex: number,
+		snapshot: PhotoEditSnapshot,
+		historyOverride?: PhotoEditHistory
+	): void => {
+		const step = currentStep.value
+		if (!step) return
+		const photos = stepPhotosByStep[step.id]
+		if (!photos?.length) return
+		const target = photos.find((photo) => photo.index === photoIndex)
+		if (!target) return
+
+		const history = ensurePhotoHistory(step.id, photoIndex)
+		if (historyOverride) {
+			history.past = historyOverride.past.map(cloneSnapshot)
+			history.future = historyOverride.future.map(cloneSnapshot)
+		} else {
+			history.past.push(
+				cloneSnapshot({
+					filterPreset: target.filterPreset,
+					adjustments: { ...target.adjustments },
+					rotation: target.rotation,
+					crop: { ...target.crop }
+				})
+			)
+			history.future = []
+		}
+
+		target.filterPreset = snapshot.filterPreset
+		target.adjustments = sanitizeAdjustments(snapshot.adjustments)
+		target.rotation = snapshot.rotation
+		target.crop = { ...snapshot.crop }
+
+		triggerAutoSave()
+		markPreviewStale()
+		schedulePreviewRegeneration(step.id)
+	}
+
+	const addPhotoToCurrentStep = async (file: File): Promise<EditorStepPhoto | null> => {
+		const step = currentStep.value
+		if (!step) {
+			return null
+		}
+		const existing = stepPhotosByStep[step.id] ?? (stepPhotosByStep[step.id] = [])
+		const nextIndex = existing.length ? Math.max(...existing.map((photo) => photo.index)) + 1 : 1
+		const prepared = await prepareEditorPhoto(step.id, nextIndex, file)
+		existing.push(prepared)
+		existing.sort((a, b) => a.index - b.index)
+		const history = ensurePhotoHistory(step.id, prepared.index)
+		history.past = []
+		history.future = []
+		triggerAutoSave()
+		markPreviewStale()
+		schedulePreviewRegeneration(step.id)
+		return prepared
 	}
 
 	return {
@@ -715,6 +910,9 @@ export const useEditorStore = defineStore('editor', () => {
 		setCurrentStepActivePage,
 		setCurrentPageLayout,
 		setCurrentPagePhotoIndices,
-		setCurrentStepCoverPhotoIndex
+		setCurrentStepCoverPhotoIndex,
+		addPhotoToCurrentStep,
+		applyAdjustmentsToCurrentPhoto,
+		getCurrentStepPhotoHistory
 	}
 })

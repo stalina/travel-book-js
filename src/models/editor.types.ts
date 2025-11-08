@@ -1,4 +1,5 @@
 import type { Step } from './types'
+import type { CropSettings, PhotoAdjustments, PhotoFilterPreset, PhotoOrientation } from './gallery.types'
 
 export type PhotoRatio = 'PORTRAIT' | 'LANDSCAPE' | 'UNKNOWN'
 
@@ -9,6 +10,14 @@ export interface EditorStepPhoto {
   ratio: PhotoRatio
   name: string
   file?: File
+  width: number
+  height: number
+  orientation: PhotoOrientation
+  fileSize: number
+  filterPreset: PhotoFilterPreset
+  adjustments: PhotoAdjustments
+  rotation: number
+  crop: CropSettings
 }
 
 export interface StepProposalPhoto {

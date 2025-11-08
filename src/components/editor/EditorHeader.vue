@@ -16,11 +16,6 @@
         :last-save-time="editorStore.lastSaveTime"
       />
       <BaseButton
-        variant="ghost"
-        size="sm"
-        @click="goGallery"
-      >📸 Galerie</BaseButton>
-      <BaseButton
         variant="outline"
         size="sm"
         @click="onImport"
@@ -81,9 +76,6 @@ const onExport = async () => {
   await exportTravelBook()
 }
 
-const goGallery = () => {
-  window.location.hash = '#/gallery'
-}
 </script>
 
 <style scoped>

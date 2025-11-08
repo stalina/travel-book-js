@@ -3,6 +3,7 @@
     :class="['base-button', `variant-${variant}`, `size-${size}`, { 'is-loading': loading }]"
     :disabled="disabled || loading"
     :type="type"
+    v-bind="$attrs"
     @click="handleClick"
   >
     <span v-if="loading" class="spinner"></span>

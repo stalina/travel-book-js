@@ -20,20 +20,6 @@ vi.mock('../../src/components/editor/StepTitleEditor.vue', () => ({
 	})
 }))
 
-vi.mock('../../src/components/editor/PhotoGrid.vue', () => ({
-	default: defineComponent({
-		name: 'PhotoGridStub',
-		props: {
-			photos: {
-				type: Array,
-				default: () => []
-			}
-		},
-		emits: ['add', 'edit', 'reorder', 'delete'],
-		template: '<div class="photo-grid-stub"></div>'
-	})
-}))
-
 vi.mock('../../src/components/editor/RichTextEditor.vue', () => ({
 	default: defineComponent({
 		name: 'RichTextEditorStub',
@@ -45,6 +31,24 @@ vi.mock('../../src/components/editor/RichTextEditor.vue', () => ({
 		},
 		emits: ['update:modelValue'],
 		template: '<div class="rich-text-editor-stub"></div>'
+	})
+}))
+
+vi.mock('../../src/components/editor/PhotoEditorModal.vue', () => ({
+	default: defineComponent({
+		name: 'PhotoEditorModalStub',
+		props: {
+			photo: {
+				type: Object,
+				required: true
+			},
+			history: {
+				type: Object,
+				default: null
+			}
+		},
+		emits: ['close', 'apply'],
+		template: '<div class="photo-editor-modal-stub"></div>'
 	})
 }))
 
@@ -88,11 +92,14 @@ describe('StepEditor', () => {
 			}
 		}
 		vi.spyOn(StepBuilder.prototype, 'build').mockResolvedValue('<div data-test="step">Prévisualisation</div>')
+		const store = useEditorStore()
+		vi.spyOn(store, 'triggerAutoSave').mockImplementation(() => {})
 	})
 
 	afterEach(() => {
 		vi.restoreAllMocks()
 		vi.useRealTimers()
+		vi.clearAllTimers()
 	})
 
 	it('affiche un état vide quand aucune étape est sélectionnée', async () => {
@@ -128,7 +135,7 @@ describe('StepEditor', () => {
 		store.setCurrentStep(0)
 		await flushPromises()
 
-			await wrapper.find('.proposal-section button.secondary').trigger('click')
+			await wrapper.get('button[data-test="proposal-regenerate"]').trigger('click')
 
 		expect(regenerateSpy).toHaveBeenCalled()
 	})
@@ -142,7 +149,8 @@ describe('StepEditor', () => {
 		store.setCurrentStep(0)
 		await flushPromises()
 
-		const validateButton = wrapper.find('button.primary')
+		const validateButton = wrapper.get('button[data-test="proposal-accept"]')
+
 		expect(validateButton.attributes('disabled')).toBeUndefined()
 
 		await validateButton.trigger('click')
@@ -162,7 +170,7 @@ describe('StepEditor', () => {
 		store.setCurrentStep(0)
 		await flushPromises()
 
-		await wrapper.find('.preview-section button.secondary').trigger('click')
+		await wrapper.get('button[data-test="preview-refresh"]').trigger('click')
 
 		expect(previewSpy).toHaveBeenCalled()
 	})
@@ -202,4 +210,94 @@ describe('StepEditor', () => {
 			await flushPromises()
 			expect(store.currentStepPages[0].id).toBe(store.currentStepActivePage?.id)
 		})
+
+	it('filtre la bibliothèque et importe une nouvelle photo', async () => {
+		vi.useFakeTimers()
+		const wrapper = mount(StepEditor)
+		const store = useEditorStore()
+		const trip = createTrip()
+
+		await store.setTrip(trip)
+		store.setCurrentStep(0)
+		await flushPromises()
+
+		await wrapper.find('[data-test="add-page"]').trigger('click')
+		await flushPromises()
+
+		const searchInput = wrapper.find('input.library-search')
+		expect(searchInput.exists()).toBe(true)
+		await searchInput.setValue('photo-2')
+		await flushPromises()
+		const filteredItems = wrapper.findAll('.library-item')
+		expect(filteredItems).toHaveLength(1)
+		expect(filteredItems[0].find('.library-item-index').text()).toContain('#2')
+
+		const uploadInput = wrapper.find('input[type="file"]')
+		expect(uploadInput.exists()).toBe(true)
+		const newFile = new File(['foo'], 'nouvelle-photo.jpg', { type: 'image/jpeg' })
+		Object.defineProperty(uploadInput.element, 'files', {
+			value: [newFile],
+			configurable: true,
+		})
+		await uploadInput.trigger('change')
+		vi.runAllTimers()
+		await flushPromises()
+
+		const added = store.currentStepPhotos.find((photo) => photo.name === 'nouvelle-photo.jpg')
+		expect(added).toBeTruthy()
+		expect(store.currentStepActivePage?.photoIndices).toContain(added?.index ?? -1)
+		expect((wrapper.find('input.library-search').element as HTMLInputElement).value).toBe('')
+	})
+
+	it('ouvre l\'éditeur photo et applique les ajustements persistés', async () => {
+		vi.useFakeTimers()
+		const wrapper = mount(StepEditor)
+		const store = useEditorStore()
+		const trip = createTrip()
+
+		await store.setTrip(trip)
+		store.setCurrentStep(0)
+		await flushPromises()
+
+		await wrapper.find('[data-test="add-page"]').trigger('click')
+		await flushPromises()
+		await wrapper.find('[data-test="page-photo-toggle-1"]').trigger('click')
+
+		expect(wrapper.find('[data-test="page-photo-edit-1"]').exists()).toBe(true)
+		;(wrapper.vm as any).openPhotoEditor(1)
+		await flushPromises()
+		const payload = {
+			state: {
+				filterPreset: 'vivid',
+				adjustments: { brightness: 12, contrast: 5, saturation: 8, warmth: -4 },
+				rotation: 90,
+				crop: { ratio: '16:9', zoom: 1.2, offsetX: 10, offsetY: -5 }
+			},
+			history: {
+				past: [
+					{
+						filterPreset: 'original',
+						adjustments: { brightness: 0, contrast: 0, saturation: 0, warmth: 0 },
+						rotation: 0,
+						crop: { ratio: 'original', zoom: 1, offsetX: 0, offsetY: 0 }
+					}
+				],
+				future: []
+			}
+		}
+		;(wrapper.vm as any).handlePhotoEditorApply(payload)
+		vi.runAllTimers()
+		await flushPromises()
+
+		expect((wrapper.vm as any).modalPhoto).toBeNull()
+
+		const updated = store.currentStepPhotos.find((photo) => photo.index === 1)
+		expect(updated?.filterPreset).toBe('vivid')
+		expect(updated?.rotation).toBe(90)
+		expect(updated?.adjustments.brightness).toBe(12)
+
+		const history = store.getCurrentStepPhotoHistory(1)
+		expect(history.past).toHaveLength(1)
+		expect(history.past[0].filterPreset).toBe('original')
+	})
 })

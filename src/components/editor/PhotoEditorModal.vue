@@ -44,7 +44,7 @@
                     min="-100"
                     max="100"
                     :value="control.value"
-                    @input="event => updateAdjustment(control.key, Number((event.target as HTMLInputElement).value))"
+                    @input="handleAdjustmentInput(control.key, $event)"
                   />
                 </label>
               </div>
@@ -95,21 +95,28 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
+import type { PropType } from 'vue'
 import BaseButton from '../BaseButton.vue'
 import type { GalleryPhoto, PhotoFilterPreset, CropRatio } from '../../models/gallery.types'
 import { PHOTO_FILTER_PRESETS, buildCssFilter, clampAdjustment } from '../../utils/photo-filters'
-import { usePhotoGalleryStore } from '../../stores/photo-gallery.store'
+
+interface EditorHistory {
+  past: EditorState[]
+  future: EditorState[]
+}
 
 const props = defineProps({
   photo: {
     type: Object as () => GalleryPhoto,
     required: true
+  },
+  history: {
+    type: Object as PropType<EditorHistory | null>,
+    default: null
   }
 })
 
-const emit = defineEmits(['close'])
-
-const store = usePhotoGalleryStore()
+const emit = defineEmits(['close', 'apply'])
 
 type AdjustmentKey = keyof GalleryPhoto['adjustments']
 
@@ -130,6 +137,26 @@ const createStateFromPhoto = (photo: GalleryPhoto): EditorState => ({
 const state = reactive<EditorState>(createStateFromPhoto(props.photo))
 const undoStack = ref<EditorState[]>([])
 const redoStack = ref<EditorState[]>([])
+
+const cloneEditorState = (value: EditorState): EditorState => ({
+  filterPreset: value.filterPreset,
+  adjustments: { ...value.adjustments },
+  rotation: value.rotation,
+  crop: { ...value.crop }
+})
+
+const initializeHistory = (history: EditorHistory | null): void => {
+  undoStack.value = history?.past.map(cloneEditorState) ?? []
+  redoStack.value = history?.future.map(cloneEditorState) ?? []
+}
+
+watch(
+  () => props.history,
+  (next) => {
+    initializeHistory(next ?? null)
+  },
+  { immediate: true }
+)
 
 const presets = PHOTO_FILTER_PRESETS
 
@@ -186,6 +213,11 @@ const snapshot = (): EditorState => ({
   crop: { ...state.crop }
 })
 
+const exportHistory = (): EditorHistory => ({
+  past: undoStack.value.map(cloneEditorState),
+  future: redoStack.value.map(cloneEditorState)
+})
+
 const restoreState = (next: EditorState): void => {
   state.filterPreset = next.filterPreset
   state.adjustments = { ...next.adjustments }
@@ -215,6 +247,14 @@ const updateAdjustment = (key: AdjustmentKey, value: number): void => {
   }
   pushUndo()
   state.adjustments[key] = clampAdjustment(value)
+}
+
+const handleAdjustmentInput = (key: AdjustmentKey, event: Event): void => {
+  const target = event.target as HTMLInputElement | null
+  if (!target) {
+    return
+  }
+  updateAdjustment(key, Number(target.value))
 }
 
 const rotate = (delta: number): void => {
@@ -277,26 +317,30 @@ const reset = (): void => {
   restoreState(createStateFromPhoto(props.photo))
   undoStack.value = []
   redoStack.value = []
+  initializeHistory(props.history ?? null)
 }
 
 const apply = (): void => {
-  store.applyAdjustments(props.photo.id, {
-    filterPreset: state.filterPreset,
-    adjustments: { ...state.adjustments },
-    rotation: state.rotation,
-    crop: { ...state.crop }
-  })
+  const payload = {
+    state: snapshot(),
+    history: exportHistory()
+  }
+
+  emit('apply', payload)
   undoStack.value = []
   redoStack.value = []
   emit('close')
 }
 
-watch(() => props.photo.id, () => {
-  restoreState(createStateFromPhoto(props.photo))
-  undoStack.value = []
-  redoStack.value = []
-})
-
+watch(
+  () => props.photo.id,
+  () => {
+    restoreState(createStateFromPhoto(props.photo))
+    undoStack.value = []
+    redoStack.value = []
+    initializeHistory(props.history ?? null)
+  }
+)
 </script>
 
 <style scoped>
@@ -335,119 +379,139 @@ watch(() => props.photo.id, () => {
 }
 
 .modal-header p {
-  margin: 4px 0 0;
+  margin: 0;
+  font-size: var(--font-size-sm, 14px);
   color: var(--color-text-secondary, #666);
 }
 
-.header-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
 .modal-content {
-  display: grid;
-  grid-template-columns: minmax(320px, 1fr) minmax(360px, 1fr);
-  gap: var(--spacing-xl);
-  padding: var(--spacing-xl);
-  overflow-y: auto;
+  display: flex;
+  gap: var(--spacing-xl, 24px);
+  padding: var(--spacing-xl, 24px);
+  background: rgba(249,250,251,0.96);
+  overflow: hidden;
 }
 
 .preview {
-  background: #050505;
-  border-radius: var(--radius-xl);
-  position: relative;
-  overflow: hidden;
+  flex: 1;
+  background: white;
+  border-radius: var(--radius-xl, 20px);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .preview img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.2s ease, filter 0.2s ease;
+  transition: transform 0.3s ease;
+  border-radius: inherit;
 }
 
 .controls {
+  width: 360px;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-lg, 20px);
+}
+
+.control-block {
+  background: white;
+  border-radius: var(--radius-xl, 20px);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  padding: var(--spacing-lg, 20px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md, 16px);
 }
 
 .control-block h3 {
-  margin: 0 0 var(--spacing-md) 0;
+  margin: 0;
+  font-size: var(--font-size-lg, 18px);
+  color: var(--color-text-primary, #1f2937);
 }
 
 .filter-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: var(--spacing-sm);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-sm, 12px);
 }
 
 .preset {
-  border: 1px solid rgba(0,0,0,0.1);
-  border-radius: var(--radius-md);
-  background: white;
-  padding: var(--spacing-sm);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: var(--radius-lg, 12px);
+  padding: var(--spacing-sm, 12px);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(147, 197, 253, 0.1));
+  font-weight: var(--font-weight-medium, 500);
   cursor: pointer;
-  transition: transform 0.2s ease, border 0.2s ease;
+  transition: all 0.2s;
 }
 
 .preset.active {
   border-color: var(--color-primary, #FF6B6B);
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.15), rgba(255, 180, 180, 0.2));
+  color: var(--color-primary, #FF6B6B);
 }
 
 .sliders {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-md, 16px);
 }
 
 .sliders label {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
+  gap: var(--spacing-xs, 6px);
   font-size: var(--font-size-sm, 14px);
+  color: var(--color-text-secondary, #475569);
 }
 
-.sliders input[type='range'] {
+.sliders input[type="range"] {
   accent-color: var(--color-primary, #FF6B6B);
 }
 
 .row {
   display: flex;
-  gap: var(--spacing-sm);
-  align-items: center;
+  gap: var(--spacing-sm, 12px);
 }
 
 .ratio-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-sm, 12px);
 }
 
 .ratio {
-  padding: 6px 12px;
-  border-radius: var(--radius-full);
-  border: 1px solid rgba(0,0,0,0.15);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: var(--radius-lg, 12px);
+  padding: var(--spacing-sm, 12px);
   background: white;
+  font-weight: var(--font-weight-medium, 500);
   cursor: pointer;
+  transition: all 0.2s;
 }
 
 .ratio.active {
   border-color: var(--color-primary, #FF6B6B);
-  background: rgba(255,107,107,0.1);
+  color: var(--color-primary, #FF6B6B);
 }
 
 .modal-footer {
-  border-top: 1px solid rgba(0,0,0,0.05);
+  background: white;
+  border-top: 1px solid rgba(226, 232, 240, 0.8);
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1024px) {
   .modal-content {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .controls {
+    width: 100%;
   }
 }
 </style>

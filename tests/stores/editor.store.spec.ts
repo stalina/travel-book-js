@@ -33,17 +33,31 @@ const createTrip = (overrides: Partial<Trip> = {}): Trip => ({
 })
 
 let buildSpy: any
+let originalCreateObjectURL: typeof URL.createObjectURL | undefined
+let originalCreateImageBitmap: typeof createImageBitmap | undefined
 
 describe('useEditorStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     ;(window as any).__parsedTrip = { stepPhotos: {} }
     buildSpy = vi.spyOn(StepBuilder.prototype, 'build').mockResolvedValue('<section>Prévisualisation</section>')
+    originalCreateObjectURL = URL.createObjectURL
+    originalCreateImageBitmap = globalThis.createImageBitmap as any
+    URL.createObjectURL = vi.fn(() => 'blob://test') as any
+    ;(globalThis as any).createImageBitmap = vi.fn(async () => ({ width: 1600, height: 900, close: vi.fn() }))
   })
 
   afterEach(() => {
     vi.useRealTimers()
     vi.restoreAllMocks()
+    if (originalCreateObjectURL) {
+      URL.createObjectURL = originalCreateObjectURL
+    }
+    if (originalCreateImageBitmap) {
+      ;(globalThis as any).createImageBitmap = originalCreateImageBitmap
+    } else {
+      delete (globalThis as any).createImageBitmap
+    }
   })
 
   it('génère une proposition et une preview lors du chargement du voyage', async () => {
@@ -112,7 +126,8 @@ describe('useEditorStore', () => {
     expect(store.currentStepPages[0].photoIndices).toEqual([1, 2, 3])
 
   store.setCurrentPageLayout(page.id, 'full-page')
-    expect(store.currentStepPages[0].layout).toBe('full-page')
+  expect(store.currentStepPages[0].layout).toBe('full-page')
+  expect(store.currentStepPages[0].photoIndices).toEqual([3])
 
   store.setCurrentStepCoverPhotoIndex(5)
     expect(store.currentStepPageState?.coverPhotoIndex).toBe(5)
@@ -157,4 +172,73 @@ describe('useEditorStore', () => {
     store.removePageFromCurrentStep(secondPage.id)
     expect(store.currentStepActivePageId).toBe(firstPage.id)
   })
+
+    it('ajoute une photo à l\'étape et la rend disponible pour la selection', async () => {
+      vi.useFakeTimers()
+      const store = useEditorStore()
+      const trip = createTrip()
+
+      await store.setTrip(trip)
+      await Promise.resolve()
+
+      const file = new File(['bar'], 'nouvelle.jpg', { type: 'image/jpeg' })
+      const added = await store.addPhotoToCurrentStep(file)
+      expect(added?.index).toBeGreaterThan(0)
+      expect(store.currentStepPhotos.some((photo) => photo.name === 'nouvelle.jpg')).toBe(true)
+
+      store.addPageToCurrentStep('full-page')
+      const page = store.currentStepActivePage
+      expect(page).toBeTruthy()
+      store.setCurrentPagePhotoIndices(page!.id, [added!.index])
+      vi.runAllTimers()
+      await Promise.resolve()
+      expect(buildSpy).toHaveBeenCalled()
+    })
+
+    it('applique des ajustements photo et conserve l\'historique', async () => {
+      vi.useFakeTimers()
+      const store = useEditorStore()
+      const photoFile = new File(['foo'], 'photo-1.jpg', { type: 'image/jpeg' })
+      ;(window as any).__parsedTrip.stepPhotos[42] = [photoFile]
+      const trip = createTrip()
+
+      await store.setTrip(trip)
+      await flushAllPromises()
+
+      const photo = store.currentStepPhotos[0]
+      expect(photo).toBeTruthy()
+
+      const snapshot = {
+        filterPreset: 'vivid' as const,
+        adjustments: { brightness: 15, contrast: 5, saturation: 10, warmth: -5 },
+        rotation: 45,
+        crop: { ratio: '4:3' as const, zoom: 1.3, offsetX: 5, offsetY: -3 }
+      }
+
+      const previous = {
+        filterPreset: photo.filterPreset,
+        adjustments: { ...photo.adjustments },
+        rotation: photo.rotation,
+        crop: { ...photo.crop }
+      }
+
+      store.applyAdjustmentsToCurrentPhoto(photo.index, snapshot, { past: [previous], future: [] })
+      vi.runAllTimers()
+      await Promise.resolve()
+
+      const updated = store.currentStepPhotos[0]
+      expect(updated.filterPreset).toBe('vivid')
+      expect(updated.rotation).toBe(45)
+      expect(updated.adjustments.brightness).toBe(15)
+
+      const history = store.getCurrentStepPhotoHistory(photo.index)
+      expect(history.past).toHaveLength(1)
+      expect(history.past[0].filterPreset).toBe(previous.filterPreset)
+      expect(buildSpy).toHaveBeenCalledTimes(1)
+    })
 })
+
+  const flushAllPromises = async () => {
+    await Promise.resolve()
+    await Promise.resolve()
+  }
