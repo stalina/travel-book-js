@@ -11,35 +11,62 @@
       />
     </div>
     <div class="header-right">
-      <SaveStatus 
+      <SaveStatus
         :status="editorStore.autoSaveStatus"
         :last-save-time="editorStore.lastSaveTime"
       />
+      <!-- Toggle button to open the preview panel (no generation here) -->
+      <BaseButton
+        variant="outline"
+        size="sm"
+        :disabled="editorStore.isExporting || editorStore.isPreviewLoading"
+        :loading="editorStore.isPreviewLoading"
+        @click="onPreview"
+      >
+        👁️ Prévisualiser
+      </BaseButton>
+
+      <!-- Stats cards moved to header -->
+      <div class="header-stats" role="list" aria-label="Statistiques du voyage">
+        <div class="stat-card" role="listitem" aria-label="Photos">
+          <div class="stat-value">{{ totalPhotos }}</div>
+          <div class="stat-label">Photos</div>
+        </div>
+        <div class="stat-card" role="listitem" aria-label="Étapes">
+          <div class="stat-value">{{ totalSteps }}</div>
+          <div class="stat-label">Étapes</div>
+        </div>
+        <div class="stat-card" role="listitem" aria-label="Jours">
+          <div class="stat-value">{{ totalDays }}</div>
+          <div class="stat-label">Jours</div>
+        </div>
+        <div class="stat-card" role="listitem" aria-label="Pages estimées">
+          <div class="stat-value">{{ estimatedPages }}</div>
+          <div class="stat-label">Pages</div>
+        </div>
+      </div>
       <BaseButton
         variant="outline"
         size="sm"
         @click="onImport"
-      >📥 Importer</BaseButton>
-      <BaseButton
-        variant="secondary"
-        size="sm"
-        :loading="editorStore.isPreviewLoading"
-        :disabled="editorStore.isExporting"
-        @click="onPreview"
-      >👁️ Prévisualiser</BaseButton>
+      >
+        📥 Importer
+      </BaseButton>
       <BaseButton
         variant="primary"
         size="sm"
         :loading="editorStore.isExporting"
         :disabled="editorStore.isPreviewLoading"
         @click="onExport"
-      >📤 Exporter</BaseButton>
+      >
+        📤 Exporter
+      </BaseButton>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useEditorStore } from '../../stores/editor.store'
 import { useEditorGeneration } from '../../composables/useEditorGeneration'
 import BaseButton from '../BaseButton.vue'
@@ -47,7 +74,13 @@ import SaveStatus from './SaveStatus.vue'
 
 const editorStore = useEditorStore()
 const projectTitle = ref('')
-const { previewTravelBook, exportTravelBook } = useEditorGeneration()
+const { exportTravelBook, previewTravelBook } = useEditorGeneration()
+
+// Computed fallbacks so initial render and tests don't show undefined
+const totalPhotos = computed(() => editorStore.totalPhotos ?? 0)
+const totalSteps = computed(() => editorStore.totalSteps ?? 0)
+const totalDays = computed(() => editorStore.totalDays ?? 0)
+const estimatedPages = computed(() => editorStore.estimatedPages ?? 0)
 
 // Synchroniser le titre avec le store
 watch(() => editorStore.currentTrip?.name, (newName) => {
@@ -69,12 +102,22 @@ const onImport = () => {
 }
 
 const onPreview = async () => {
-  await previewTravelBook()
+  // Ouvrir le panneau de preview en mode desktop par défaut
+  editorStore.setPreviewMode('desktop')
+  // Ouvrir le volet UI
+  window.dispatchEvent(new CustomEvent('toggle-preview', { detail: { open: true } }))
+  // Lancer explicitement la génération de la prévisualisation et afficher un loader
+  try {
+    await previewTravelBook()
+  } catch {
+    // previewTravelBook gère déjà les erreurs dans le store
+  }
 }
 
 const onExport = async () => {
   await exportTravelBook()
 }
+
 </script>
 
 <style scoped>
@@ -86,6 +129,7 @@ const onExport = async () => {
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--spacing-lg, 24px);
+  height: var(--header-height, 64px);
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   z-index: 100;
 }
@@ -134,6 +178,29 @@ const onExport = async () => {
   align-items: center;
   gap: var(--spacing-md, 16px);
 }
+
+.header-stats {
+  display: flex;
+  gap: var(--spacing-sm, 8px);
+  align-items: center;
+}
+
+.header-stats .stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2px 6px;
+  background: linear-gradient(135deg, var(--color-primary-light, #ffdede), var(--color-primary, #FF6B6B));
+  color: white;
+  border-radius: 6px;
+  min-width: 48px;
+  font-size: 13px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.header-stats .stat-value { font-weight: 700; }
+.header-stats .stat-label { font-size: 12px; opacity: 0.9; }
 
 @media (max-width: 768px) {
   .header-left {

@@ -1,4 +1,5 @@
 import { Trip, Step } from '../../models/types'
+import type { StepGenerationPlan, StepPageLayout, StepPagePlanItem } from '../../models/editor.types'
 import { getPositionPercentage } from '../map.service'
 import { elevationService } from '../elevation.service'
 import { 
@@ -19,6 +20,11 @@ type PhotoWithMeta = {
   ratio: 'PORTRAIT' | 'LANDSCAPE' | 'UNKNOWN'
 }
 
+type ResolvedPage = {
+  layout: StepPageLayout
+  photos: PhotoWithMeta[]
+}
+
 /**
  * Builder pour générer les pages HTML d'une étape du voyage
  * Gère la couverture, les photos et la mise en page automatique
@@ -37,7 +43,7 @@ export class StepBuilder {
     private readonly step: Step,
     private readonly photosMapping: Record<number, Record<number, any>>,
     private readonly photoDataUrlMap: Record<string, string>,
-    private readonly stepPlan?: { cover?: number; pages: number[][] }
+    private readonly stepPlan?: StepGenerationPlan
   ) {}
 
   /**
@@ -74,43 +80,137 @@ export class StepBuilder {
    */
   private planLayout(photosArr: PhotoWithMeta[]): {
     cover: PhotoWithMeta | null
-    pages: PhotoWithMeta[][]
+    pages: ResolvedPage[]
   } {
-    const portrait = photosArr.filter(p => p.ratio === 'PORTRAIT')
-    const landscape = photosArr.filter(p => p.ratio === 'LANDSCAPE')
-    const other = photosArr.filter(p => p.ratio === 'UNKNOWN')
-
-    const useCover = !this.step.description || this.step.description.length < 800
-    let cover: PhotoWithMeta | null = null
-    
-    if (this.stepPlan?.cover != null) {
-      cover = photosArr.find(p => p.index === this.stepPlan!.cover) || null
-    } else if (useCover) {
-      cover = portrait[0] ?? landscape[0] ?? null
+    const photoByIndex = new Map<number, PhotoWithMeta>()
+    for (const photo of photosArr) {
+      photoByIndex.set(photo.index, photo)
     }
 
-    // Pages: si plan utilisateur présent, le suivre; sinon, heuristique par défaut
-    let pages: PhotoWithMeta[][] = []
+    const defaultCover = this.selectDefaultCover(photosArr)
+    const cover = this.resolveCover(photoByIndex, defaultCover)
+
     if (this.stepPlan) {
-      const coverIdx = cover?.index
-      pages = this.stepPlan.pages.map(arr => arr
-        .map(idx => photosArr.find(p => p.index === idx))
-        .filter((p): p is PhotoWithMeta => !!p && (coverIdx ? p.index !== coverIdx : true))
-      )
-    } else {
-      const candLand = [...landscape]
-      const candPort = cover ? portrait.filter(p => p !== cover) : [...portrait]
-      const candOther = [...other]
-      while (candLand.length >= 4) pages.push(candLand.splice(0, 4))
-      while (candLand.length >= 2 && candPort.length >= 1)
-        pages.push([candLand.shift()!, candLand.shift()!, candPort.shift()!])
-      while (candPort.length >= 2) pages.push(candPort.splice(0, 2))
-      while (candPort.length) pages.push([candPort.shift()!])
-      while (candLand.length) pages.push([candLand.shift()!])
-      while (candOther.length) pages.push([candOther.shift()!])
+      const plannedPages = this.resolvePlannedPages(photoByIndex, cover)
+      if (plannedPages.length) {
+        return { cover, pages: plannedPages }
+      }
     }
 
-    return { cover, pages }
+    return { cover, pages: this.buildAutomaticPages(photosArr, cover) }
+  }
+
+  private selectDefaultCover(photosArr: PhotoWithMeta[]): PhotoWithMeta | null {
+    if (!this.step.description || this.step.description.length < 800) {
+      const portrait = photosArr.find((photo) => photo.ratio === 'PORTRAIT')
+      if (portrait) return portrait
+      const landscape = photosArr.find((photo) => photo.ratio === 'LANDSCAPE')
+      if (landscape) return landscape
+    }
+    return null
+  }
+
+  private resolveCover(
+    photoByIndex: Map<number, PhotoWithMeta>,
+    fallback: PhotoWithMeta | null
+  ): PhotoWithMeta | null {
+    if (this.stepPlan?.cover != null) {
+      const planned = photoByIndex.get(this.stepPlan.cover)
+      if (planned) {
+        return planned
+      }
+    }
+    return fallback
+  }
+
+  private normalizePlanEntry(entry: StepPagePlanItem | number[]): StepPagePlanItem {
+    if (Array.isArray(entry)) {
+      return {
+        layout: this.inferLayoutFromCount(entry.length),
+        photoIndices: [...entry]
+      }
+    }
+    return {
+      layout: entry.layout,
+      photoIndices: [...entry.photoIndices]
+    }
+  }
+
+  private resolvePlannedPages(
+    photoByIndex: Map<number, PhotoWithMeta>,
+    cover: PhotoWithMeta | null
+  ): ResolvedPage[] {
+    if (!this.stepPlan) return []
+    const coverIndex = cover?.index ?? null
+    const pages: ResolvedPage[] = []
+
+    for (const rawEntry of this.stepPlan.pages ?? []) {
+      const entry = this.normalizePlanEntry(rawEntry)
+      const photos = entry.photoIndices
+        .map((idx) => photoByIndex.get(idx) ?? null)
+        .filter((photo): photo is PhotoWithMeta => !!photo && (coverIndex == null || photo.index !== coverIndex))
+
+      pages.push({
+        layout: entry.layout,
+        photos
+      })
+    }
+
+    return pages
+  }
+
+  private inferLayoutFromCount(count: number): StepPageLayout {
+    if (count >= 4) return 'grid-2x2'
+    if (count === 3) return 'three-columns'
+    if (count === 2) return 'hero-plus-2'
+    return 'full-page'
+  }
+
+  private buildAutomaticPages(photosArr: PhotoWithMeta[], cover: PhotoWithMeta | null): ResolvedPage[] {
+    const coverIndex = cover?.index
+    const portraits = photosArr.filter((photo) => photo.ratio === 'PORTRAIT' && photo.index !== coverIndex)
+    const landscapes = photosArr.filter((photo) => photo.ratio === 'LANDSCAPE' && photo.index !== coverIndex)
+    const others = photosArr.filter((photo) => photo.ratio === 'UNKNOWN' && photo.index !== coverIndex)
+
+    const pages: ResolvedPage[] = []
+    const pushPage = (layout: StepPageLayout, photos: PhotoWithMeta[]) => {
+      if (!photos.length) return
+      pages.push({ layout, photos })
+    }
+
+    while (landscapes.length >= 4) {
+      pushPage('grid-2x2', landscapes.splice(0, 4))
+    }
+
+    while (landscapes.length >= 2 && portraits.length >= 1) {
+      pushPage('hero-plus-2', [landscapes.shift()!, landscapes.shift()!, portraits.shift()!])
+    }
+
+    while (portraits.length >= 3) {
+      pushPage('three-columns', portraits.splice(0, 3))
+    }
+
+    while (portraits.length >= 2) {
+      pushPage('hero-plus-2', portraits.splice(0, 2))
+    }
+
+    while (landscapes.length >= 2) {
+      pushPage('hero-plus-2', landscapes.splice(0, 2))
+    }
+
+    if (portraits.length === 1) {
+      pushPage('full-page', portraits.splice(0, 1))
+    }
+
+    if (landscapes.length === 1) {
+      pushPage('full-page', landscapes.splice(0, 1))
+    }
+
+    while (others.length) {
+      pushPage('full-page', [others.shift()!])
+    }
+
+    return pages
   }
 
   /**
@@ -290,60 +390,81 @@ export class StepBuilder {
   /**
    * Construit une page de photos
    */
-  private buildPhotoPage(page: PhotoWithMeta[]): string {
-    if (page.length <= 2) {
-      return this.buildOneOrTwoPhotosPage(page)
-    } else {
-      return this.buildThreeOrFourPhotosPage(page)
+  private buildPhotoPage(page: ResolvedPage): string {
+    if (!page.photos.length) {
+      return this.buildEmptyLayout(page.layout)
+    }
+
+    switch (page.layout) {
+      case 'grid-2x2':
+        return this.buildGrid2x2Layout(page.photos)
+      case 'hero-plus-2':
+        return this.buildHeroPlusTwoLayout(page.photos)
+      case 'three-columns':
+        return this.buildThreeColumnsLayout(page.photos)
+      case 'full-page':
+      default:
+        return this.buildFullPageLayout(page.photos)
     }
   }
 
-  /**
-   * Construit une page avec 1 ou 2 photos
-   */
-  private buildOneOrTwoPhotosPage(page: PhotoWithMeta[]): string {
-    const left = page[0]
-    const right = page[1]
+  private buildGrid2x2Layout(photos: PhotoWithMeta[]): string {
     return `
-        <div class="break-after">
-          <div class="photo-columns">
-            <div class="photo-column">
-              <div class="photo-container" style="background-image: url(${cssUrlValue(this.resolvedPhotoUrl(left))})">
-                <div class="photo-index">${left.index}</div>
-              </div>
-            </div>
-            ${right ? `
-            <div class="photo-column">
-              <div class="photo-container" style="background-image: url(${cssUrlValue(this.resolvedPhotoUrl(right))})">
-                <div class="photo-index">${right.index}</div>
-              </div>
-            </div>` : ''}
-          </div>
-        </div>`
+      <div class="break-after">
+        <div class="step-layout layout-grid-2x2">
+          ${photos.map((photo) => this.renderPhotoCell(photo)).join('')}
+        </div>
+      </div>`
   }
 
-  /**
-   * Construit une page avec 3 ou 4 photos (2 colonnes)
-   */
-  private buildThreeOrFourPhotosPage(page: PhotoWithMeta[]): string {
-    const col1 = page.slice(0, 2)
-    const col2 = page.slice(2, 4)
+  private buildHeroPlusTwoLayout(photos: PhotoWithMeta[]): string {
+    const [hero, ...supports] = photos
     return `
-        <div class="break-after">
-          <div class="photo-columns">
-            <div class="photo-column">
-              ${col1.map(p => `
-              <div class="photo-container" style="background-image: url(${cssUrlValue(this.resolvedPhotoUrl(p))})"> 
-                <div class="photo-index">${p.index}</div>
-              </div>`).join('')}
-            </div>
-            <div class="photo-column">
-              ${col2.map(p => `
-              <div class="photo-container" style="background-image: url(${cssUrlValue(this.resolvedPhotoUrl(p))})"> 
-                <div class="photo-index">${p.index}</div>
-              </div>`).join('')}
-            </div>
-          </div>
-        </div>`
+      <div class="break-after">
+        <div class="step-layout layout-hero-plus-2">
+          ${hero ? this.renderPhotoCell(hero, 'hero') : ''}
+          ${supports.map((photo) => this.renderPhotoCell(photo, 'support')).join('')}
+        </div>
+      </div>`
+  }
+
+  private buildThreeColumnsLayout(photos: PhotoWithMeta[]): string {
+    return `
+      <div class="break-after">
+        <div class="step-layout layout-three-columns">
+          ${photos.map((photo) => this.renderPhotoCell(photo)).join('')}
+        </div>
+      </div>`
+  }
+
+  private buildFullPageLayout(photos: PhotoWithMeta[]): string {
+    const photo = photos[0]
+    if (!photo) {
+      return this.buildEmptyLayout('full-page')
+    }
+    return `
+      <div class="break-after">
+        <div class="step-layout layout-full-page">
+          ${this.renderPhotoCell(photo, 'full')}
+        </div>
+      </div>`
+  }
+
+  private buildEmptyLayout(layout: StepPageLayout): string {
+    return `
+      <div class="break-after">
+        <div class="step-layout layout-empty ${layout}">
+          <div class="layout-empty-message">Ajoutez des photos à cette page pour remplir la mise en page.</div>
+        </div>
+      </div>`
+  }
+
+  private renderPhotoCell(photo: PhotoWithMeta, extraClass = ''): string {
+    return `
+      <div class="layout-photo ${extraClass}">
+        <div class="layout-photo-image" style="background-image: url(${cssUrlValue(this.resolvedPhotoUrl(photo))})">
+          <span class="layout-photo-index">${photo.index}</span>
+        </div>
+      </div>`
   }
 }

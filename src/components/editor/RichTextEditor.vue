@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, onUnmounted } from 'vue'
 import FormattingToolbar from './FormattingToolbar.vue'
 import { useTextFormatting } from '../../composables/useTextFormatting'
 
@@ -41,8 +41,17 @@ onMounted(() => {
     editorRef.value.innerHTML = props.modelValue
   }
 
-  // Écouter les changements de sélection pour mettre à jour la toolbar
-  document.addEventListener('selectionchange', handleSelectionChange)
+  // Écouter les changements de sélection pour mettre à jour la toolbar (guarded for test env)
+  if (typeof document !== 'undefined' && document?.addEventListener) {
+    document.addEventListener('selectionchange', handleSelectionChange)
+    onUnmounted(() => {
+      try {
+        document.removeEventListener('selectionchange', handleSelectionChange)
+      } catch (e) {
+        // ignore in test env
+      }
+    })
+  }
 })
 
 watch(() => props.modelValue, (newValue) => {
@@ -75,15 +84,15 @@ const handleKeydown = (event: KeyboardEvent) => {
     switch (event.key.toLowerCase()) {
       case 'b':
         event.preventDefault()
-        document.execCommand('bold', false)
+        if (typeof document !== 'undefined' && document.execCommand) document.execCommand('bold', false)
         break
       case 'i':
         event.preventDefault()
-        document.execCommand('italic', false)
+        if (typeof document !== 'undefined' && document.execCommand) document.execCommand('italic', false)
         break
       case 'u':
         event.preventDefault()
-        document.execCommand('underline', false)
+        if (typeof document !== 'undefined' && document.execCommand) document.execCommand('underline', false)
         break
     }
   }

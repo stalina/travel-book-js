@@ -7,6 +7,9 @@
   --grey-19: #b7c0cd;
   --grey-23: #e7eaee;
 
+  /* Header height used by the preview overlay positioning */
+  --header-height: 64px;
+
   --content-padding: 202px;
   --full-to-relative: 0.35;
   --country-shape-size: 348px;
@@ -252,6 +255,8 @@ html, body {
   background-repeat: no-repeat;
   background-position: center;
   background-size: auto 100%;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .photo-index {
@@ -265,8 +270,105 @@ html, body {
   color: red;
 }
 
+.step-layout {
+  display: grid;
+  gap: 20px;
+  height: calc(100vh - 40px);
+  padding: 0;
+}
+
+.layout-photo {
+  position: relative;
+  border-radius: 0;
+  overflow: visible;
+  background: transparent;
+}
+
+.layout-photo-image {
+  width: 100%;
+  height: 100%;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  display: block;
+  position: relative;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.layout-photo-index {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translate(-50%, 0);
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: red;
+  font-family: "BrandonGrotesque";
+  font-weight: 500;
+  font-size: 40px;
+}
+
+.layout-grid-2x2 {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+.layout-grid-2x2 .layout-photo {
+  min-height: 0;
+}
+
+.layout-hero-plus-2 {
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: repeat(2, 1fr);
+}
+
+.layout-hero-plus-2 .layout-photo.hero {
+  grid-row: 1 / span 2;
+}
+
+.layout-hero-plus-2 .layout-photo.support {
+  min-height: 0;
+}
+
+.layout-three-columns {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.layout-three-columns .layout-photo {
+  min-height: 0;
+}
+
+.layout-full-page {
+  grid-template-columns: 1fr;
+}
+
+.layout-full-page .layout-photo.full {
+  min-height: calc(100vh - 80px);
+}
+
+.layout-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(0, 0, 0, 0.1);
+  border-radius: 24px;
+}
+
+.layout-empty-message {
+  font-family: "BrandonGrotesque";
+  font-size: 36px;
+  color: rgba(0, 0, 0, 0.4);
+  text-align: center;
+  max-width: 60%;
+}
+
 @media print {
   .photo-index {
+    display: none;
+  }
+  .layout-photo-index {
     display: none;
   }
 }
@@ -291,6 +393,7 @@ html, body {
   .break-after {
     border: none;
     margin-bottom: 0;
+    padding: 0;
   }
 }
 
@@ -312,6 +415,8 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .cover-overlay {

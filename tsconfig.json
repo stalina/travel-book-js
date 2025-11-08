@@ -10,7 +10,9 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "preserve",
-    "types": ["vite/client", "happy-dom"]
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "types": ["vue", "vite/client", "happy-dom"]
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "tests/**/*.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]

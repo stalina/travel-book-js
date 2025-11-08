@@ -105,9 +105,14 @@ describe('step.builder - StepBuilder', () => {
   })
 
   it('génère des pages de photos avec pagination automatique', async () => {
+    const stepWithoutCover: Step = {
+      ...mockTrip.steps[0],
+      description: 'a'.repeat(900)
+    }
+
     const builder = new StepBuilder(
-      mockTrip,
-      mockTrip.steps[0],
+      { ...mockTrip, steps: [stepWithoutCover] },
+      stepWithoutCover,
       {
         10: {
           1: { path: 'p1.jpg', index: 1, ratio: 'LANDSCAPE' },
@@ -122,7 +127,7 @@ describe('step.builder - StepBuilder', () => {
     const html = await builder.build()
 
     // 4 photos landscape = 1 page de 4 photos
-    expect(html).toContain('photo-columns')
+    expect(html).toContain('layout-grid-2x2')
     expect(html).toContain('p1.jpg')
     expect(html).toContain('p4.jpg')
   })
@@ -141,7 +146,12 @@ describe('step.builder - StepBuilder', () => {
       {},
       {
         cover: 1,
-        pages: [[2, 3]]
+        pages: [
+          {
+            layout: 'hero-plus-2',
+            photoIndices: [2, 3]
+          }
+        ]
       }
     )
 
@@ -154,6 +164,7 @@ describe('step.builder - StepBuilder', () => {
     // Photos 2 et 3 sur une page
     expect(html).toContain('p2.jpg')
     expect(html).toContain('p3.jpg')
+    expect(html).toContain('layout-hero-plus-2')
   })
 
   it('affiche les statistiques de l\'étape (date, météo, altitude)', async () => {

@@ -5,6 +5,7 @@ import { CoverBuilder } from './builders/cover.builder'
 import { StatsBuilder } from './builders/stats.builder'
 import { MapBuilder } from './builders/map.builder'
 import { StepBuilder } from './builders/step.builder'
+import type { StepGenerationPlan } from '../models/editor.types'
 import { loggerService, LoggerService } from './logger.service'
 
 export type GeneratedArtifacts = {
@@ -15,7 +16,7 @@ export type GenerateOptions = {
   photosPlan?: string // contenu texte de photos_by_pages.txt permettant d'écraser la pagination auto
 }
 
-type StepPlan = { cover?: number, pages: number[][] }
+type StepPlan = StepGenerationPlan
 
 /**
  * ArtifactGenerator - Orchestrateur principal pour la génération d'artefacts de voyage
