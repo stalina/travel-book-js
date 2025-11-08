@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- When collapsed show only a small fixed toggle button. All preview UI is hidden to let editor take full width. -->
+  <!-- Toggle when preview is collapsed -->
     <button
       v-if="!expanded"
       class="preview-toggle"
@@ -88,13 +88,9 @@ const expanded = ref(false)
 const { previewTravelBook } = useEditorGeneration()
 
 const openPanel = async () => {
-  // Keep existing mode behavior
+  // open panel and request preview generation (non-blocking)
   editorStore.setPreviewMode('desktop')
   expanded.value = true
-  // Trigger preview generation when opening from the panel toggle so
-  // the behavior matches the header preview button.
-  // We don't await this call deliberately to let the UI open immediately;
-  // the store's isPreviewLoading flag will display loading state in the panel.
   void previewTravelBook()
 }
 
@@ -102,11 +98,11 @@ const closePanel = () => {
   expanded.value = false
 }
 
-// Reference to the iframe element so we can call its contentWindow.print()
+// iframe reference used for print/open/download actions
 const previewFrame = ref<HTMLIFrameElement | null>(null)
 
 const printPreview = () => {
-  // Try to print from the iframe's contentWindow if available
+  // Try printing from iframe.contentWindow, fallback to opening a window
   try {
     const iframe = previewFrame.value
     const printed = iframe?.contentWindow && typeof iframe.contentWindow.print === 'function'
@@ -124,10 +120,7 @@ const printPreview = () => {
     const html = previewContent.value || ''
     const w = window.open('', '_blank')
     if (w) {
-      // Write the HTML but append a small script that waits for images/tiles to load
-      // before calling print(). This helps ensure cover photo and map tiles are
-      // available in the print snapshot. If images don't finish loading within
-      // the timeout, we still call print to avoid blocking indefinitely.
+  // Append a small script that waits for images/tiles to load before print.
       const waitAndPrintScript = `
         <script>
           (function(){
@@ -157,16 +150,13 @@ const printPreview = () => {
       `
 
       w.document.open()
-      // Insert the wait script just before closing body to ensure all images are present
+    // Insert the wait script before closing </body>
   const injected = html.replace(/<\/body>/i, waitAndPrintScript + '\n</body>')
       w.document.write(injected)
       w.document.close()
       w.focus()
-      // Some test environments (happy-dom/jsdom) return a Window-like object
-      // but do not execute the injected script or expose a print method. In
-      // that case, fallback to calling the main window.print() so tests and
-      // headless environments still trigger a print attempt instead of
-      // silently returning.
+      // In some test/headless environments the new window may not expose print()
+      // so call window.print() as a fallback.
       if (typeof (w as any).print !== 'function') {
         try { window.print() } catch (e) { /* ignore */ }
       }
@@ -184,7 +174,6 @@ const openInNewTab = () => {
   try {
     const iframe = previewFrame.value
     if (iframe && iframe.contentWindow && iframe.contentWindow.document) {
-      // Try to open a new tab and write the iframe's document HTML
       const docHtml = iframe.contentWindow.document.documentElement.outerHTML
       const w = window.open('', '_blank')
       if (w) {
@@ -196,10 +185,9 @@ const openInNewTab = () => {
       }
     }
   } catch (err) {
-    // ignore and fallback to using previewContent
+    // fallback to previewContent
   }
 
-  // Fallback: open previewContent in a new tab
   try {
     const html = previewContent.value || ''
     const w = window.open('', '_blank')
@@ -224,7 +212,7 @@ const downloadHtml = () => {
         html = iframe.contentWindow.document.documentElement.outerHTML
       }
     } catch (err) {
-      // ignore and fallback
+      // fallback to previewContent
     }
     if (!html) html = previewContent.value || ''
 
@@ -236,7 +224,6 @@ const downloadHtml = () => {
     document.body.appendChild(a)
     a.click()
     a.remove()
-    // revoke after a delay to ensure download started
     setTimeout(() => URL.revokeObjectURL(url), 1000)
     return
   } catch (err) {
@@ -257,7 +244,7 @@ onMounted(() => {
     expanded.value = !!ev.detail?.open
   }
   window.addEventListener('toggle-preview', onToggle)
-  // Remove listener on unmount to avoid leaks in long-running app
+  // remove listener on unmount
   onUnmounted(() => {
     window.removeEventListener('toggle-preview', onToggle)
   })
