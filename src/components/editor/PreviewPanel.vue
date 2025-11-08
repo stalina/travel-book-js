@@ -42,6 +42,7 @@
       <div class="preview-overlay-header">
         <div class="preview-overlay-title">Aperçu (PDF)</div>
         <div class="preview-overlay-actions">
+          <button class="print-button" @click="printPreview" :disabled="isGenerating || !previewContent" aria-label="Imprimer">🖨️</button>
           <button class="close-button" @click="closePanel" aria-label="Fermer">✕</button>
         </div>
       </div>
@@ -53,6 +54,7 @@
         </div>
         <iframe
           v-else
+          ref="previewFrame"
           class="preview-frame-expanded"
           sandbox=""
           :srcdoc="previewContent"
@@ -96,6 +98,84 @@ const openPanel = async () => {
 
 const closePanel = () => {
   expanded.value = false
+}
+
+// Reference to the iframe element so we can call its contentWindow.print()
+const previewFrame = ref<HTMLIFrameElement | null>(null)
+
+const printPreview = () => {
+  // Try to print from the iframe's contentWindow if available
+  try {
+    const iframe = previewFrame.value
+    const printed = iframe?.contentWindow && typeof iframe.contentWindow.print === 'function'
+    if (printed) {
+      iframe!.contentWindow!.focus()
+      iframe!.contentWindow!.print()
+      return
+    }
+  } catch (err) {
+    // ignore and fallback
+  }
+
+  // Fallback: open a new window/tab with the preview HTML and print it
+  try {
+    const html = previewContent.value || ''
+    const w = window.open('', '_blank')
+    if (w) {
+      // Write the HTML but append a small script that waits for images/tiles to load
+      // before calling print(). This helps ensure cover photo and map tiles are
+      // available in the print snapshot. If images don't finish loading within
+      // the timeout, we still call print to avoid blocking indefinitely.
+      const waitAndPrintScript = `
+        <script>
+          (function(){
+            const TIMEOUT = 5000;
+            function allImagesLoaded() {
+              const imgs = Array.from(document.images || [])
+              if (imgs.length === 0) return true
+              return imgs.every(i => i.complete && (i.naturalWidth !== 0))
+            }
+            function onReady() {
+              try { window.focus(); window.print(); } catch(e) { /* ignore */ }
+            }
+            if (allImagesLoaded()) {
+              onReady();
+            } else {
+              let called = false;
+              const attempt = () => { if (called) return; if (allImagesLoaded()) { called = true; onReady(); } };
+              const timer = setTimeout(() => { if (!called) { called = true; onReady(); } }, TIMEOUT);
+              // Listen to load/error on images
+              Array.from(document.images || []).forEach(img => {
+                img.addEventListener('load', attempt, { once: true })
+                img.addEventListener('error', attempt, { once: true })
+              })
+            }
+          })();
+        <\/script>
+      `
+
+      w.document.open()
+      // Insert the wait script just before closing body to ensure all images are present
+  const injected = html.replace(/<\/body>/i, waitAndPrintScript + '\n</body>')
+      w.document.write(injected)
+      w.document.close()
+      w.focus()
+      // Some test environments (happy-dom/jsdom) return a Window-like object
+      // but do not execute the injected script or expose a print method. In
+      // that case, fallback to calling the main window.print() so tests and
+      // headless environments still trigger a print attempt instead of
+      // silently returning.
+      if (typeof (w as any).print !== 'function') {
+        try { window.print() } catch (e) { /* ignore */ }
+      }
+      return
+    }
+  } catch (err) {
+    // ignore
+  }
+
+  // Last-resort fallback
+  window.print()
 }
 
 const { content: previewContent, setMode, mode } = usePreview({

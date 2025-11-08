@@ -204,4 +204,27 @@ describe('PreviewPanel', () => {
     expect(status.classes()).toContain('type-error')
     expect(status.text()).toContain('Erreur de génération')
   })
+
+  it('renders print button and triggers print when clicked', async () => {
+    const wrapper = mount(PreviewPanel)
+    const store = useEditorStore()
+
+    // Open panel and provide preview content
+    window.dispatchEvent(new CustomEvent('toggle-preview', { detail: { open: true } }))
+    await wrapper.vm.$nextTick()
+    store.setPreviewHtml('<!DOCTYPE html><html><body><p>Preview</p></body></html>')
+    await wrapper.vm.$nextTick()
+
+    if (typeof (window as any).print !== 'function') {
+      ;(window as any).print = vi.fn()
+    }
+    const printSpy = vi.spyOn(window as any, 'print').mockImplementation(() => undefined as any)
+
+    const btn = wrapper.find('button.print-button')
+    expect(btn.exists()).toBe(true)
+    await btn.trigger('click')
+
+    expect(printSpy).toHaveBeenCalled()
+    printSpy.mockRestore()
+  })
 })
