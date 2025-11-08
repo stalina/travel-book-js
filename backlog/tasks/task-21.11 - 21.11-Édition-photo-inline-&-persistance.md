@@ -1,9 +1,11 @@
 ---
 id: task-21.11
 title: 21.11 - Édition photo inline & persistance
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@agent-k'
 created_date: '2025-11-07 22:54'
+updated_date: '2025-11-08 10:19'
 labels: []
 dependencies: []
 parent_task_id: task-21
@@ -23,3 +25,12 @@ Brancher l'éditeur photo existant sur les slots de page et assurer la persistan
 - [ ] #3 Undo/redo par photo reste fonctionnel après fermeture/réouverture de l'éditeur.
 - [ ] #4 Tests Vitest validant la persistance des ajustements et l'intégration store + composants.
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Audit de l'éditeur photo existant et des stores pour identifier interfaces
+2. Intégrer le composant dans StepEditor slots avec ouverture inline/modal et contexte étape
+3. Étendre le store pour persister filtres/crop/rotation par photo + wire preview regen
+4. Couvrir par tests store et composant (undo/redo, persistance)
+<!-- SECTION:PLAN:END -->
