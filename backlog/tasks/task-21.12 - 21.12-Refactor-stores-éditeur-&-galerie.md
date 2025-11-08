@@ -1,9 +1,11 @@
 ---
 id: task-21.12
 title: 21.12 - Refactor stores éditeur & galerie
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@agent-k'
 created_date: '2025-11-07 22:54'
+updated_date: '2025-11-08 12:13'
 labels: []
 dependencies: []
 parent_task_id: task-21
