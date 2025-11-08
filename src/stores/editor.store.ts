@@ -251,6 +251,8 @@ const createEmptyPageState = (): StepPageState => ({
  */
 export const useEditorStore = defineStore('editor', () => {
 	const currentTrip = ref<Trip | null>(null)
+	// keep an internal original snapshot of the trip to allow resets
+	const originalTrip = ref<Trip | null>(null)
 	const currentStepIndex = ref<number>(0)
 	const autoSaveStatus = ref<SaveStatus>('idle')
 	const lastSaveTime = ref<Date | null>(null)
@@ -578,6 +580,8 @@ export const useEditorStore = defineStore('editor', () => {
 		cleanupContext()
 		const clonedTrip = deepClone(trip)
 		currentTrip.value = clonedTrip
+		// store an immutable original snapshot for restores when parsedTrip is unavailable
+		originalTrip.value = deepClone(trip)
 		currentStepIndex.value = 0
 		invalidatePreview()
 
@@ -625,6 +629,80 @@ export const useEditorStore = defineStore('editor', () => {
 			markPreviewStale()
 			schedulePreviewRegeneration(step.id)
 		}
+	}
+
+	/**
+	 * Réinitialise une étape à son état original (nom, description, photos, pages, histories)
+	 * Les données originales sont lues depuis window.__parsedTrip si disponible.
+	 */
+	const resetStep = async (stepId: number): Promise<void> => {
+		if (!currentTrip.value) return
+		const index = currentTrip.value.steps.findIndex((s) => s.id === stepId)
+		if (index === -1) return
+
+		// Restore step fields from parsedTrip if available, otherwise from internal originalTrip
+		const parsed = (typeof window !== 'undefined' ? (window as any).__parsedTrip : undefined)
+		let originalStep: Step | undefined
+		if (parsed?.trip) {
+			originalStep = (parsed.trip as Trip).steps.find((s: Step) => s.id === stepId)
+		}
+		if (!originalStep && originalTrip.value) {
+			originalStep = originalTrip.value.steps.find((s) => s.id === stepId)
+		}
+		if (originalStep) {
+			// copy back all fields from original step except the id to restore editable data
+			const target = currentTrip.value.steps[index]
+			const keys = Object.keys(originalStep) as Array<keyof Step>
+			for (const key of keys) {
+				if (key === 'id') continue
+				;(target as any)[key] = (originalStep as any)[key]
+			}
+		}
+
+		// Reset page state for this step
+		stepPageStates[stepId] = reactive(createEmptyPageState()) as StepPageState
+
+		// Rebuild editor photo list from parsed files if available, otherwise clear
+		const parsedFiles: File[] = parsed?.stepPhotos?.[stepId] ?? []
+		// Revoke previous urls
+		const previous = stepPhotosByStep[stepId] ?? []
+		for (const p of previous) {
+			revokeObjectUrl(p.url)
+		}
+		if (parsedFiles.length) {
+			const prepared: EditorStepPhoto[] = []
+			for (let i = 0; i < parsedFiles.length; i++) {
+				// prepareEditorPhoto can be async
+				prepared.push(await prepareEditorPhoto(stepId, i + 1, parsedFiles[i]))
+			}
+			stepPhotosByStep[stepId] = prepared
+			// reset photo histories
+			const historyMap = ensurePhotoHistoryMap(stepId)
+			for (const key of Object.keys(historyMap)) {
+				delete historyMap[Number(key)]
+			}
+			for (const photo of prepared) {
+				historyMap[photo.index] = { past: [], future: [] }
+			}
+		} else {
+			// No parsed files: clear photos and histories
+			stepPhotosByStep[stepId] = []
+			const historyMap = ensurePhotoHistoryMap(stepId)
+			for (const key of Object.keys(historyMap)) {
+				delete historyMap[Number(key)]
+			}
+		}
+
+		// Clear proposals / previews for this step
+		delete proposalStates[stepId]
+		proposalLoadingByStep[stepId] = false
+		previewHtmlByStep[stepId] = ''
+		previewUpdatedAtByStep[stepId] = undefined
+		previewLoadingByStep[stepId] = false
+
+		triggerAutoSave()
+		markPreviewStale()
+		schedulePreviewRegeneration(stepId)
 	}
 
 	const reorderSteps = (newSteps: Step[]) => {
@@ -895,5 +973,6 @@ export const useEditorStore = defineStore('editor', () => {
 		addPhotoToCurrentStep,
 		applyAdjustmentsToCurrentPhoto,
 		getCurrentStepPhotoHistory
+		,resetStep
 	}
 })

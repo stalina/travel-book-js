@@ -30,10 +30,24 @@
 
         <div v-else-if="proposal" class="proposal-card">
           <div class="proposal-meta">
-            <p class="proposal-summary">{{ proposal.summary }}</p>
-            <p class="proposal-date">
-              Généré le {{ formatTimestamp(proposal.generatedAt) }}
-            </p>
+            <div class="proposal-meta-left">
+              <p class="proposal-summary">{{ proposal.summary }}</p>
+              <p class="proposal-date">
+                Généré le {{ formatTimestamp(proposal.generatedAt) }}
+              </p>
+            </div>
+            <div class="proposal-meta-right">
+              <BaseButton
+                variant="ghost"
+                size="sm"
+                class="reset-button"
+                data-test="proposal-reset"
+                :disabled="!step"
+                @click="onResetStep"
+              >
+                Réinitialiser
+              </BaseButton>
+            </div>
           </div>
           <div class="proposal-description" v-html="proposal.description"></div>
           <ul class="proposal-stats">
@@ -367,6 +381,13 @@
       @apply="handlePhotoEditorApply"
       @close="closePhotoEditor"
     />
+
+    <ConfirmDialog
+      :model-value="confirmResetOpen"
+      message="Voulez-vous réinitialiser cette étape et supprimer toutes les modifications locales ?"
+      @confirm="handleConfirmReset"
+      @cancel="handleCancelReset"
+    />
   </div>
 </template>
 
@@ -381,6 +402,7 @@ import type { GalleryPhoto, PhotoAdjustments, CropSettings, PhotoFilterPreset } 
 import { buildCssFilter } from '../../utils/photo-filters'
 import BaseButton from '../BaseButton.vue'
 import BaseCard from '../BaseCard.vue'
+import ConfirmDialog from '../ui/ConfirmDialog.vue'
 
 const layoutOptions: Array<{ value: StepPageLayout; label: string; description: string }> = [
   { value: 'grid-2x2', label: 'Grille 2 x 2', description: 'Jusqu’à 4 photos en grille équilibrée' },
@@ -689,6 +711,23 @@ const handleUpload = async (event: Event) => {
 const formatTimestamp = (timestamp: number) => {
   const date = new Date(timestamp)
   return date.toLocaleString('fr-FR')
+}
+
+const onResetStep = async () => {
+  // open confirm dialog handled via component state
+  confirmResetOpen.value = true
+}
+
+const confirmResetOpen = ref(false)
+
+const handleConfirmReset = async () => {
+  confirmResetOpen.value = false
+  if (!step.value) return
+  await editorStore.resetStep(step.value.id)
+}
+
+const handleCancelReset = () => {
+  confirmResetOpen.value = false
 }
 </script>
 
@@ -1296,10 +1335,29 @@ const formatTimestamp = (timestamp: number) => {
   gap: var(--spacing-lg, 24px);
 }
 
-.proposal-meta {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs, 6px);
+
+  .proposal-meta {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-xs, 6px);
+  }
+
+  .proposal-meta-left {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .proposal-meta-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-left: var(--spacing-md, 16px);
+  }
+
+.reset-button {
+  color: var(--color-text-secondary, #6b7280);
 }
 
 .proposal-summary {
