@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@agent-k'
 created_date: '2025-11-07 22:53'
-updated_date: '2025-11-08 00:15'
+updated_date: '2025-11-08 00:16'
 labels: []
 dependencies: []
 parent_task_id: task-21
@@ -35,3 +35,12 @@ Fusionner la vue Galerie avec l'éditeur d'étape pour afficher une proposition 
 4. Refonte StepEditor : panneau proposition + bouton régénérer, preview embarquée de la page courante, synchronisation avec les actions du store.
 5. Ajouter tests Vitest (store + composable + rendu StepEditor) couvrant génération initiale, régénération et reflet dans la preview.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+- StepEditor affiche désormais les propositions auto (texte, stats, photos) avec régénération et validation.
+- EditorStore orchestre propositions/preview par étape (prépa photos, acceptation, rafraîchissement instantané).
+- Nouvelle galerie photo (store + vue + composants) pour filtrer, sélectionner et éditer les clichés du voyage.
+- Ajout tests Vitest : store éditeur, galerie, StepEditor et preview pour sécuriser les flux.
+<!-- SECTION:NOTES:END -->
