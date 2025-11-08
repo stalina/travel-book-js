@@ -1,9 +1,11 @@
 ---
 id: task-21.9
 title: '21.9 - Éditeur étape : pages & mises en page'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@agent-k'
 created_date: '2025-11-07 22:53'
+updated_date: '2025-11-08 00:21'
 labels: []
 dependencies: []
 parent_task_id: task-21
