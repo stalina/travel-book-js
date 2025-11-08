@@ -227,4 +227,49 @@ describe('PreviewPanel', () => {
     expect(printSpy).toHaveBeenCalled()
     printSpy.mockRestore()
   })
+
+  it('renders open-in-new-tab button and opens a new window when clicked', async () => {
+    const wrapper = mount(PreviewPanel)
+    const store = useEditorStore()
+
+    // Open panel and provide preview content
+    window.dispatchEvent(new CustomEvent('toggle-preview', { detail: { open: true } }))
+    await wrapper.vm.$nextTick()
+    store.setPreviewHtml('<!DOCTYPE html><html><body><p>Preview</p></body></html>')
+    await wrapper.vm.$nextTick()
+
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => ({ document: { open: () => {}, write: () => {}, close: () => {} } } as any))
+
+    const btn = wrapper.find('button.open-button')
+    expect(btn.exists()).toBe(true)
+    await btn.trigger('click')
+
+    expect(openSpy).toHaveBeenCalled()
+    openSpy.mockRestore()
+  })
+
+  it('renders download HTML button and triggers download when clicked', async () => {
+    const wrapper = mount(PreviewPanel)
+    const store = useEditorStore()
+
+    // Open panel and provide preview content
+    window.dispatchEvent(new CustomEvent('toggle-preview', { detail: { open: true } }))
+    await wrapper.vm.$nextTick()
+    store.setPreviewHtml('<!DOCTYPE html><html><body><p>Preview</p></body></html>')
+    await wrapper.vm.$nextTick()
+
+    const createSpy = vi.spyOn(URL, 'createObjectURL').mockImplementation(() => 'blob:fake')
+    // spy on anchor click via prototype
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined as any)
+
+    const btn = wrapper.find('button.download-button')
+    expect(btn.exists()).toBe(true)
+    await btn.trigger('click')
+
+    expect(createSpy).toHaveBeenCalled()
+    expect(clickSpy).toHaveBeenCalled()
+
+  clickSpy.mockRestore()
+  createSpy.mockRestore()
+  })
 })

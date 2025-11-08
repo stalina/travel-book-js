@@ -42,7 +42,9 @@
       <div class="preview-overlay-header">
         <div class="preview-overlay-title">Aperçu (PDF)</div>
         <div class="preview-overlay-actions">
-          <button class="print-button" @click="printPreview" :disabled="isGenerating || !previewContent" aria-label="Imprimer">🖨️</button>
+          <button class="download-button" @click="downloadHtml" :disabled="isGenerating || !previewContent" aria-label="Télécharger HTML" title="Télécharger le HTML de l'aperçu">⤓</button>
+          <button class="open-button" @click="openInNewTab" :disabled="isGenerating || !previewContent" aria-label="Ouvrir dans un nouvel onglet" title="Ouvrir l'aperçu dans un nouvel onglet">↗️</button>
+          <button class="print-button" @click="printPreview" :disabled="isGenerating || !previewContent" aria-label="Imprimer" title="Imprimer l'aperçu">🖨️</button>
           <button class="close-button" @click="closePanel" aria-label="Fermer">✕</button>
         </div>
       </div>
@@ -129,7 +131,7 @@ const printPreview = () => {
       const waitAndPrintScript = `
         <script>
           (function(){
-            const TIMEOUT = 5000;
+            const TIMEOUT = 8000;
             function allImagesLoaded() {
               const imgs = Array.from(document.images || [])
               if (imgs.length === 0) return true
@@ -176,6 +178,70 @@ const printPreview = () => {
 
   // Last-resort fallback
   window.print()
+}
+
+const openInNewTab = () => {
+  try {
+    const iframe = previewFrame.value
+    if (iframe && iframe.contentWindow && iframe.contentWindow.document) {
+      // Try to open a new tab and write the iframe's document HTML
+      const docHtml = iframe.contentWindow.document.documentElement.outerHTML
+      const w = window.open('', '_blank')
+      if (w) {
+        w.document.open()
+        w.document.write(docHtml)
+        w.document.close()
+        w.focus()
+        return
+      }
+    }
+  } catch (err) {
+    // ignore and fallback to using previewContent
+  }
+
+  // Fallback: open previewContent in a new tab
+  try {
+    const html = previewContent.value || ''
+    const w = window.open('', '_blank')
+    if (w) {
+      w.document.open()
+      w.document.write(html)
+      w.document.close()
+      w.focus()
+      return
+    }
+  } catch (err) {
+    // ignore
+  }
+}
+
+const downloadHtml = () => {
+  try {
+    let html = ''
+    try {
+      const iframe = previewFrame.value
+      if (iframe && iframe.contentWindow && iframe.contentWindow.document) {
+        html = iframe.contentWindow.document.documentElement.outerHTML
+      }
+    } catch (err) {
+      // ignore and fallback
+    }
+    if (!html) html = previewContent.value || ''
+
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'preview.html'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    // revoke after a delay to ensure download started
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+    return
+  } catch (err) {
+    // ignore
+  }
 }
 
 const { content: previewContent, setMode, mode } = usePreview({
@@ -279,12 +345,48 @@ watch(
     font-weight: var(--font-weight-semibold);
     color: var(--color-text-primary);
   }
+  .preview-overlay-actions button {
+    margin-left: 8px;
+  }
+
+  /* Design-system buttons for actions (download / open / print / close) */
+  .preview-overlay-actions button {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid var(--color-border-2, rgba(0,0,0,0.06));
+    background: var(--color-surface, #fff);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: background 120ms ease, box-shadow 120ms ease, transform 60ms ease;
+    font-size: 16px;
+  }
+
+  .preview-overlay-actions button:hover:not(:disabled) {
+    background: var(--color-surface-hover, #f5f7fb);
+    transform: translateY(-1px);
+  }
+
+  .preview-overlay-actions button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(66,133,244,0.12);
+  }
+
+  .preview-overlay-actions button:disabled {
+    opacity: 0.45;
+    cursor: default;
+    transform: none;
+  }
 
   .close-button {
     background: transparent;
     border: none;
-    font-size: 20px;
+    font-size: 18px;
     cursor: pointer;
+    padding: 6px;
   }
 
   .preview-overlay-content {
