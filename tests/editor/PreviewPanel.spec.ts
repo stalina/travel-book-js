@@ -3,7 +3,23 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import PreviewPanel from '../../src/components/editor/PreviewPanel.vue'
 import { useEditorStore } from '../../src/stores/editor.store'
-import type { Trip } from '../../src/models/types'
+import type { Trip, Step } from '../../src/models/types'
+
+const buildStep = (id: number, overrides: Partial<Step> = {}): Step => ({
+  id,
+  name: `Étape ${id}`,
+  description: `Description pour l'étape ${id}`,
+  city: 'Paris',
+  country: 'France',
+  country_code: 'FR',
+  weather_condition: 'Ensoleillé',
+  weather_temperature: 20,
+  start_time: 1_609_459_200 + id * 86_400,
+  lat: 48.8566,
+  lon: 2.3522,
+  slug: `etape-${id}`,
+  ...overrides
+})
 
 describe('PreviewPanel', () => {
   beforeEach(() => {
@@ -56,17 +72,16 @@ describe('PreviewPanel', () => {
     const store = useEditorStore()
     
     const mockTrip: Trip = {
-      id: 1,
-      name: 'Test Trip',
-      start_date: 1234567890, // Jan 1970
-      end_date: 1235000000,   // ~5 jours plus tard
-      steps: [
-        { id: 1, name: 'Step 1' } as any,
-        { id: 2, name: 'Step 2' } as any
-      ]
-    } as Trip
-    
-    store.setTrip(mockTrip)
+		id: 1,
+		name: 'Test Trip',
+		start_date: 1_609_372_800,
+		end_date: 1_609_459_200,
+		steps: [buildStep(1), buildStep(2)],
+		cover_photo: null,
+		summary: 'Résumé'
+	}
+
+	await store.setTrip(mockTrip)
     await wrapper.vm.$nextTick()
     
     const statValues = wrapper.findAll('.stat-value')

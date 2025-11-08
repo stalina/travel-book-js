@@ -265,8 +265,102 @@ html, body {
   color: red;
 }
 
+.step-layout {
+  display: grid;
+  gap: 24px;
+  height: calc(100vh - 40px);
+  padding: 20px;
+}
+
+.layout-photo {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #f4f6f8;
+}
+
+.layout-photo-image {
+  width: 100%;
+  height: 100%;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  display: block;
+  position: relative;
+}
+
+.layout-photo-index {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-family: "BrandonGrotesque";
+  font-weight: 500;
+  font-size: 28px;
+}
+
+.layout-grid-2x2 {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+.layout-grid-2x2 .layout-photo {
+  min-height: 0;
+}
+
+.layout-hero-plus-2 {
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: repeat(2, 1fr);
+}
+
+.layout-hero-plus-2 .layout-photo.hero {
+  grid-row: 1 / span 2;
+}
+
+.layout-hero-plus-2 .layout-photo.support {
+  min-height: 0;
+}
+
+.layout-three-columns {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.layout-three-columns .layout-photo {
+  min-height: 0;
+}
+
+.layout-full-page {
+  grid-template-columns: 1fr;
+}
+
+.layout-full-page .layout-photo.full {
+  min-height: calc(100vh - 80px);
+}
+
+.layout-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(0, 0, 0, 0.1);
+  border-radius: 24px;
+}
+
+.layout-empty-message {
+  font-family: "BrandonGrotesque";
+  font-size: 36px;
+  color: rgba(0, 0, 0, 0.4);
+  text-align: center;
+  max-width: 60%;
+}
+
 @media print {
   .photo-index {
+    display: none;
+  }
+  .layout-photo-index {
     display: none;
   }
 }

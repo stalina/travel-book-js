@@ -1,247 +1,205 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { mount, flushPromises } from '@vue/test-utils'
+import { defineComponent } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
-import StepEditor from '../../src/components/editor/StepEditor.vue'
 import { useEditorStore } from '../../src/stores/editor.store'
 import type { Trip, Step } from '../../src/models/types'
+import { StepBuilder } from '../../src/services/builders/step.builder'
+
+vi.mock('../../src/components/editor/StepTitleEditor.vue', () => ({
+	default: defineComponent({
+		name: 'StepTitleEditorStub',
+		props: {
+			modelValue: {
+				type: String,
+				default: ''
+			}
+		},
+		emits: ['update:modelValue'],
+		template: '<div class="step-title-editor-stub"></div>'
+	})
+}))
+
+vi.mock('../../src/components/editor/PhotoGrid.vue', () => ({
+	default: defineComponent({
+		name: 'PhotoGridStub',
+		props: {
+			photos: {
+				type: Array,
+				default: () => []
+			}
+		},
+		emits: ['add', 'edit', 'reorder', 'delete'],
+		template: '<div class="photo-grid-stub"></div>'
+	})
+}))
+
+vi.mock('../../src/components/editor/RichTextEditor.vue', () => ({
+	default: defineComponent({
+		name: 'RichTextEditorStub',
+		props: {
+			modelValue: {
+				type: String,
+				default: ''
+			}
+		},
+		emits: ['update:modelValue'],
+		template: '<div class="rich-text-editor-stub"></div>'
+	})
+}))
+
+import StepEditor from '../../src/components/editor/StepEditor.vue'
+
+const createStep = (overrides: Partial<Step> = {}): Step => ({
+	id: 1,
+	name: 'Étape Test',
+	description: 'Description initiale',
+	city: 'Paris',
+	country: 'France',
+	country_code: 'FR',
+	weather_condition: 'Ensoleillé',
+	weather_temperature: 23,
+	start_time: 1_609_459_200,
+	lat: 48.8566,
+	lon: 2.3522,
+	slug: 'etape-test',
+	...overrides
+})
+
+const createTrip = (overrides: Partial<Trip> = {}): Trip => ({
+	id: 10,
+	name: 'Voyage Test',
+	start_date: 1_609_372_800,
+	end_date: 1_609_459_200,
+	steps: [createStep()],
+	cover_photo: null,
+	summary: 'Résumé',
+	...overrides
+})
 
 describe('StepEditor', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia())
-  })
+	const createMockFile = (name: string) => new File(['x'], name, { type: 'image/jpeg' })
 
-  it('shows empty state when no step is selected', () => {
-    const wrapper = mount(StepEditor)
-    
-    expect(wrapper.find('.empty-state').exists()).toBe(true)
-    expect(wrapper.text()).toContain('Sélectionnez une étape')
-  })
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		;(window as any).__parsedTrip = {
+			stepPhotos: {
+				1: [createMockFile('photo-1.jpg'), createMockFile('photo-2.jpg'), createMockFile('photo-3.jpg')]
+			}
+		}
+		vi.spyOn(StepBuilder.prototype, 'build').mockResolvedValue('<div data-test="step">Prévisualisation</div>')
+	})
 
-  it('shows editor content when step is selected', async () => {
-    const wrapper = mount(StepEditor)
-    const store = useEditorStore()
-    
-    const mockTrip: Trip = {
-      id: 1,
-      name: 'Test Trip',
-      start_date: 1234567890,
-      end_date: 1234567890,
-      steps: [
-        {
-          id: 1,
-          name: 'Paris',
-          description: 'Visite de Paris',
-          country: 'France',
-          country_code: 'FR',
-          start_time: 1234567890,
-          end_time: 1234567890,
-          weather_condition: 'sunny',
-          weather_temperature: 25,
-          latitude: 48.8566,
-          longitude: 2.3522,
-          lat: 48.8566,
-          lon: 2.3522,
-          slug: 'paris'
-        } as unknown as Step
-      ]
-    } as Trip
-    
-    store.setTrip(mockTrip)
-    store.setCurrentStep(0)
-    await wrapper.vm.$nextTick()
-    
-    expect(wrapper.find('.empty-state').exists()).toBe(false)
-    expect(wrapper.find('.editor-content').exists()).toBe(true)
-  })
+	afterEach(() => {
+		vi.restoreAllMocks()
+		vi.useRealTimers()
+	})
 
-  it('renders StepTitleEditor with current step name', async () => {
-    const wrapper = mount(StepEditor)
-    const store = useEditorStore()
-    
-    const mockTrip: Trip = {
-      id: 1,
-      name: 'Test Trip',
-      start_date: 1234567890,
-      end_date: 1234567890,
-      steps: [
-        {
-          id: 1,
-          name: 'Lyon',
-          description: 'Visite de Lyon',
-          country: 'France',
-          country_code: 'FR',
-          start_time: 1234567890,
-          end_time: 1234567890,
-          weather_condition: 'sunny',
-          weather_temperature: 22,
-          latitude: 45.7640,
-          longitude: 4.8357,
-          lat: 45.7640,
-          lon: 4.8357,
-          slug: 'lyon'
-        } as unknown as Step
-      ]
-    } as Trip
-    
-    store.setTrip(mockTrip)
-    store.setCurrentStep(0)
-    await wrapper.vm.$nextTick()
-    
-    const titleEditor = wrapper.findComponent({ name: 'StepTitleEditor' })
-    expect(titleEditor.exists()).toBe(true)
-    expect(titleEditor.props('modelValue')).toBe('Lyon')
-  })
+	it('affiche un état vide quand aucune étape est sélectionnée', async () => {
+		const wrapper = mount(StepEditor)
+		await flushPromises()
 
-  it('renders PhotoGrid section', async () => {
-    const wrapper = mount(StepEditor)
-    const store = useEditorStore()
-    
-    const mockTrip: Trip = {
-      id: 1,
-      name: 'Test Trip',
-      start_date: 1234567890,
-      end_date: 1234567890,
-      steps: [
-        {
-          id: 1,
-          name: 'Test Step',
-          description: 'Test',
-          country: 'France',
-          country_code: 'FR',
-          start_time: 1234567890,
-          end_time: 1234567890,
-          weather_condition: 'sunny',
-          weather_temperature: 25,
-          latitude: 48.8566,
-          longitude: 2.3522,
-          lat: 48.8566,
-          lon: 2.3522,
-          slug: 'test'
-        } as unknown as Step
-      ]
-    } as Trip
-    
-    store.setTrip(mockTrip)
-    store.setCurrentStep(0)
-    await wrapper.vm.$nextTick()
-    
-    const photoGrid = wrapper.findComponent({ name: 'PhotoGrid' })
-    expect(photoGrid.exists()).toBe(true)
-  })
+		expect(wrapper.find('.empty-state').exists()).toBe(true)
+		expect(wrapper.text()).toContain('Sélectionnez une étape')
+	})
 
-  it('renders RichTextEditor with current step description', async () => {
-    const wrapper = mount(StepEditor)
-    const store = useEditorStore()
-    
-    const mockTrip: Trip = {
-      id: 1,
-      name: 'Test Trip',
-      start_date: 1234567890,
-      end_date: 1234567890,
-      steps: [
-        {
-          id: 1,
-          name: 'Test Step',
-          description: 'Ma description de test',
-          country: 'France',
-          country_code: 'FR',
-          start_time: 1234567890,
-          end_time: 1234567890,
-          weather_condition: 'sunny',
-          weather_temperature: 25,
-          latitude: 48.8566,
-          longitude: 2.3522,
-          lat: 48.8566,
-          lon: 2.3522,
-          slug: 'test'
-        } as unknown as Step
-      ]
-    } as Trip
-    
-    store.setTrip(mockTrip)
-    store.setCurrentStep(0)
-    await wrapper.vm.$nextTick()
-    
-    const richEditor = wrapper.findComponent({ name: 'RichTextEditor' })
-    expect(richEditor.exists()).toBe(true)
-    expect(richEditor.props('modelValue')).toBe('Ma description de test')
-  })
+	it('affiche la proposition et la prévisualisation pour une étape sélectionnée', async () => {
+		const wrapper = mount(StepEditor)
+		const store = useEditorStore()
+		const trip = createTrip()
 
-  it('updates step title when title editor emits update', async () => {
-    const wrapper = mount(StepEditor)
-    const store = useEditorStore()
-    
-    const mockTrip: Trip = {
-      id: 1,
-      name: 'Test Trip',
-      start_date: 1234567890,
-      end_date: 1234567890,
-      steps: [
-        {
-          id: 1,
-          name: 'Original Name',
-          description: 'Test',
-          country: 'France',
-          country_code: 'FR',
-          start_time: 1234567890,
-          end_time: 1234567890,
-          weather_condition: 'sunny',
-          weather_temperature: 25,
-          latitude: 48.8566,
-          longitude: 2.3522,
-          lat: 48.8566,
-          lon: 2.3522,
-          slug: 'test'
-        } as unknown as Step
-      ]
-    } as Trip
-    
-    store.setTrip(mockTrip)
-    store.setCurrentStep(0)
-    await wrapper.vm.$nextTick()
-    
-    const titleEditor = wrapper.findComponent({ name: 'StepTitleEditor' })
-    await titleEditor.vm.$emit('update:modelValue', 'New Name')
-    
-    expect(store.currentStep?.name).toBe('New Name')
-  })
+		await store.setTrip(trip)
+		store.setCurrentStep(0)
+		await flushPromises()
 
-  it('updates step description when rich editor emits update', async () => {
-    const wrapper = mount(StepEditor)
-    const store = useEditorStore()
-    
-    const mockTrip: Trip = {
-      id: 1,
-      name: 'Test Trip',
-      start_date: 1234567890,
-      end_date: 1234567890,
-      steps: [
-        {
-          id: 1,
-          name: 'Test',
-          description: 'Original description',
-          country: 'France',
-          country_code: 'FR',
-          start_time: 1234567890,
-          end_time: 1234567890,
-          weather_condition: 'sunny',
-          weather_temperature: 25,
-          latitude: 48.8566,
-          longitude: 2.3522,
-          lat: 48.8566,
-          lon: 2.3522,
-          slug: 'test'
-        } as unknown as Step
-      ]
-    } as Trip
-    
-    store.setTrip(mockTrip)
-    store.setCurrentStep(0)
-    await wrapper.vm.$nextTick()
-    
-    const richEditor = wrapper.findComponent({ name: 'RichTextEditor' })
-    await richEditor.vm.$emit('update:modelValue', '<p>New description</p>')
-    
-    expect(store.currentStep?.description).toBe('<p>New description</p>')
-  })
+		expect(wrapper.find('.proposal-section').exists()).toBe(true)
+		expect(wrapper.find('.proposal-summary').text()).toContain('Jour')
+		expect(wrapper.find('iframe.preview-frame').exists()).toBe(true)
+	})
+
+	it('lance la régénération de proposition lors du clic sur le bouton dédié', async () => {
+		const wrapper = mount(StepEditor)
+		const store = useEditorStore()
+		const trip = createTrip()
+
+		const regenerateSpy = vi.spyOn(store, 'regenerateCurrentStepProposal')
+
+		await store.setTrip(trip)
+		store.setCurrentStep(0)
+		await flushPromises()
+
+			await wrapper.find('.proposal-section button.secondary').trigger('click')
+
+		expect(regenerateSpy).toHaveBeenCalled()
+	})
+
+	it('désactive le bouton de validation après acceptation et affiche la date', async () => {
+		const wrapper = mount(StepEditor)
+		const store = useEditorStore()
+		const trip = createTrip()
+
+		await store.setTrip(trip)
+		store.setCurrentStep(0)
+		await flushPromises()
+
+		const validateButton = wrapper.find('button.primary')
+		expect(validateButton.attributes('disabled')).toBeUndefined()
+
+		await validateButton.trigger('click')
+		await flushPromises()
+
+		expect(wrapper.find('.proposal-accepted').text()).toContain('Dernière validation')
+		expect(validateButton.attributes('disabled')).toBe('')
+	})
+
+	it('rafraîchit l\'aperçu lorsqu\'on clique sur « Actualiser »', async () => {
+		const wrapper = mount(StepEditor)
+		const store = useEditorStore()
+		const trip = createTrip()
+		const previewSpy = vi.spyOn(store, 'regenerateCurrentStepPreview')
+
+		await store.setTrip(trip)
+		store.setCurrentStep(0)
+		await flushPromises()
+
+		await wrapper.find('.preview-section button.secondary').trigger('click')
+
+		expect(previewSpy).toHaveBeenCalled()
+	})
+
+		it('gère l\'ajout de pages, le choix de layout et la sélection de couverture', async () => {
+			vi.useFakeTimers()
+			const wrapper = mount(StepEditor)
+			const store = useEditorStore()
+			const trip = createTrip()
+
+			await store.setTrip(trip)
+			store.setCurrentStep(0)
+			await flushPromises()
+
+			await wrapper.find('[data-test="add-page"]').trigger('click')
+			await flushPromises()
+			expect(store.currentStepPages).toHaveLength(1)
+
+			await wrapper.find('[data-test="layout-option-three-columns"]').trigger('click')
+			expect(store.currentStepActivePage?.layout).toBe('three-columns')
+
+			await wrapper.find('[data-test="page-photo-toggle-1"]').trigger('click')
+			expect(store.currentStepActivePage?.photoIndices).toContain(1)
+
+			await wrapper.find('[data-test="cover-option-1"]').trigger('click')
+			expect(store.currentStepPageState?.coverPhotoIndex).toBe(1)
+
+			await wrapper.find('[data-test="add-page"]').trigger('click')
+			await flushPromises()
+			expect(store.currentStepPages).toHaveLength(2)
+
+			await wrapper.find('[data-test="page-chip-2"]').trigger('click')
+			expect(store.currentStepActivePage?.id).toBe(store.currentStepPages[1].id)
+
+			await wrapper.find('[data-test="move-page-left"]').trigger('click')
+			vi.runAllTimers()
+			await flushPromises()
+			expect(store.currentStepPages[0].id).toBe(store.currentStepActivePage?.id)
+		})
 })
