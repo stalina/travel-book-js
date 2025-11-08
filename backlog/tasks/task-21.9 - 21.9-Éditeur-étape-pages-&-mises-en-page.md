@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@agent-k'
 created_date: '2025-11-07 22:53'
-updated_date: '2025-11-08 00:22'
+updated_date: '2025-11-08 08:39'
 labels: []
 dependencies: []
 parent_task_id: task-21
@@ -20,10 +20,10 @@ Ajouter la gestion multi-page directement dans l'éditeur d'étape avec choix d'
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Barre de navigation des pages avec ajout, suppression, réorganisation et sélection de la page active.
-- [ ] #2 Chaque page expose la liste des layouts disponibles avec aperçu miniature et application immédiate.
-- [ ] #3 Les métadonnées des pages sont persistées dans le store et reflétées dans la prévisualisation.
-- [ ] #4 Tests Vitest sur le store pages/layouts et la barre de navigation.
+- [x] #1 Barre de navigation des pages avec ajout, suppression, réorganisation et sélection de la page active.
+- [x] #2 Chaque page expose la liste des layouts disponibles avec aperçu miniature et application immédiate.
+- [x] #3 Les métadonnées des pages sont persistées dans le store et reflétées dans la prévisualisation.
+- [x] #4 Tests Vitest sur le store pages/layouts et la barre de navigation.
 <!-- AC:END -->
 
 ## Implementation Plan
