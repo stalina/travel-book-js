@@ -38,6 +38,11 @@ export function useEditorGeneration() {
     if (previewLock || editorStore.isPreviewLoading || editorStore.isExporting) {
       return null
     }
+    // If the preview is not stale and we already have artifacts and a valid preview HTML,
+    // avoid re-generating. This prevents unnecessary work when the content hasn't changed.
+    if (!editorStore.isPreviewStale && tripStore.artifacts && editorStore.previewHtml) {
+      return tripStore.artifacts
+    }
 
     previewLock = true
     editorStore.setPreviewError(null)
