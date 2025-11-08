@@ -252,6 +252,8 @@ html, body {
   background-repeat: no-repeat;
   background-position: center;
   background-size: auto 100%;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .photo-index {
@@ -267,16 +269,16 @@ html, body {
 
 .step-layout {
   display: grid;
-  gap: 24px;
+  gap: 20px;
   height: calc(100vh - 40px);
-  padding: 20px;
+  padding: 0;
 }
 
 .layout-photo {
   position: relative;
-  border-radius: 18px;
-  overflow: hidden;
-  background: #f4f6f8;
+  border-radius: 0;
+  overflow: visible;
+  background: transparent;
 }
 
 .layout-photo-image {
@@ -287,19 +289,22 @@ html, body {
   background-repeat: no-repeat;
   display: block;
   position: relative;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .layout-photo-index {
   position: absolute;
-  bottom: 16px;
-  right: 16px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff;
+  bottom: 30px;
+  left: 50%;
+  transform: translate(-50%, 0);
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: red;
   font-family: "BrandonGrotesque";
   font-weight: 500;
-  font-size: 28px;
+  font-size: 40px;
 }
 
 .layout-grid-2x2 {
@@ -385,6 +390,7 @@ html, body {
   .break-after {
     border: none;
     margin-bottom: 0;
+    padding: 0;
   }
 }
 
@@ -406,6 +412,8 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .cover-overlay {
