@@ -359,16 +359,33 @@ watch(
     border-radius: 8px;
     border: 1px solid var(--color-border-2, rgba(0,0,0,0.06));
     background: var(--color-surface, #fff);
-    color: var(--color-text-primary);
+    color: var(--color-text-primary, #222);
     cursor: pointer;
     transition: background 120ms ease, box-shadow 120ms ease, transform 60ms ease;
     font-size: 16px;
   }
 
-  .preview-overlay-actions button:hover:not(:disabled) {
-    background: var(--color-surface-hover, #f5f7fb);
-    transform: translateY(-1px);
+  /* Color variants */
+  .download-button { /* accent / success */
+    background: var(--color-accent, #0b9d58);
+    color: var(--color-on-accent, #fff);
+    border-color: transparent;
   }
+  .download-button:hover:not(:disabled) { background: color-mix(in srgb, var(--color-accent, #0b9d58) 88%, black 12%); }
+
+  .open-button { /* primary */
+    background: var(--color-primary, #1a73e8);
+    color: var(--color-on-primary, #fff);
+    border-color: transparent;
+  }
+  .open-button:hover:not(:disabled) { background: color-mix(in srgb, var(--color-primary, #1a73e8) 88%, black 12%); }
+
+  .print-button { /* neutral */
+    background: var(--color-surface, #fff);
+    color: var(--color-text-primary, #222);
+    border-color: var(--color-border-2, rgba(0,0,0,0.06));
+  }
+  .print-button:hover:not(:disabled) { background: var(--color-surface-hover, #f5f7fb); }
 
   .preview-overlay-actions button:focus {
     outline: none;
