@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@agent-k'
 created_date: '2025-11-07 22:53'
-updated_date: '2025-11-08 00:21'
+updated_date: '2025-11-08 00:22'
 labels: []
 dependencies: []
 parent_task_id: task-21
@@ -25,3 +25,12 @@ Ajouter la gestion multi-page directement dans l'éditeur d'étape avec choix d'
 - [ ] #3 Les métadonnées des pages sont persistées dans le store et reflétées dans la prévisualisation.
 - [ ] #4 Tests Vitest sur le store pages/layouts et la barre de navigation.
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Étendre le store éditeur (types, actions) pour gérer les pages par étape : ajout/suppression/ordre/layout et synchronisation preview.
+2. Implémenter les composants UI (navigation des pages + sélecteur de layout) et les intégrer dans StepEditor avec interactions store.
+3. Adapter StepBuilder/preview pour interpréter les layouts choisis et rendre les pages correspondantes.
+4. Couvrir par des tests Vitest : logique du store pages/layouts et barre de navigation/layout picker.
+<!-- SECTION:PLAN:END -->
