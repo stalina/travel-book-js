@@ -34,3 +34,11 @@ Remplacer la modale séparée par un sélecteur de photos intégré à chaque sl
 3. Remplacer PhotoGrid placeholders par slots interactifs avec panel latéral.
 4. Relier à preview regeneration et couvrir avec tests store/composant.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+- Intégration du panneau de bibliothèque directement dans StepEditor avec recherche, filtres orientation et slots interactifs
+- Nouveau composable usePhotoLibrary, constantes de capacité et enrichissement du store pour clamp et import d'images
+- Upload photo inline disponible et regen preview via notifyPageChange
+<!-- SECTION:NOTES:END -->
