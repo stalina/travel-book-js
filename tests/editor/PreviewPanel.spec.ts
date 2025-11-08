@@ -1,4 +1,13 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+// Mock the generation composable so opening the panel doesn't perform heavy work
+const previewMock = vi.fn(() => Promise.resolve(null))
+vi.mock('../../src/composables/useEditorGeneration', () => ({
+  useEditorGeneration: () => ({
+    previewTravelBook: previewMock,
+    openPreviewInViewer: vi.fn(),
+    exportTravelBook: vi.fn()
+  })
+}))
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import PreviewPanel from '../../src/components/editor/PreviewPanel.vue'
@@ -116,6 +125,21 @@ describe('PreviewPanel', () => {
     await wrapper.vm.$nextTick()
     const mountedAfterOpen = wrapper.find('iframe.preview-frame').exists() || wrapper.find('iframe.preview-frame-expanded').exists()
     expect(mountedAfterOpen).toBe(true)
+  })
+
+  it('clicking the collapsed toggle button triggers preview generation', async () => {
+    // Ensure previewMock call count resets
+    previewMock.mockReset()
+    const wrapper = mount(PreviewPanel)
+
+    // Find the collapsed toggle button and click it
+    const toggle = wrapper.find('button.preview-toggle')
+    expect(toggle.exists()).toBe(true)
+    await toggle.trigger('click')
+    // nextTick to let handlers run
+    await wrapper.vm.$nextTick()
+
+    expect(previewMock).toHaveBeenCalledTimes(1)
   })
 
   it('applies correct CSS class for preview mode', async () => {

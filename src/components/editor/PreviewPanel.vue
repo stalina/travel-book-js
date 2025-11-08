@@ -76,13 +76,22 @@
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useEditorStore } from '../../stores/editor.store'
 import { usePreview } from '../../composables/usePreview'
+import { useEditorGeneration } from '../../composables/useEditorGeneration'
 
 const editorStore = useEditorStore()
 const expanded = ref(false)
 
-const openPanel = () => {
+const { previewTravelBook } = useEditorGeneration()
+
+const openPanel = async () => {
+  // Keep existing mode behavior
   editorStore.setPreviewMode('desktop')
   expanded.value = true
+  // Trigger preview generation when opening from the panel toggle so
+  // the behavior matches the header preview button.
+  // We don't await this call deliberately to let the UI open immediately;
+  // the store's isPreviewLoading flag will display loading state in the panel.
+  void previewTravelBook()
 }
 
 const closePanel = () => {
