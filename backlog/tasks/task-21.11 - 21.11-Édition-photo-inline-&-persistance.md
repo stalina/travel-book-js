@@ -1,11 +1,11 @@
 ---
 id: task-21.11
 title: 21.11 - Édition photo inline & persistance
-status: In Progress
+status: Done
 assignee:
   - '@agent-k'
 created_date: '2025-11-07 22:54'
-updated_date: '2025-11-08 12:12'
+updated_date: '2025-11-08 12:13'
 labels: []
 dependencies: []
 parent_task_id: task-21
