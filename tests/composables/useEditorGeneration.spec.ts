@@ -48,4 +48,26 @@ describe('useEditorGeneration', () => {
     expect(callCount).toBe(1)
     expect(results.filter(r => r !== null).length).toBe(1)
   })
+
+  it('skips regeneration when preview is not stale and previewHtml exists', async () => {
+    const tripStore = useTripStore()
+    const editorStore = useEditorStore()
+
+    // Provide existing artifacts and previewHtml
+    const artifacts = { manifest: {}, files: [], manifestEntries: 1 } as any
+    tripStore.artifacts = artifacts
+    editorStore.setPreviewHtml('<html></html>')
+    // Mark preview as not stale
+    editorStore.isPreviewStale = false
+
+    // Spy on generateArtifacts - it must NOT be called
+    const genSpy = vi.spyOn(tripStore, 'generateArtifacts')
+
+    const { previewTravelBook } = useEditorGeneration()
+
+    const result = await previewTravelBook()
+
+  expect(result).toStrictEqual(artifacts)
+    expect(genSpy).not.toHaveBeenCalled()
+  })
 })

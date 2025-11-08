@@ -1,4 +1,13 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+// Mock the generation composable so opening the panel doesn't perform heavy work
+const previewMock = vi.fn(() => Promise.resolve(null))
+vi.mock('../../src/composables/useEditorGeneration', () => ({
+  useEditorGeneration: () => ({
+    previewTravelBook: previewMock,
+    openPreviewInViewer: vi.fn(),
+    exportTravelBook: vi.fn()
+  })
+}))
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import PreviewPanel from '../../src/components/editor/PreviewPanel.vue'
@@ -118,6 +127,21 @@ describe('PreviewPanel', () => {
     expect(mountedAfterOpen).toBe(true)
   })
 
+  it('clicking the collapsed toggle button triggers preview generation', async () => {
+    // Ensure previewMock call count resets
+    previewMock.mockReset()
+    const wrapper = mount(PreviewPanel)
+
+    // Find the collapsed toggle button and click it
+    const toggle = wrapper.find('button.preview-toggle')
+    expect(toggle.exists()).toBe(true)
+    await toggle.trigger('click')
+    // nextTick to let handlers run
+    await wrapper.vm.$nextTick()
+
+    expect(previewMock).toHaveBeenCalledTimes(1)
+  })
+
   it('applies correct CSS class for preview mode', async () => {
     const wrapper = mount(PreviewPanel)
     const store = useEditorStore()
@@ -179,5 +203,73 @@ describe('PreviewPanel', () => {
     const status = wrapper.find('.status-message')
     expect(status.classes()).toContain('type-error')
     expect(status.text()).toContain('Erreur de génération')
+  })
+
+  it('renders print button and triggers print when clicked', async () => {
+    const wrapper = mount(PreviewPanel)
+    const store = useEditorStore()
+
+    // Open panel and provide preview content
+    window.dispatchEvent(new CustomEvent('toggle-preview', { detail: { open: true } }))
+    await wrapper.vm.$nextTick()
+    store.setPreviewHtml('<!DOCTYPE html><html><body><p>Preview</p></body></html>')
+    await wrapper.vm.$nextTick()
+
+    if (typeof (window as any).print !== 'function') {
+      ;(window as any).print = vi.fn()
+    }
+    const printSpy = vi.spyOn(window as any, 'print').mockImplementation(() => undefined as any)
+
+    const btn = wrapper.find('button.print-button')
+    expect(btn.exists()).toBe(true)
+    await btn.trigger('click')
+
+    expect(printSpy).toHaveBeenCalled()
+    printSpy.mockRestore()
+  })
+
+  it('renders open-in-new-tab button and opens a new window when clicked', async () => {
+    const wrapper = mount(PreviewPanel)
+    const store = useEditorStore()
+
+    // Open panel and provide preview content
+    window.dispatchEvent(new CustomEvent('toggle-preview', { detail: { open: true } }))
+    await wrapper.vm.$nextTick()
+    store.setPreviewHtml('<!DOCTYPE html><html><body><p>Preview</p></body></html>')
+    await wrapper.vm.$nextTick()
+
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => ({ document: { open: () => {}, write: () => {}, close: () => {} } } as any))
+
+    const btn = wrapper.find('button.open-button')
+    expect(btn.exists()).toBe(true)
+    await btn.trigger('click')
+
+    expect(openSpy).toHaveBeenCalled()
+    openSpy.mockRestore()
+  })
+
+  it('renders download HTML button and triggers download when clicked', async () => {
+    const wrapper = mount(PreviewPanel)
+    const store = useEditorStore()
+
+    // Open panel and provide preview content
+    window.dispatchEvent(new CustomEvent('toggle-preview', { detail: { open: true } }))
+    await wrapper.vm.$nextTick()
+    store.setPreviewHtml('<!DOCTYPE html><html><body><p>Preview</p></body></html>')
+    await wrapper.vm.$nextTick()
+
+    const createSpy = vi.spyOn(URL, 'createObjectURL').mockImplementation(() => 'blob:fake')
+    // spy on anchor click via prototype
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined as any)
+
+    const btn = wrapper.find('button.download-button')
+    expect(btn.exists()).toBe(true)
+    await btn.trigger('click')
+
+    expect(createSpy).toHaveBeenCalled()
+    expect(clickSpy).toHaveBeenCalled()
+
+  clickSpy.mockRestore()
+  createSpy.mockRestore()
   })
 })

@@ -5,19 +5,16 @@ import EditorHeader from '../../src/components/editor/EditorHeader.vue'
 import { useEditorStore } from '../../src/stores/editor.store'
 import type { Trip } from '../../src/models/types'
 
-const previewMock = vi.fn()
 const exportMock = vi.fn()
 
 vi.mock('../../src/composables/useEditorGeneration', () => ({
   useEditorGeneration: () => ({
-    previewTravelBook: previewMock,
     exportTravelBook: exportMock
   })
 }))
 
 describe('EditorHeader', () => {
   beforeEach(() => {
-    previewMock.mockReset()
     exportMock.mockReset()
     setActivePinia(createPinia())
   })
@@ -39,24 +36,12 @@ describe('EditorHeader', () => {
   it('renders action buttons', () => {
     const wrapper = mount(EditorHeader)
     const buttons = wrapper.findAllComponents({ name: 'BaseButton' })
-    
-    expect(buttons.length).toBeGreaterThanOrEqual(3)
+    // Now we have Import and Export buttons in the header (preview moved to floating toggle)
+    expect(buttons.length).toBeGreaterThanOrEqual(2)
   })
 
-  it('opens preview panel when clicking preview button', async () => {
-    const wrapper = mount(EditorHeader)
-    const buttons = wrapper.findAllComponents({ name: 'BaseButton' })
-    const previewButton = buttons.find(btn => btn.text().includes('Prévisualiser'))
-    expect(previewButton).toBeDefined()
-    // Spy on window.dispatchEvent to assert the toggle event is emitted
-    const spy = vi.spyOn(window, 'dispatchEvent')
-    await previewButton!.trigger('click')
-    expect(spy).toHaveBeenCalled()
-    // previewTravelBook should be triggered by the header action
-    expect(previewMock).toHaveBeenCalledTimes(1)
-    // Clean up
-    spy.mockRestore()
-  })
+  // The preview button was removed from the header; preview is opened via the
+  // floating toggle. No test required here.
 
   it('triggers export when clicking export button', async () => {
     const wrapper = mount(EditorHeader)
@@ -107,14 +92,16 @@ describe('EditorHeader', () => {
     expect(saveStatus.props('status')).toBe('saving')
   })
 
-  it('disables preview button while exporting', async () => {
+  it('shows export button loading while exporting', async () => {
     const wrapper = mount(EditorHeader)
     const store = useEditorStore()
     store.setExporting(true)
     await wrapper.vm.$nextTick()
     const buttons = wrapper.findAllComponents({ name: 'BaseButton' })
-    const previewButton = buttons.find(btn => btn.text().includes('Prévisualiser'))
-    expect(previewButton?.props('disabled')).toBe(true)
+    const exportButton = buttons.find(btn => btn.text().includes('Exporter'))
+    expect(exportButton).toBeDefined()
+    // The export button uses the `loading` prop bound to isExporting
+    expect(exportButton?.props('loading')).toBe(true)
   })
 
   it('renders stat-cards with correct values from store', async () => {

@@ -15,16 +15,6 @@
         :status="editorStore.autoSaveStatus"
         :last-save-time="editorStore.lastSaveTime"
       />
-      <!-- Toggle button to open the preview panel (no generation here) -->
-      <BaseButton
-        variant="outline"
-        size="sm"
-        :disabled="editorStore.isExporting || editorStore.isPreviewLoading"
-        :loading="editorStore.isPreviewLoading"
-        @click="onPreview"
-      >
-        👁️ Prévisualiser
-      </BaseButton>
 
       <!-- Stats cards moved to header -->
       <div class="header-stats" role="list" aria-label="Statistiques du voyage">
@@ -74,7 +64,7 @@ import SaveStatus from './SaveStatus.vue'
 
 const editorStore = useEditorStore()
 const projectTitle = ref('')
-const { exportTravelBook, previewTravelBook } = useEditorGeneration()
+const { exportTravelBook } = useEditorGeneration()
 
 // Computed fallbacks so initial render and tests don't show undefined
 const totalPhotos = computed(() => editorStore.totalPhotos ?? 0)
@@ -101,18 +91,7 @@ const onImport = () => {
   window.location.hash = '#/'
 }
 
-const onPreview = async () => {
-  // Ouvrir le panneau de preview en mode desktop par défaut
-  editorStore.setPreviewMode('desktop')
-  // Ouvrir le volet UI
-  window.dispatchEvent(new CustomEvent('toggle-preview', { detail: { open: true } }))
-  // Lancer explicitement la génération de la prévisualisation et afficher un loader
-  try {
-    await previewTravelBook()
-  } catch {
-    // previewTravelBook gère déjà les erreurs dans le store
-  }
-}
+
 
 const onExport = async () => {
   await exportTravelBook()
