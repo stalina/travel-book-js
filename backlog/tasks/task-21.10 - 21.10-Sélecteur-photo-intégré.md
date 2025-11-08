@@ -1,9 +1,11 @@
 ---
 id: task-21.10
 title: 21.10 - Sélecteur photo intégré
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@agent-k'
 created_date: '2025-11-07 22:53'
+updated_date: '2025-11-08 08:49'
 labels: []
 dependencies: []
 parent_task_id: task-21
