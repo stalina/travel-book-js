@@ -34,3 +34,12 @@ Ajouter la gestion multi-page directement dans l'éditeur d'étape avec choix d'
 3. Adapter StepBuilder/preview pour interpréter les layouts choisis et rendre les pages correspondantes.
 4. Couvrir par des tests Vitest : logique du store pages/layouts et barre de navigation/layout picker.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+- Extended Pinia editor store with per-page state (layout, photo selection, cover) and wired preview regeneration on mutations.
+- Updated StepBuilder to consume the persisted plan and render the selected layouts, including fallback handling.
+- Added full StepEditor UI for page navigation, layout picker, photo toggles & cover selection with matching styles.
+- Covered store, builder and StepEditor flows with Vitest suites; ran full test suite and typecheck.
+<!-- SECTION:NOTES:END -->
