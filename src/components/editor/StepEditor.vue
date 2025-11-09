@@ -22,9 +22,9 @@
             <div class="section-head">
               <h3>Pages & mise en page</h3>
               <div class="controls">
-                <button class="nav-btn" :disabled="!canMoveLeft" @click="movePage(-1)">◀</button>
-                <button class="nav-btn" :disabled="!canMoveRight" @click="movePage(1)">▶</button>
-                <BaseButton variant="primary" size="sm" @click="addPage">Ajouter</BaseButton>
+                <button class="nav-btn" :disabled="!canMoveLeft" @click="movePage(-1)" data-test="move-page-left">◀</button>
+                <button class="nav-btn" :disabled="!canMoveRight" @click="movePage(1)" data-test="move-page-right">▶</button>
+                <BaseButton variant="primary" size="sm" data-test="add-page" @click="addPage">Ajouter</BaseButton>
                 <BaseButton variant="secondary" size="sm" @click="generateDefaultPages">Générer par défaut</BaseButton>
                 <BaseButton variant="ghost" size="sm" :disabled="!activePage" @click="removeActivePage">Supprimer</BaseButton>
               </div>
@@ -37,6 +37,7 @@
                 class="page-thumb"
                 :class="{ active: pageItem.id === activePageId }"
                 @click="selectPage(pageItem.id)"
+                :data-test="`page-chip-${idx + 1}`"
               >
                 <div class="thumb-preview">
                   <div v-if="idx === 0" class="thumb-cover">
@@ -179,26 +180,34 @@
             </div>
           </section>
 
-          <!-- Description -->
-          <section class="section">
-            <RichTextEditor :model-value="step?.description ?? ''" @update:model-value="updateDescription" />
-          </section>
-
-          <!-- Aperçu (preview) -->
-          <section class="section preview-section">
-            <div class="preview-head">
-              <h4>Aperçu à l'impression</h4>
-              <div class="preview-actions">
-                <BaseButton size="sm" variant="ghost" @click="refreshPreview">Rafraîchir</BaseButton>
-                <BaseButton size="sm" variant="secondary" @click="printPreview" :disabled="!previewHtml">Imprimer</BaseButton>
-              </div>
+          <!-- Proposal (description + preview) -->
+          <div class="proposal-section">
+            <div class="proposal-meta" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <div></div>
+              <BaseButton variant="ghost" size="sm" data-test="proposal-reset" @click="confirmResetOpen = true">Réinitialiser</BaseButton>
             </div>
 
-            <div v-if="isPreviewLoading" class="preview-loading">Génération en cours…</div>
-            <div v-else class="preview-frame" v-html="previewHtml"></div>
+            <!-- Description -->
+            <section class="section proposal-description">
+              <RichTextEditor :model-value="step?.description ?? ''" @update:model-value="updateDescription" />
+            </section>
 
-            <div class="preview-updated" v-if="previewUpdatedAt != null">Mis à jour: {{ formatDate(previewUpdatedAt) }}</div>
-          </section>
+            <!-- Aperçu (preview) -->
+            <section class="section preview-section">
+              <div class="preview-head">
+                <h4>Aperçu à l'impression</h4>
+                <div class="preview-actions">
+                  <BaseButton size="sm" variant="ghost" data-test="preview-refresh" @click="refreshPreview">Rafraîchir</BaseButton>
+                  <BaseButton size="sm" variant="secondary" @click="printPreview" :disabled="!previewHtml">Imprimer</BaseButton>
+                </div>
+              </div>
+
+              <div v-if="isPreviewLoading" class="preview-loading">Génération en cours…</div>
+              <iframe v-else class="preview-frame" :srcdoc="previewHtml"></iframe>
+
+              <div class="preview-updated" v-if="previewUpdatedAt != null">Mis à jour: {{ formatDate(previewUpdatedAt) }}</div>
+            </section>
+          </div>
 
           <!-- Cover photo selection -->
           <section v-if="isActivePageCover && coverFormat === 'text-image'" class="section">
@@ -225,56 +234,23 @@
                 <img :src="sel.photo.url" :alt="sel.photo.name" :style="photoStyle(sel.photo.index)" />
                 <span>Slot {{ i + 1 }}</span>
                 <div class="actions">
-                  <button @click="openPhotoEditor(sel.photo.index)">✎</button>
-                  <button @click="togglePhoto(sel.photo.index)">✕</button>
+                  <button :data-test="`page-photo-edit-${sel.photo.index}`" @click="openPhotoEditor(sel.photo.index)">✎</button>
+                  <button :data-test="`page-photo-toggle-${sel.photo.index}`" @click="togglePhoto(sel.photo.index)">✕</button>
                 </div>
               </div>
               <div v-for="idx in remainingSlots" :key="`empty-${idx}`" class="selected-card empty">
                 <span>Slot {{ selectedPhotoDetails.length + idx }}</span>
+                <div class="actions">
+                  <button @click.prevent="openLibraryForSlot(selectedPhotoDetails.length + idx - 1)">📚</button>
+                </div>
               </div>
             </div>
           </section>
         </div>
 
-        <!-- Sidebar bibliothèque -->
-        <aside class="sidebar">
-          <div class="sidebar-header">
-            <h4>Bibliothèque</h4>
-            <span>{{ filteredPhotos.length }} / {{ libraryPhotos.length }}</span>
-            <BaseButton variant="outline" size="sm" @click="openUploadDialog">Importer</BaseButton>
-            <input ref="uploadInput" type="file" accept="image/*" style="display: none;" @change="handleUpload" />
-          </div>
-
-          <div class="sidebar-filters">
-            <input v-model="photoSearch" type="search" placeholder="Rechercher..." />
-            <div class="ratio-btns">
-              <button
-                v-for="opt in ratioOptions"
-                :key="opt.value"
-                :class="{ active: photoRatio === opt.value }"
-                @click="setRatio(opt.value)"
-              >
-                {{ opt.label }}
-              </button>
-            </div>
-          </div>
-
-          <div v-if="filteredPhotos.length" class="sidebar-photos">
-            <button
-              v-for="photo in filteredPhotos"
-              :key="photo.id"
-              class="lib-photo"
-              :class="{ selected: selectedPhotoSet.has(photo.index) }"
-              @click="togglePhoto(photo.index)"
-            >
-              <img :src="photo.url" :alt="photo.name" :style="photoStyle(photo.index)" />
-              <div class="meta">
-                <span>#{{ photo.index }}</span>
-                <span>{{ photo.ratio.toLowerCase() }}</span>
-              </div>
-            </button>
-          </div>
-          <p v-else class="no-results">Aucun résultat</p>
+        <!-- Sidebar bibliothèque (hidden - library available via popin) -->
+        <aside v-if="false" class="sidebar">
+          <!-- Library is hidden in the editor main UI; open it via slot actions -->
         </aside>
       </div>
     </div>
@@ -288,13 +264,43 @@
       @close="closePhotoEditor"
     />
 
+    <!-- Photo library popin (used to pick a photo for a slot) -->
+    <div v-if="libraryPopinOpen" class="modal-overlay active">
+      <div class="photo-library-popin">
+        <div class="popin-header">
+          <div style="display:flex; gap:12px; align-items:center;">
+            <h3 style="margin:0;">Bibliothèque de l'étape</h3>
+            <span class="muted">{{ filteredPhotos.length }} / {{ libraryPhotos.length }}</span>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input v-model="photoSearch" class="library-search" type="search" placeholder="Rechercher..." style="padding:6px 8px; border:1px solid #d1d5db; border-radius:6px;" />
+            <div class="ratio-btns">
+              <button v-for="opt in ratioOptions" :key="opt.value" :class="{ active: photoRatio === opt.value }" @click="setRatio(opt.value)">{{ opt.label }}</button>
+            </div>
+            <BaseButton variant="outline" size="sm" class="import-btn" @click="openUploadDialog">📥 Importer</BaseButton>
+            <button class="btn-close" @click="closeLibrary">✕</button>
+          </div>
+        </div>
+        <!-- hidden upload input triggered by the Importer button -->
+        <input ref="uploadInput" type="file" accept="image/*" style="display:none" @change="handleUpload" />
+        <div style="display:block; padding:12px;">
+          <div class="popin-grid">
+            <button v-for="photo in filteredPhotos" :key="photo.id" class="library-item" @click="selectPhotoForSlot(photo.index)">
+              <img :src="photo.url" :alt="photo.name" />
+              <div class="library-item-index">#{{ photo.index }}</div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <ConfirmDialog
       :model-value="confirmResetOpen"
       message="Voulez-vous réinitialiser cette étape ?"
       @confirm="handleConfirmReset"
       @cancel="handleCancelReset"
     />
-  </div>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -448,6 +454,34 @@ const modalPhoto = computed<GalleryPhoto | null>(() => {
     palette: []
   }
 })
+
+// Photo library popin state
+const libraryPopinOpen = ref(false)
+const currentLibrarySlot = ref<number | null>(null)
+
+const openLibraryForSlot = (slotIndex: number) => {
+  currentLibrarySlot.value = slotIndex
+  libraryPopinOpen.value = true
+}
+
+const closeLibrary = () => {
+  currentLibrarySlot.value = null
+  libraryPopinOpen.value = false
+}
+
+const selectPhotoForSlot = (photoIndex: number) => {
+  const page = activePage.value
+  if (!page || currentLibrarySlot.value == null) return
+  const existing = [...(page.photoIndices ?? [])]
+  // ensure the selected slot index exists in array
+  const slotPos = currentLibrarySlot.value
+  existing[slotPos] = photoIndex
+  // trim to capacity
+  const capacity = getLayoutCapacity(page.layout)
+  const next = existing.slice(0, capacity)
+  editorStore.setCurrentPagePhotoIndices(page.id, next)
+  closeLibrary()
+}
 
 const editedPhotoHistory = computed<EditorPhotoHistory | null>(() => {
   if (!editedPhoto.value) return null
@@ -713,14 +747,20 @@ const formatDate = (ts: number | string | Date) => {
 
 .editor-layout {
   flex: 1;
-  display: grid;
-  grid-template-columns: 1fr 340px;
+  display: flex; /* make layout a flex container so content can stretch and scroll */
+  flex-direction: row;
+  align-items: stretch;
   overflow: hidden;
 }
 
 .editor-content {
+  /* Allow the content area to grow and scroll within the editor-layout flex container.
+     min-height:0 is required so that the flex child can shrink and allow overflow to work. */
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   padding: 24px;
+  width: 100%;
 }
 
 .section {
@@ -890,6 +930,57 @@ const formatDate = (ts: number | string | Date) => {
   padding: 12px;
 }
 
+/* Photo library popin */
+.modal-overlay.active {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.photo-library-popin {
+  background: white;
+  width: 900px;
+  max-width: calc(100% - 40px);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(2,6,23,0.2);
+}
+
+.popin-header { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid #eef2f6; }
+.popin-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; padding: 16px; max-height: 60vh; overflow:auto; }
+.lib-photo img { width:100%; height:100%; object-fit:cover; border-radius:8px; }
+.library-item {
+  position: relative;
+  aspect-ratio: 1;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+  padding: 0;
+  display: block;
+}
+.library-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.library-item .library-item-index {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.btn-close { background:transparent; border:none; font-size:18px; cursor:pointer; }
+
 .preview-head {
   display: flex;
   justify-content: space-between;
@@ -909,6 +1000,8 @@ const formatDate = (ts: number | string | Date) => {
   min-height: 240px;
   padding: 12px;
   overflow: auto;
+  width: 100%;
+  display: block;
 }
 
 .preview-loading {
@@ -1394,6 +1487,20 @@ const formatDate = (ts: number | string | Date) => {
   background: #dbeafe;
   border-color: #3b82f6;
   color: #2563eb;
+}
+
+::v-deep(.import-btn) {
+  border-radius: 28px !important;
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+  color: #ef4444 !important; /* red-500 */
+  border-color: rgba(239,68,68,0.22) !important;
+  background: linear-gradient(180deg, rgba(255,245,245,0.6), rgba(255,250,250,0.6));
+  box-shadow: 0 6px 18px rgba(239,68,68,0.06);
+}
+
+::v-deep(.import-btn):hover {
+  background: linear-gradient(180deg, rgba(255,230,230,0.9), rgba(255,245,245,0.9));
 }
 
 .sidebar-photos {
