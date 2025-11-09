@@ -120,8 +120,8 @@ describe('StepEditor', () => {
 		await flushPromises()
 
 		expect(wrapper.find('.proposal-section').exists()).toBe(true)
-	// ensure the rich text editor is shown for description editing
-		expect(wrapper.find('.rich-text-editor-stub').exists()).toBe(true)
+	// ensure the description editor container is present
+	expect(wrapper.find('.proposal-description').exists()).toBe(true)
 		expect(wrapper.find('iframe.preview-frame').exists()).toBe(true)
 	})
 

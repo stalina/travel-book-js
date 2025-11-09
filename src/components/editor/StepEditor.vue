@@ -29,7 +29,7 @@
         <div v-else-if="step" class="proposal-card">
           <div class="proposal-meta">
             <div class="proposal-meta-left">
-              <p class="proposal-summary">{{ step.name }}</p>
+              <p class="proposal-summary">{{ proposalSummary }}</p>
             </div>
             <div class="proposal-meta-right">
               <BaseButton
@@ -456,6 +456,25 @@ const activePhotoSet = computed(() => new Set(activePage.value?.photoIndices ?? 
 const selectedPhotoIndices = computed(() => activePage.value?.photoIndices ?? [])
 const selectedPhotoSet = computed(() => new Set(selectedPhotoIndices.value))
 
+const proposalSummary = computed(() => {
+  const s = step.value
+  const trip = editorStore.currentTrip
+  if (!s) return ''
+  // compute day number from trip start_date and step.start_time
+  let dayNumber = 1
+  if (trip?.start_date && typeof s.start_time === 'number') {
+    const tripStart = new Date(trip.start_date * 1000).getTime()
+    const stepTime = new Date(s.start_time * 1000).getTime()
+    const msPerDay = 24 * 60 * 60 * 1000
+    dayNumber = Math.max(1, Math.floor((stepTime - tripStart) / msPerDay) + 1)
+  }
+  const city = s.city ? s.city.trim() : ''
+  const country = s.country ? s.country.trim() : ''
+  const location = [city, country].filter(Boolean).join(', ') || city || country || ''
+  const dateStr = s.start_time ? new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }).format(new Date(s.start_time * 1000)) : ''
+  return `Jour-${dayNumber} : ${location} (${dateStr})`
+})
+
 const { query: photoSearch, ratio: photoRatio, filteredPhotos, setRatio } = usePhotoLibrary(libraryPhotos)
 
 const layoutCapacity = computed(() => {
@@ -743,8 +762,6 @@ const handleCancelReset = () => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2xl, 48px);
-  max-width: 960px;
-  margin: 0 auto;
 }
 
 .editor-section {
