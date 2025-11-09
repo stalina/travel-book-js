@@ -59,39 +59,45 @@
             
             <!-- Cover format -->
             <div v-if="isActivePageCover" class="options layout-options-row">
-              <div
-                role="button"
-                tabindex="0"
-                class="layout-option"
-                :class="{ active: coverFormat === 'text-image' }"
-                @click="setCoverFormat('text-image')"
-                title="Texte + Image"
-              >
-                <div class="layout-preview cover-preview text-image">
-                  <div class="cover-thumb"><div class="img-placeholder"></div></div>
-                  <div class="cover-text-block">
-                    <div class="title-line"></div>
-                    <div class="subtitle-line"></div>
+              <div class="layout-option-grid">
+                <button
+                  type="button"
+                  class="layout-option-button"
+                  :class="{ active: coverFormat === 'text-image' }"
+                  @click="setCoverFormat('text-image')"
+                  data-test="cover-text-image"
+                >
+                  <div class="layout-preview cover-preview text-image" aria-hidden="true">
+                    <div class="cover-text-block">
+                      <div class="title-line"></div>
+                      <div class="subtitle-line"></div>
+                    </div>
+                    <div class="cover-thumb"><div class="img-placeholder"></div></div>
                   </div>
-                </div>
-                <div class="layout-name">Texte + Image</div>
-              </div>
+                  <div class="layout-option-content">
+                    <span class="layout-option-label">Texte + Image</span>
+                    <span class="layout-option-description">Texte à gauche, image à droite</span>
+                  </div>
+                </button>
 
-              <div
-                role="button"
-                tabindex="0"
-                class="layout-option"
-                :class="{ active: coverFormat === 'text-only' }"
-                @click="setCoverFormat('text-only')"
-                title="Texte pleine page"
-              >
-                <div class="layout-preview cover-preview text-only">
-                  <div class="cover-text-large">
-                    <div class="title-line large"></div>
-                    <div class="subtitle-line small"></div>
+                <button
+                  type="button"
+                  class="layout-option-button"
+                  :class="{ active: coverFormat === 'text-only' }"
+                  @click="setCoverFormat('text-only')"
+                  data-test="cover-text-only"
+                >
+                  <div class="layout-preview cover-preview text-only" aria-hidden="true">
+                    <div class="cover-text-large">
+                      <div class="title-line large"></div>
+                      <div class="subtitle-line small"></div>
+                    </div>
                   </div>
-                </div>
-                <div class="layout-name">Texte pleine page</div>
+                  <div class="layout-option-content">
+                    <span class="layout-option-label">Texte pleine page</span>
+                    <span class="layout-option-description">Texte occupant toute la largeur</span>
+                  </div>
+                </button>
               </div>
             </div>
 
@@ -1103,20 +1109,48 @@ const formatDate = (ts: number | string | Date) => {
   align-items: center;
 }
 
-.cover-thumb {
-  width: 48px;
-  height: 72px;
-  border-radius: 6px;
-  overflow: hidden;
-  background: linear-gradient(180deg,#eef2ff,#e6eefc);
-  display:flex; align-items:center; justify-content:center;
+.cover-preview.text-image {
+  flex-direction: row;
+  justify-content: space-between;
 }
 
-.img-placeholder {
-  width: 36px;
-  height: 28px;
-  background: linear-gradient(180deg,#dbeafe,#c7ddff);
-  border-radius: 4px;
+.cover-preview.text-image .cover-text-block {
+  flex: 1 1 60%;
+  padding-right: 12px;
+}
+
+.cover-preview.text-image .cover-thumb {
+  width: 36%;
+  min-width: 120px;
+  height: 100px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: linear-gradient(180deg,#eef2ff,#e6eefc);
+}
+
+.cover-preview.text-only {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cover-text-large {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.title-line.large { height: 22px; width: 70%; background: linear-gradient(180deg,#e6eefc,#eef6ff); border-radius:6px; }
+.subtitle-line.small { height: 14px; width: 40%; background: linear-gradient(180deg,#f1f5f9,#f8fafc); border-radius:6px; }
+
+.layout-option-button.active[data-test="cover-text-image"] .layout-preview {
+  background: linear-gradient(180deg, rgba(254,228,226,0.6), rgba(255,246,245,0.6));
+}
+
+.layout-option-button.active[data-test="cover-text-only"] .layout-preview {
+  background: linear-gradient(180deg, rgba(254,228,226,0.4), rgba(255,246,245,0.4));
 }
 
 .cover-text-block {
