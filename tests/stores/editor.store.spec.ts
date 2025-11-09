@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useEditorStore } from '../../src/stores/editor.store'
 import type { Trip, Step } from '../../src/models/types'
-import { stepProposalService } from '../../src/services/editor/step-proposal.service'
 import { StepBuilder } from '../../src/services/builders/step.builder'
 
 const createStep = (overrides: Partial<Step> = {}): Step => ({
@@ -66,20 +65,17 @@ describe('useEditorStore', () => {
 
     await store.setTrip(trip)
 
-    expect(store.currentStepProposal).not.toBeNull()
-    expect(store.currentStepPreviewHtml).toContain('Prévisualisation')
+  expect(store.currentStepPreviewHtml).toContain('Prévisualisation')
   })
 
   it('permet de régénérer une proposition pour l’étape courante', async () => {
     const store = useEditorStore()
     const trip = createTrip()
-    const generateSpy = vi.spyOn(stepProposalService, 'generate')
 
-  // generation is triggered during setTrip (initial load)
-  generateSpy.mockClear()
+  // ensure StepBuilder was used to create preview HTML
   await store.setTrip(trip)
-  // ensure the service was used to produce a proposal
-  expect(generateSpy).toHaveBeenCalledTimes(1)
+  // ensure the builder produced a preview by checking preview HTML content
+  expect(store.currentStepPreviewHtml).toContain('Prévisualisation')
   })
 
   it('enregistre la proposition validée, met à jour la description et régénère la preview', async () => {
@@ -89,16 +85,14 @@ describe('useEditorStore', () => {
 
     await store.setTrip(trip)
     buildSpy.mockClear()
-  const proposal = store.currentStepProposal
-  expect(proposal).not.toBeNull()
-
-  // Simulate accepting the proposal by applying its description to the step
-  store.updateStepDescription(0, proposal!.description)
+  // simulate direct edit of description
+  const newDesc = 'Description appliquée via test'
+  store.updateStepDescription(0, newDesc)
   vi.runAllTimers()
   await Promise.resolve()
 
-  expect(store.currentStep?.description).toBe(proposal?.description)
-  expect(buildSpy).toHaveBeenCalledTimes(1)
+	expect(store.currentStep?.description).toBe(newDesc)
+	expect(buildSpy).toHaveBeenCalledTimes(1)
   })
 
   it('initialise un état de pages et permet de configurer couverture, layout et photos', async () => {

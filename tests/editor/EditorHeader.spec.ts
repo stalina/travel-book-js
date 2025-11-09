@@ -40,8 +40,7 @@ describe('EditorHeader', () => {
     expect(buttons.length).toBeGreaterThanOrEqual(2)
   })
 
-  // The preview button was removed from the header; preview is opened via the
-  // floating toggle. No test required here.
+  // (preview is opened via the floating toggle)
 
   it('triggers export when clicking export button', async () => {
     const wrapper = mount(EditorHeader)

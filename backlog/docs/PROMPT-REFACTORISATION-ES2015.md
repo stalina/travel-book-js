@@ -160,7 +160,6 @@ export const artifactGenerator = new ArtifactGenerator(
   elevationService
 )
 
-// ⚠️ Wrapper rétrocompatible (temporaire, à supprimer après migration complète)
 export async function generateArtifacts(input: FFInput, options?: GenerateOptions) {
   return artifactGenerator.generate(input, options)
 }

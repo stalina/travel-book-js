@@ -8,22 +8,14 @@ import type {
 	PhotoRatio,
 	StepGenerationPlan,
 	StepPageLayout,
-	StepPageState,
-	StepProposal
+	StepPageState
 } from '../models/editor.types'
-import { stepProposalService } from '../services/editor/step-proposal.service'
 import { StepBuilder } from '../services/builders/step.builder'
 import type { CropSettings, PhotoAdjustments, PhotoFilterPreset, PhotoOrientation } from '../models/gallery.types'
 import { DEFAULT_PHOTO_ADJUSTMENTS, DEFAULT_PHOTO_CROP, DEFAULT_PHOTO_FILTER } from '../models/photo.constants'
 import { getLayoutCapacity } from '../models/layout.constants'
 import { clampAdjustment } from '../utils/photo-filters'
 
-interface ProposalState {
-	draft: StepProposal
-	accepted?: StepProposal
-}
-
-type ProposalMap = Record<number, ProposalState | undefined>
 type BooleanMap = Record<number, boolean | undefined>
 type DateMap = Record<number, Date | undefined>
 type PreviewHtmlMap = Record<number, string | undefined>
@@ -157,9 +149,7 @@ const readParsedStepPhotos = (): Record<number, File[]> => {
 	return {}
 }
 
-const cloneProposal = (proposal: StepProposal): StepProposal => {
-	return JSON.parse(JSON.stringify(proposal)) as StepProposal
-}
+
 
 const buildStepPreviewDocument = async (
 	trip: Trip,
@@ -269,7 +259,7 @@ export const useEditorStore = defineStore('editor', () => {
 
 	const stepPhotosByStep = reactive<Record<number, EditorStepPhoto[]>>({})
 	const photoHistoriesByStep = reactive<Record<number, Record<number, PhotoEditHistory>>>({})
-	const proposalStates = reactive<ProposalMap>({})
+	// proposal system removed
 	const proposalLoadingByStep = reactive<BooleanMap>({})
 	const previewHtmlByStep = reactive<PreviewHtmlMap>({})
 	const previewUpdatedAtByStep = reactive<DateMap>({})
@@ -355,23 +345,7 @@ export const useEditorStore = defineStore('editor', () => {
 		return state.pages.find((page) => page.id === state.activePageId) ?? null
 	})
 
-	const currentStepProposal = computed<StepProposal | null>(() => {
-		const step = currentStep.value
-		if (!step) return null
-		return proposalStates[step.id]?.draft ?? null
-	})
-
-	const currentStepAcceptedProposal = computed<StepProposal | null>(() => {
-		const step = currentStep.value
-		if (!step) return null
-		return proposalStates[step.id]?.accepted ?? null
-	})
-
-	const isCurrentStepProposalLoading = computed(() => {
-		const step = currentStep.value
-		if (!step) return isPreparingPhotos.value
-		return proposalLoadingByStep[step.id] ?? isPreparingPhotos.value
-	})
+	const isCurrentStepProposalLoading = computed(() => isPreparingPhotos.value)
 
 	const currentStepPreviewHtml = computed(() => {
 		const step = currentStep.value
@@ -400,8 +374,7 @@ export const useEditorStore = defineStore('editor', () => {
 			}
 		}
 		clearObjectMap(stepPhotosByStep)
-		clearObjectMap(proposalStates)
-		clearObjectMap(previewHtmlByStep)
+	clearObjectMap(previewHtmlByStep)
 		clearObjectMap(previewUpdatedAtByStep)
 		clearObjectMap(previewLoadingByStep)
 		clearObjectMap(proposalLoadingByStep)
@@ -442,34 +415,7 @@ export const useEditorStore = defineStore('editor', () => {
 		}
 	}
 
-	const ensureStepProposal = async (stepId: number, force = false): Promise<StepProposal | null> => {
-		const trip = currentTrip.value
-		if (!trip) return null
-		const step = trip.steps.find((s) => s.id === stepId)
-		if (!step) return null
-
-		if (!force && proposalStates[stepId]?.draft) {
-			return proposalStates[stepId]!.draft
-		}
-
-		if (proposalLoadingByStep[stepId]) {
-			return proposalStates[stepId]?.draft ?? null
-		}
-
-		proposalLoadingByStep[stepId] = true
-		try {
-			const photos = stepPhotosByStep[stepId] ?? []
-			const proposal = stepProposalService.generate(trip, step, photos)
-			const previous = proposalStates[stepId]
-			proposalStates[stepId] = {
-				draft: proposal,
-				accepted: previous?.accepted
-			}
-			return proposal
-		} finally {
-			proposalLoadingByStep[stepId] = false
-		}
-	}
+	// proposal generation removed: editing applies directly to steps
 
 	const ensurePageState = (stepId: number): StepPageState => {
 		if (!stepPageStates[stepId]) {
@@ -593,7 +539,6 @@ export const useEditorStore = defineStore('editor', () => {
 
 		const firstStep = clonedTrip.steps?.[0]
 		if (firstStep) {
-			await ensureStepProposal(firstStep.id, true)
 			await regenerateStepPreview(firstStep.id)
 			clearStepBuilderMock()
 		}
@@ -603,7 +548,6 @@ export const useEditorStore = defineStore('editor', () => {
 		if (currentTrip.value?.steps && index >= 0 && index < currentTrip.value.steps.length) {
 			currentStepIndex.value = index
 			const step = currentTrip.value.steps[index]
-			void ensureStepProposal(step.id)
 			ensurePageState(step.id)
 			if (!previewHtmlByStep[step.id]) {
 				void regenerateStepPreview(step.id)
@@ -638,7 +582,7 @@ export const useEditorStore = defineStore('editor', () => {
 	const resetStep = async (stepId: number): Promise<void> => {
 		if (!currentTrip.value) return
 		const index = currentTrip.value.steps.findIndex((s) => s.id === stepId)
-		if (index === -1) return
+	if (index === -1) return
 
 		// Restore step fields from parsedTrip if available, otherwise from internal originalTrip
 		const parsed = (typeof window !== 'undefined' ? (window as any).__parsedTrip : undefined)
@@ -693,9 +637,8 @@ export const useEditorStore = defineStore('editor', () => {
 			}
 		}
 
-		// Clear proposals / previews for this step
-		delete proposalStates[stepId]
-		proposalLoadingByStep[stepId] = false
+	// Clear previews for this step
+	proposalLoadingByStep[stepId] = false
 		previewHtmlByStep[stepId] = ''
 		previewUpdatedAtByStep[stepId] = undefined
 		previewLoadingByStep[stepId] = false
@@ -934,9 +877,7 @@ export const useEditorStore = defineStore('editor', () => {
 		currentStepPages,
 		currentStepActivePage,
 		currentStepActivePageId,
-		currentStepProposal,
-		currentStepAcceptedProposal,
-		currentStepPreviewHtml,
+	currentStepPreviewHtml,
 		currentStepPreviewUpdatedAt,
 		isCurrentStepProposalLoading,
 		isCurrentStepPreviewLoading,

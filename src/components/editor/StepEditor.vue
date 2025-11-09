@@ -18,9 +18,7 @@
           <div class="section-actions">
             <!-- actions removed: regenerate / accept buttons intentionally retired -->
           </div>
-          <p v-if="acceptedProposal" class="proposal-accepted">
-            Dernière validation : {{ formatTimestamp(acceptedProposal.generatedAt) }}
-          </p>
+          <!-- proposal-system removed: no acceptedProposal to display -->
         </header>
 
         <div v-if="isProposalLoading" class="proposal-loading">
@@ -28,13 +26,10 @@
           <p>Génération en cours…</p>
         </div>
 
-        <div v-else-if="proposal" class="proposal-card">
+        <div v-else-if="step" class="proposal-card">
           <div class="proposal-meta">
             <div class="proposal-meta-left">
-              <p class="proposal-summary">{{ proposal.summary }}</p>
-              <p class="proposal-date">
-                Généré le {{ formatTimestamp(proposal.generatedAt) }}
-              </p>
+              <p class="proposal-summary">{{ step.name }}</p>
             </div>
             <div class="proposal-meta-right">
               <BaseButton
@@ -49,30 +44,15 @@
               </BaseButton>
             </div>
           </div>
-          <div class="proposal-description" v-html="proposal.description"></div>
-          <ul class="proposal-stats">
-            <li v-for="stat in proposal.stats" :key="stat.label">
-              <span class="stat-label">{{ stat.label }}</span>
-              <span class="stat-value">{{ stat.value }}</span>
-            </li>
-          </ul>
-          <div v-if="proposal.photos.length" class="proposal-photos">
-            <div
-              v-for="photo in proposal.photos"
-              :key="photo.id"
-              class="proposal-photo"
-              :class="{ cover: photo.isCover }"
-            >
-              <img :src="photo.url" :alt="photo.label" />
-              <span class="proposal-photo-label">{{ photo.label }}</span>
-              <span v-if="photo.isCover" class="proposal-photo-badge">Couverture</span>
-            </div>
+          <div class="proposal-description">
+            <RichTextEditor
+              :model-value="step?.description ?? ''"
+              @update:model-value="updateDescription"
+            />
           </div>
         </div>
-
         <div v-else class="proposal-empty">
-          <p>Aucune proposition disponible pour le moment.</p>
-          <p class="proposal-hint">Cliquez sur « Régénérer » pour lancer une proposition.</p>
+          <p>Aucune étape sélectionnée.</p>
         </div>
       </section>
 
@@ -328,10 +308,10 @@
         </div>
       </section>
 
-      <section class="editor-section description-section">
+  <section v-if="step && false" class="editor-section description-section">
         <h3 class="section-title">Description</h3>
         <RichTextEditor
-          :model-value="step.description ?? ''"
+          :model-value="step?.description ?? ''"
           @update:model-value="updateDescription"
         />
       </section>
@@ -456,9 +436,7 @@ const editorStore = useEditorStore()
 const uploadInput = ref<HTMLInputElement | null>(null)
 
 const step = computed(() => editorStore.currentStep)
-const proposal = computed(() => editorStore.currentStepProposal)
-const acceptedProposal = computed(() => editorStore.currentStepAcceptedProposal)
-const isProposalLoading = computed(() => editorStore.isCurrentStepProposalLoading)
+const isProposalLoading = computed(() => false)
 const gridPhotos = computed(() => editorStore.currentStepPhotos)
 const previewHtml = computed(() => editorStore.currentStepPreviewHtml)
 const previewUpdatedAt = computed(() => editorStore.currentStepPreviewUpdatedAt)

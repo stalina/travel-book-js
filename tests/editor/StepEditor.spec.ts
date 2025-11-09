@@ -5,7 +5,6 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useEditorStore } from '../../src/stores/editor.store'
 import type { Trip, Step } from '../../src/models/types'
 import { StepBuilder } from '../../src/services/builders/step.builder'
-import { stepProposalService } from '../../src/services/editor/step-proposal.service'
 
 vi.mock('../../src/components/editor/StepTitleEditor.vue', () => ({
 	default: defineComponent({
@@ -121,7 +120,8 @@ describe('StepEditor', () => {
 		await flushPromises()
 
 		expect(wrapper.find('.proposal-section').exists()).toBe(true)
-		expect(wrapper.find('.proposal-summary').text()).toContain('Jour')
+	// ensure the rich text editor is shown for description editing
+		expect(wrapper.find('.rich-text-editor-stub').exists()).toBe(true)
 		expect(wrapper.find('iframe.preview-frame').exists()).toBe(true)
 	})
 
@@ -130,14 +130,12 @@ describe('StepEditor', () => {
 		const store = useEditorStore()
 		const trip = createTrip()
 
-			const generateSpy = vi.spyOn(stepProposalService, 'generate')
+	// ensure preview generation (StepBuilder) runs
+		await store.setTrip(trip)
+		store.setCurrentStep(0)
+		await flushPromises()
 
-			await store.setTrip(trip)
-			store.setCurrentStep(0)
-			await flushPromises()
-
-			// generation is triggered during setTrip / step initialization
-			expect(generateSpy).toHaveBeenCalled()
+		expect(store.currentStepPreviewHtml).toContain('Prévisualisation')
 	})
 
 	it('désactive le bouton de validation après acceptation et affiche la date', async () => {
@@ -149,14 +147,13 @@ describe('StepEditor', () => {
 		store.setCurrentStep(0)
 		await flushPromises()
 
-		// Button removed: simulate acceptance by applying the proposal description
-		expect(wrapper.find('.proposal-accepted').exists()).toBe(false)
-		const proposal = store.currentStepProposal
-		expect(proposal).not.toBeNull()
-		store.updateStepDescription(0, proposal!.description)
+	expect(wrapper.find('.proposal-accepted').exists()).toBe(false)
+	// Simulate direct edit
+		const newDesc = 'Description appliquée via test'
+		store.updateStepDescription(0, newDesc)
 		await flushPromises()
-		// Acceptance UI removed: ensure description updated in store and no accepted label
-		expect(store.currentStep?.description).toBe(proposal?.description)
+		// Ensure description updated in store and no accepted label exists
+		expect(store.currentStep?.description).toBe(newDesc)
 		expect(wrapper.find('.proposal-accepted').exists()).toBe(false)
 	})
 

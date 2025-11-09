@@ -2,15 +2,13 @@ import { describe, it, expect, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useEditorStore } from '../../src/stores/editor.store'
 import { StepBuilder } from '../../src/services/builders/step.builder'
-import { stepProposalService } from '../../src/services/editor/step-proposal.service'
 
 describe('editor.store resetStep description', () => {
   it('restores the original description after resetStep (fallback to originalTrip)', async () => {
     setActivePinia(createPinia())
 
     // Mock external builders/services used during setTrip/regeneration
-    vi.spyOn(StepBuilder.prototype, 'build').mockResolvedValue('<div/>')
-    vi.spyOn(stepProposalService, 'generate').mockReturnValue({ summary: '', description: '', photos: [], stats: [], generatedAt: Date.now() } as any)
+  vi.spyOn(StepBuilder.prototype, 'build').mockResolvedValue('<div/>')
 
     const store = useEditorStore()
 
