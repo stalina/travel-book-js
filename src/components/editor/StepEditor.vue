@@ -187,10 +187,62 @@
               <BaseButton variant="ghost" size="sm" data-test="proposal-reset" @click="confirmResetOpen = true">Réinitialiser</BaseButton>
             </div>
 
-            <!-- Description -->
-            <section class="section proposal-description">
-              <RichTextEditor :model-value="step?.description ?? ''" @update:model-value="updateDescription" />
-            </section>
+            <!-- Conditional layout rules:
+                 - Cover + text-image: show description + cover-photo selector side-by-side
+                 - Cover + text-only: show description only
+                 - Non-cover page: show photo selection only
+            -->
+            <div>
+              <!-- Case: cover page -->
+              <template v-if="isActivePageCover">
+                <template v-if="coverFormat === 'text-image'">
+                  <div class="two-column-layout">
+                    <section class="section proposal-description">
+                      <RichTextEditor :model-value="step?.description ?? ''" @update:model-value="updateDescription" />
+                    </section>
+
+                    <!-- Cover photo selector uses SelectedSlot component -->
+                    <section class="section photo-selection-column">
+                      <h4>Photo de couverture</h4>
+                      <SelectedSlot
+                        :photo="coverPhoto"
+                        :slotIndex="0"
+                        :slotNumber="1"
+                        @openLibrary="openLibraryForSlot"
+                        @edit="openPhotoEditor"
+                        @clear="clearCover"
+                      />
+                    </section>
+                  </div>
+                </template>
+
+                <template v-else>
+                  <!-- coverFormat === 'text-only' -> description only -->
+                  <section class="section proposal-description">
+                    <RichTextEditor :model-value="step?.description ?? ''" @update:model-value="updateDescription" />
+                  </section>
+                </template>
+              </template>
+
+              <!-- Case: non-cover page -> show page photo selection full width -->
+              <template v-else>
+                <section v-if="activePage" class="section">
+                  <h4>Sélection ({{ selectedPhotoIndices.length }} / {{ layoutCapacity }})</h4>
+                  <div class="selected-grid">
+                    <SelectedSlot
+                      v-for="(slot, i) in pageSlots"
+                      :key="i"
+                      :photo="slot"
+                      :slotIndex="i"
+                      :slotNumber="i + 1"
+                      @openLibrary="openLibraryForSlot"
+                      @edit="openPhotoEditor"
+                      @clear="clearSlot"
+                    />
+                  </div>
+                </section>
+              </template>
+            </div>
 
             <!-- Aperçu (preview) -->
             <section class="section preview-section">
@@ -209,43 +261,9 @@
             </section>
           </div>
 
-          <!-- Cover photo selection -->
-          <section v-if="isActivePageCover && coverFormat === 'text-image'" class="section">
-            <h4>Photo de couverture</h4>
-            <div class="photo-grid">
-              <button
-                v-for="photo in libraryPhotos"
-                :key="photo.id"
-                class="photo-card"
-                :class="{ selected: isCover(photo.index) }"
-                @click="toggleCover(photo.index)"
-              >
-                <img :src="photo.url" :alt="photo.name" :style="photoStyle(photo.index)" />
-                <span class="badge">#{{ photo.index }}</span>
-              </button>
-            </div>
-          </section>
+          <!-- Cover photo selection removed (now handled in the two-column layout using slot/popin) -->
 
-          <!-- Page photo selection -->
-          <section v-if="!isActivePageCover && activePage" class="section">
-            <h4>Sélection ({{ selectedPhotoIndices.length }} / {{ layoutCapacity }})</h4>
-            <div class="selected-grid">
-              <div v-for="(sel, i) in selectedPhotoDetails" :key="sel.photo.index" class="selected-card">
-                <img :src="sel.photo.url" :alt="sel.photo.name" :style="photoStyle(sel.photo.index)" />
-                <span>Slot {{ i + 1 }}</span>
-                <div class="actions">
-                  <button :data-test="`page-photo-edit-${sel.photo.index}`" @click="openPhotoEditor(sel.photo.index)">✎</button>
-                  <button :data-test="`page-photo-toggle-${sel.photo.index}`" @click="togglePhoto(sel.photo.index)">✕</button>
-                </div>
-              </div>
-              <div v-for="idx in remainingSlots" :key="`empty-${idx}`" class="selected-card empty">
-                <span>Slot {{ selectedPhotoDetails.length + idx }}</span>
-                <div class="actions">
-                  <button @click.prevent="openLibraryForSlot(selectedPhotoDetails.length + idx - 1)">📚</button>
-                </div>
-              </div>
-            </div>
-          </section>
+          <!-- (photo selection moved into the two-column layout above) -->
         </div>
 
         <!-- Sidebar bibliothèque (hidden - library available via popin) -->
@@ -314,6 +332,7 @@ import type { GalleryPhoto, PhotoAdjustments, CropSettings, PhotoFilterPreset } 
 import { buildCssFilter } from '../../utils/photo-filters'
 import BaseButton from '../BaseButton.vue'
 import ConfirmDialog from '../ui/ConfirmDialog.vue'
+import SelectedSlot from './SelectedSlot.vue'
 
 const layoutOptions: Array<{ value: StepPageLayout; label: string }> = [
   { value: 'grid-2x2', label: 'Grille 2×2' },
@@ -470,8 +489,16 @@ const closeLibrary = () => {
 }
 
 const selectPhotoForSlot = (photoIndex: number) => {
+  if (currentLibrarySlot.value == null) return
+  // If selecting for the cover slot (we use slot 0 for cover), set the step cover photo
+  if (currentLibrarySlot.value === 0 && isActivePageCover.value) {
+    editorStore.setCurrentStepCoverPhotoIndex(photoIndex)
+    closeLibrary()
+    return
+  }
+
   const page = activePage.value
-  if (!page || currentLibrarySlot.value == null) return
+  if (!page) return
   const existing = [...(page.photoIndices ?? [])]
   // ensure the selected slot index exists in array
   const slotPos = currentLibrarySlot.value
@@ -481,6 +508,16 @@ const selectPhotoForSlot = (photoIndex: number) => {
   const next = existing.slice(0, capacity)
   editorStore.setCurrentPagePhotoIndices(page.id, next)
   closeLibrary()
+}
+
+const coverPhoto = computed(() => {
+  const idx = coverPhotoIndex.value
+  if (idx == null) return null
+  return libraryPhotos.value.find((p) => p.index === idx) ?? null
+})
+
+const clearCover = () => {
+  editorStore.setCurrentStepCoverPhotoIndex(null)
 }
 
 const editedPhotoHistory = computed<EditorPhotoHistory | null>(() => {
@@ -541,6 +578,29 @@ const remainingSlots = computed(() => {
   const available = layoutCapacity.value - selectedPhotoIndices.value.length
   return available > 0 ? available : 0
 })
+
+// slots array for active page: array of GalleryPhoto|null for each slot position
+const pageSlots = computed(() => {
+  const page = activePage.value
+  const cap = layoutCapacity.value
+  if (!page || !cap) return []
+  const slots: Array<any | null> = []
+  for (let i = 0; i < cap; i++) {
+    const idx = page.photoIndices?.[i] ?? null
+    const photo = idx == null ? null : libraryPhotos.value.find((p) => p.index === idx) ?? null
+    slots.push(photo)
+  }
+  return slots
+})
+
+const clearSlot = (slotIndex: number) => {
+  const page = activePage.value
+  if (!page) return
+  const existing = [...(page.photoIndices ?? [])]
+  if (slotIndex < 0 || slotIndex >= existing.length) return
+  existing.splice(slotIndex, 1)
+  editorStore.setCurrentPagePhotoIndices(page.id, existing)
+}
 
 const updateTitle = (newTitle: string) => {
   if (!step.value) return
@@ -768,6 +828,24 @@ const formatDate = (ts: number | string | Date) => {
   background: white;
   border-radius: 8px;
   padding: 16px;
+}
+
+.two-column-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 16px;
+  align-items: start;
+}
+
+.photo-selection-column {
+  max-width: 360px;
+}
+
+@media (max-width: 900px) {
+  .two-column-layout {
+    grid-template-columns: 1fr;
+  }
+  .photo-selection-column { max-width: none; }
 }
 
 .section-head {
