@@ -418,10 +418,55 @@ export const useEditorStore = defineStore('editor', () => {
 	// proposal generation removed: editing applies directly to steps
 
 	const ensurePageState = (stepId: number): StepPageState => {
-		if (!stepPageStates[stepId]) {
-			stepPageStates[stepId] = reactive(createEmptyPageState()) as StepPageState
+			if (!stepPageStates[stepId]) {
+				stepPageStates[stepId] = reactive(createEmptyPageState()) as StepPageState
+				// populate defaults
+				void populateDefaultPagesForStep(stepId)
+			}
+			return stepPageStates[stepId]!
+	}
+
+	/**
+	 * Populate default pages for a step: cover + sample photo pages
+	 */
+	const populateDefaultPagesForStep = async (stepId: number): Promise<void> => {
+		const state = stepPageStates[stepId] ?? reactive(createEmptyPageState())
+		// clear existing
+		state.pages = []
+		state.activePageId = null
+		state.coverPhotoIndex = null
+
+		const step = currentTrip.value?.steps.find((s) => s.id === stepId)
+		const photos = stepPhotosByStep[stepId] ?? []
+
+		// If there are photos, create a single cover page (text + photo).
+		// The cover uses state.coverPhotoIndex to reference the photo and
+		// does not place the photo in the page's photoIndices so that only
+		// the cover photo is modifiable via the cover control.
+		if (photos.length > 0) {
+			const coverPage: EditorStepPage = { id: createPageId(stepId), layout: 'full-page', photoIndices: [] }
+			state.pages.push(coverPage)
+			state.activePageId = coverPage.id
+			state.coverPhotoIndex = photos[0].index
+			// default cover format: text + image when we have at least one photo
+			state.coverFormat = 'text-image'
+			// For each remaining photo, create a dedicated full-page with that photo selected
+			for (let i = 1; i < photos.length; i++) {
+				const page: EditorStepPage = { id: createPageId(stepId), layout: 'full-page', photoIndices: [photos[i].index] }
+				state.pages.push(page)
+			}
 		}
-		return stepPageStates[stepId]!
+
+		// If no photos, leave pages empty (editor can add pages manually)
+
+		stepPageStates[stepId] = state as StepPageState
+		notifyPageChange(stepId)
+	}
+
+	const generateDefaultPagesForStep = async (stepId: number): Promise<void> => {
+		// public method to (re)generate default pages for a step
+		stepPageStates[stepId] = reactive(createEmptyPageState()) as StepPageState
+		await populateDefaultPagesForStep(stepId)
 	}
 
 	const buildStepPlan = (stepId: number): StepGenerationPlan | undefined => {
@@ -536,6 +581,15 @@ export const useEditorStore = defineStore('editor', () => {
 		}
 
 		await prepareStepPhotosForTrip(clonedTrip)
+
+		// After photos are prepared, populate default pages for each step so the
+		// Pages & mise en page section is not empty on first load.
+		for (const step of clonedTrip.steps ?? []) {
+			// ensure we have an empty state (may already exist)
+			stepPageStates[step.id] = stepPageStates[step.id] ?? reactive(createEmptyPageState()) as StepPageState
+			// populate synchronously so the UI sees pages immediately
+			await populateDefaultPagesForStep(step.id)
+		}
 
 		const firstStep = clonedTrip.steps?.[0]
 		if (firstStep) {
@@ -793,6 +847,18 @@ export const useEditorStore = defineStore('editor', () => {
 		notifyPageChange(step.id)
 	}
 
+	const setCurrentStepCoverFormat = (format: 'text-image' | 'text-only'): void => {
+		const step = currentStep.value
+		if (!step) return
+		const state = ensurePageState(step.id)
+		if (state.coverFormat === format) return
+		state.coverFormat = format
+		notifyPageChange(step.id)
+		triggerAutoSave()
+		markPreviewStale()
+		schedulePreviewRegeneration(step.id)
+	}
+
 	const getCurrentStepPhotoHistory = (photoIndex: number): PhotoEditHistory => {
 		const step = currentStep.value
 		if (!step) {
@@ -911,9 +977,11 @@ export const useEditorStore = defineStore('editor', () => {
 		setCurrentPageLayout,
 		setCurrentPagePhotoIndices,
 		setCurrentStepCoverPhotoIndex,
+		setCurrentStepCoverFormat,
 		addPhotoToCurrentStep,
 		applyAdjustmentsToCurrentPhoto,
 		getCurrentStepPhotoHistory
 		,resetStep
+		,generateDefaultPagesForStep
 	}
 })
