@@ -40,11 +40,45 @@
               >
                 <div class="thumb-preview">
                   <div v-if="idx === 0" class="thumb-cover">
-                    <span>T</span>
-                    <span v-if="coverFormat === 'text-image'" class="small">📷</span>
+                    <!-- Render a miniature of the cover matching coverFormat -->
+                    <div v-if="coverFormat === 'text-image'" class="mini-cover layout-preview cover-preview text-image" aria-hidden="true">
+                      <div class="cover-text-block">
+                        <div class="title-line small"></div>
+                        <div class="subtitle-line xsmall"></div>
+                      </div>
+                      <div class="cover-thumb small-thumb"><div class="img-placeholder"></div></div>
+                    </div>
+                    <div v-else class="mini-cover layout-preview cover-preview text-only" aria-hidden="true">
+                      <div class="cover-text-large">
+                        <div class="title-line medium"></div>
+                        <div class="subtitle-line small"></div>
+                      </div>
+                    </div>
                   </div>
                   <div v-else class="thumb-grid">
-                    <div v-for="n in Math.min(getLayoutCapacity(pageItem.layout), 4)" :key="n" class="slot"></div>
+                    <div class="mini-layout" aria-hidden="true">
+                      <div :class="['layout-preview', previewClassFor[pageItem.layout]]">
+                        <template v-if="pageItem.layout === 'grid-2x2'">
+                          <span class="layout-block"></span>
+                          <span class="layout-block"></span>
+                          <span class="layout-block"></span>
+                          <span class="layout-block"></span>
+                        </template>
+                        <template v-else-if="pageItem.layout === 'hero-plus-2'">
+                          <span class="layout-block" style="grid-row: 1 / 3;"></span>
+                          <span class="layout-block"></span>
+                          <span class="layout-block"></span>
+                        </template>
+                        <template v-else-if="pageItem.layout === 'three-columns'">
+                          <span class="layout-block"></span>
+                          <span class="layout-block"></span>
+                          <span class="layout-block"></span>
+                        </template>
+                        <template v-else>
+                          <span class="layout-block"></span>
+                        </template>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <span class="label">{{ idx === 0 ? 'Couverture' : `Page ${idx + 1}` }}</span>
@@ -761,6 +795,7 @@ const formatDate = (ts: number | string | Date) => {
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  overflow: hidden;
 }
 
 .page-thumb:hover {
@@ -775,12 +810,15 @@ const formatDate = (ts: number | string | Date) => {
 
 .thumb-preview {
   width: 100%;
-  aspect-ratio: 3/4;
+  height: 72px; /* reduced height (about half) to fit strip */
   background: #f3f4f6;
   border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 4px;
 }
 
 .thumb-cover {
@@ -788,28 +826,48 @@ const formatDate = (ts: number | string | Date) => {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  font-size: 24px;
-  font-weight: bold;
-  color: #6b7280;
-}
-
-.thumb-cover .small {
   font-size: 14px;
+  font-weight: 600;
 }
 
-.thumb-grid {
+.thumb-cover .mini-cover {
   width: 100%;
+  max-width: 96px;
   height: 100%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 2px;
   padding: 4px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
 }
+
+.mini-cover .title-line.small { height: 8px; width: 50%; border-radius: 4px; }
+.mini-cover .title-line.medium { height: 10px; width: 60%; border-radius: 6px; }
+.mini-cover .subtitle-line.xsmall { height: 6px; width: 40%; border-radius: 4px; }
+
+.small-thumb { min-width: 32px; height: 40px; border-radius: 6px; overflow: hidden; }
+
+.thumb-grid { display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.thumb-grid .slot { width: 40px; height: 28px; background: linear-gradient(180deg,#eef2ff,#f8fbff); border-radius: 4px; }
 
 .thumb-grid .slot {
   background: #d1d5db;
   border-radius: 2px;
+}
+
+.mini-layout .layout-preview {
+  width: 96px;
+  height: 56px;
+  padding: 6px;
+  box-sizing: border-box;
+  border-radius: 6px;
+  gap: 6px;
+}
+
+.mini-layout .layout-block {
+  border-radius: 4px;
 }
 
 .page-thumb .label {
