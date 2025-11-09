@@ -58,39 +58,84 @@
             <h4>{{ isActivePageCover ? 'Agencement de la couverture' : 'Mise en page' }}</h4>
             
             <!-- Cover format -->
-            <div v-if="isActivePageCover" class="options">
-              <button
-                class="option"
+            <div v-if="isActivePageCover" class="options layout-options-row">
+              <div
+                role="button"
+                tabindex="0"
+                class="layout-option"
                 :class="{ active: coverFormat === 'text-image' }"
                 @click="setCoverFormat('text-image')"
+                title="Texte + Image"
               >
-                <div class="icon cover-ti"><span>T</span><span class="sm">📷</span></div>
-                <span>Texte + Image</span>
-              </button>
-              <button
-                class="option"
+                <div class="layout-preview cover-preview text-image">
+                  <div class="cover-thumb"><div class="img-placeholder"></div></div>
+                  <div class="cover-text-block">
+                    <div class="title-line"></div>
+                    <div class="subtitle-line"></div>
+                  </div>
+                </div>
+                <div class="layout-name">Texte + Image</div>
+              </div>
+
+              <div
+                role="button"
+                tabindex="0"
+                class="layout-option"
                 :class="{ active: coverFormat === 'text-only' }"
                 @click="setCoverFormat('text-only')"
+                title="Texte pleine page"
               >
-                <div class="icon cover-to"><span>T</span></div>
-                <span>Texte seul</span>
-              </button>
+                <div class="layout-preview cover-preview text-only">
+                  <div class="cover-text-large">
+                    <div class="title-line large"></div>
+                    <div class="subtitle-line small"></div>
+                  </div>
+                </div>
+                <div class="layout-name">Texte pleine page</div>
+              </div>
             </div>
 
             <!-- Photo layout -->
-            <div v-else class="options">
-              <button
-                v-for="opt in layoutOptions"
-                :key="opt.value"
-                class="option"
-                :class="{ active: opt.value === activeLayout }"
-                @click="selectLayout(opt.value)"
-              >
-                <div class="icon" :class="`layout-${opt.value}`">
-                  <div v-for="n in layoutPreviewBlocks[opt.value]" :key="n" class="block"></div>
-                </div>
-                <span>{{ opt.label }}</span>
-              </button>
+            <div v-else class="options layout-options-row">
+              <div class="layout-option-grid">
+                <button
+                  v-for="opt in layoutOptions"
+                  :key="opt.value"
+                  type="button"
+                  class="layout-option-button"
+                  :class="{ active: opt.value === activeLayout }"
+                  @click="selectLayout(opt.value)"
+                  :data-test="`layout-option-${opt.value}`"
+                >
+                  <div :class="['layout-preview', previewClassFor[opt.value]]" aria-hidden="true">
+                    <template v-if="opt.value === 'grid-2x2'">
+                      <span class="layout-block"></span>
+                      <span class="layout-block"></span>
+                      <span class="layout-block"></span>
+                      <span class="layout-block"></span>
+                    </template>
+                    <template v-else-if="opt.value === 'hero-plus-2'">
+                      <span class="layout-block" style="grid-row: 1 / 3;"></span>
+                      <span class="layout-block"></span>
+                      <span class="layout-block"></span>
+                    </template>
+                    <template v-else-if="opt.value === 'three-columns'">
+                      <span class="layout-block"></span>
+                      <span class="layout-block"></span>
+                      <span class="layout-block"></span>
+                    </template>
+                    <template v-else>
+                      <span class="layout-block"></span>
+                    </template>
+                  </div>
+                  <div class="layout-option-content">
+                    <span class="layout-option-label">{{ opt.label }}</span>
+                    <span class="layout-option-description">
+                      {{ opt.value === 'grid-2x2' ? "Jusqu’à 4 photos en grille équilibrée" : opt.value === 'hero-plus-2' ? "Une photo principale et jusqu’à 2 secondaires" : opt.value === 'three-columns' ? "Trois portraits alignés verticalement" : "Une photo immersive occupant toute la page" }}
+                    </span>
+                  </div>
+                </button>
+              </div>
             </div>
           </section>
 
@@ -236,6 +281,14 @@ const layoutPreviewBlocks: Record<StepPageLayout, number> = {
   'hero-plus-2': 3,
   'three-columns': 3,
   'full-page': 1
+}
+
+// mapping to match mockup classes in docs/mockups/gallery.html
+const previewClassFor: Record<StepPageLayout, string> = {
+  'grid-2x2': 'grid-2x2',
+  'hero-plus-2': 'hero-side',
+  'three-columns': 'three-columns',
+  'full-page': 'full-page'
 }
 
 const ratioOptions: Array<{ value: 'all' | PhotoRatio; label: string }> = [
@@ -885,6 +938,207 @@ const formatDate = (ts: number | string | Date) => {
   background: #d1d5db;
   border-radius: 2px;
 }
+
+/* Layout card previews (professional look) */
+.layout-options-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.layout-option {
+  border: 2px solid #e6eefc;
+  border-radius: 12px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.12s ease-in-out;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.layout-option:hover {
+  border-color: #2b6ef6;
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.08);
+}
+
+.layout-option.active {
+  border-color: #2b6ef6;
+  box-shadow: 0 12px 34px rgba(59, 130, 246, 0.14);
+}
+
+.layout-preview {
+  aspect-ratio: 16 / 10;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.layout-preview.grid-2x2 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.layout-preview.hero-side {
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.layout-preview .layout-block {
+  background: #e6eefc;
+  border-radius: 6px;
+}
+
+.layout-preview[style*="grid-template-columns: 1fr 1fr 1fr"] {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.layout-preview[style*="grid-template-columns: 1fr;"] {
+  grid-template-columns: 1fr;
+}
+
+.layout-name {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  color: #0f172a;
+}
+
+/* Main-branch inspired option grid + button styles */
+.layout-option-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.layout-option-button {
+  border: 1px solid rgba(15,23,42,0.04);
+  background: #fff;
+  padding: 0;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 220px;
+  transition: all 0.12s ease-in-out;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+}
+
+.layout-option-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(15,23,42,0.06);
+}
+
+.layout-option-button .layout-preview {
+  background: linear-gradient(180deg,#fbfdff,#ffffff);
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: none;
+}
+
+.layout-option-button .layout-block {
+  display: block;
+  background: linear-gradient(180deg,#eef2ff,#e6eefc);
+  border-radius: 6px;
+}
+
+/* Hero: first block spans two rows to create vertical hero on the left */
+.layout-preview.hero-side .layout-block:first-child {
+  grid-row: 1 / span 2;
+}
+
+.layout-option-content {
+  padding: 8px 10px;
+  background: #fff;
+  border-radius: 0 0 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.layout-option-label {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.layout-option-description {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* preview variants matching main branch */
+.layout-preview.grid-2x2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 6px; }
+.layout-preview.hero-side { grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 6px; }
+.layout-preview.three-columns { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+.layout-preview.full-page { grid-template-columns: 1fr; }
+
+/* active state uses red accent like main branch */
+.layout-option-button.active {
+  border-color: #ef4444; /* red-500 */
+  box-shadow: 0 14px 36px rgba(239, 68, 68, 0.12);
+}
+
+.layout-option-button.active .layout-preview {
+  background: linear-gradient(180deg, rgba(254,228,226,0.6), rgba(255,246,245,0.6));
+}
+
+.layout-option-button.active .layout-block {
+  background: linear-gradient(180deg, rgba(255,224,224,0.6), rgba(255,240,240,0.6));
+}
+
+/* Cover specific */
+.cover-preview {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.cover-thumb {
+  width: 48px;
+  height: 72px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: linear-gradient(180deg,#eef2ff,#e6eefc);
+  display:flex; align-items:center; justify-content:center;
+}
+
+.img-placeholder {
+  width: 36px;
+  height: 28px;
+  background: linear-gradient(180deg,#dbeafe,#c7ddff);
+  border-radius: 4px;
+}
+
+.cover-text-block {
+  flex: 1;
+}
+
+.cover-text-block .title-line {
+  height: 14px;
+  background: linear-gradient(90deg,#f3f6fb,#eef7ff);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.cover-text-block .subtitle-line {
+  height: 10px;
+  width: 60%;
+  background: linear-gradient(90deg,#f7f9fc,#f2f8ff);
+  border-radius: 4px;
+}
+
+.cover-text-large .title-line.large { height: 28px; width: 80%; }
+.cover-text-large .subtitle-line.small { height: 12px; width: 50%; margin-top: 10px }
 
 .photo-grid,
 .selected-grid {
