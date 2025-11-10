@@ -91,11 +91,15 @@ const openPanel = async () => {
   // open panel and request preview generation (non-blocking)
   editorStore.setPreviewMode('desktop')
   expanded.value = true
+  // update central store so layout can react
+  editorStore.setPreviewOpen(true)
   void previewTravelBook()
 }
 
 const closePanel = () => {
   expanded.value = false
+  // update central store so layout can react
+  editorStore.setPreviewOpen(false)
 }
 
 // iframe reference used for print/open/download actions
@@ -240,14 +244,12 @@ const { content: previewContent, setMode, mode } = usePreview({
 onMounted(() => {
   editorStore.setPreviewMode('desktop')
   setMode('desktop')
-  const onToggle = (ev: any) => {
-    expanded.value = !!ev.detail?.open
-  }
-  window.addEventListener('toggle-preview', onToggle)
-  // remove listener on unmount
-  onUnmounted(() => {
-    window.removeEventListener('toggle-preview', onToggle)
+  // Sync local expanded state with store
+  const stop = watch(() => editorStore.isPreviewOpen, (val) => {
+    expanded.value = !!val
   })
+  // Sync local expanded state with store; no legacy global listener.
+  onUnmounted(() => stop())
 })
 
 const isGenerating = computed(() => editorStore.isPreviewLoading)
@@ -318,6 +320,9 @@ watch(
     z-index: 1050;
     display: flex;
     flex-direction: column;
+    transition: transform 240ms ease, opacity 200ms ease;
+    transform: translateX(0);
+    opacity: 1;
   }
 
   .preview-overlay-header {
@@ -439,6 +444,48 @@ watch(
   @media (max-width: 1200px) {
     .preview-toggle { right: 4px; }
     .preview-frame-expanded { width: calc(100% - 32px); height: calc(100vh - var(--header-height, 64px) - 80px); }
+  }
+
+  /* Mobile: overlay uses full width and covers content under header */
+  @media (max-width: 768px) {
+    .preview-overlay-panel {
+      left: 0;
+      right: 0;
+      width: 100vw;
+      max-width: none;
+      top: var(--header-height, 64px);
+      height: calc(100vh - var(--header-height, 64px));
+      border-radius: 0;
+      padding: 0;
+      box-shadow: none;
+    }
+
+    .preview-overlay-content {
+      padding: 12px;
+    }
+
+    .preview-frame-expanded {
+      width: 100%;
+      height: calc(100vh - var(--header-height, 64px) - 96px);
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    /* Move toggle to bottom-right on small screens for easier reachability */
+    .preview-toggle {
+      top: auto;
+      bottom: 16px;
+      right: 16px;
+      transform: translateY(0);
+      padding: 12px 14px;
+    }
+
+    /* Slightly larger action buttons for touch */
+    .preview-overlay-actions button {
+      width: 44px;
+      height: 44px;
+      font-size: 18px;
+    }
   }
 
   </style>

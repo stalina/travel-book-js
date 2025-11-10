@@ -80,7 +80,6 @@ const handleEnter = (event: KeyboardEvent) => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs, 4px);
-  margin-bottom: var(--spacing-lg, 24px);
 }
 
 .title-input {

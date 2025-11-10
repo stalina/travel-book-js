@@ -15,26 +15,7 @@
         :status="editorStore.autoSaveStatus"
         :last-save-time="editorStore.lastSaveTime"
       />
-
-      <!-- Stats cards moved to header -->
-      <div class="header-stats" role="list" aria-label="Statistiques du voyage">
-        <div class="stat-card" role="listitem" aria-label="Photos">
-          <div class="stat-value">{{ totalPhotos }}</div>
-          <div class="stat-label">Photos</div>
-        </div>
-        <div class="stat-card" role="listitem" aria-label="Étapes">
-          <div class="stat-value">{{ totalSteps }}</div>
-          <div class="stat-label">Étapes</div>
-        </div>
-        <div class="stat-card" role="listitem" aria-label="Jours">
-          <div class="stat-value">{{ totalDays }}</div>
-          <div class="stat-label">Jours</div>
-        </div>
-        <div class="stat-card" role="listitem" aria-label="Pages estimées">
-          <div class="stat-value">{{ estimatedPages }}</div>
-          <div class="stat-label">Pages</div>
-        </div>
-      </div>
+        <HeaderStats />
       <BaseButton
         variant="outline"
         size="sm"
@@ -61,6 +42,7 @@ import { useEditorStore } from '../../stores/editor.store'
 import { useEditorGeneration } from '../../composables/useEditorGeneration'
 import BaseButton from '../BaseButton.vue'
 import SaveStatus from './SaveStatus.vue'
+import HeaderStats from './HeaderStats.vue'
 
 const editorStore = useEditorStore()
 const projectTitle = ref('')
@@ -78,11 +60,9 @@ watch(() => editorStore.currentTrip?.name, (newName) => {
 }, { immediate: true })
 
 const onTitleBlur = () => {
-  if (editorStore.currentTrip && projectTitle.value !== editorStore.currentTrip.name) {
-    // Mise à jour du titre du voyage
-    editorStore.currentTrip.name = projectTitle.value
-    editorStore.triggerAutoSave()
-    editorStore.markPreviewStale()
+  if (projectTitle.value && editorStore.currentTrip && projectTitle.value !== editorStore.currentTrip.name) {
+    // Use store method to update trip name so behavior is centralized
+    editorStore.updateTripName(projectTitle.value)
   }
 }
 

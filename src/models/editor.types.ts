@@ -62,6 +62,11 @@ export interface StepPageState {
   pages: EditorStepPage[]
   activePageId: string | null
   coverPhotoIndex: number | null
+  /**
+   * Format de la page de couverture: 'text-image' = texte + image (image modifiable),
+   * 'text-only' = texte en pleine page (pas d'image)
+   */
+  coverFormat?: 'text-image' | 'text-only'
 }
 
 export interface StepPagePlanItem {
