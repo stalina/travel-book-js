@@ -1,6 +1,6 @@
 ---
 id: decision-1
-title: ADR — Client-only runtime (No-server runtime)
+title: ADR — Client-only runtime (No-server runtime) 
 date: '2025-11-10 22:56'
 status: accepted
 ---

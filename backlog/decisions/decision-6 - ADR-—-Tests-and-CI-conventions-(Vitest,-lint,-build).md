@@ -1,6 +1,6 @@
 ---
 id: decision-6
-title: 'ADR — Tests and CI conventions (Vitest, lint, build)'
+title: ADR — Tests and CI conventions (Vitest, lint, build)
 date: '2025-11-10 22:57'
 status: accepted
 ---
