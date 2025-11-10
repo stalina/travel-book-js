@@ -1,7 +1,7 @@
 ---
 id: task-24
 title: Refactorisation StepEditor et nettoyage composants
-status: In Progress
+status: Done
 assignee:
   - '@copilot'
 created_date: '2025-11-10 09:14'
