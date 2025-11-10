@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-11-10 10:02'
-updated_date: '2025-11-10 10:03'
+updated_date: '2025-11-10 10:04'
 labels: []
 dependencies: []
 ---
@@ -18,8 +18,8 @@ Un test de régression doit garantir que les miniatures du bandeau pages affiche
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Le test échoue si les classes mini-layout sont absentes
-- [ ] #2 Le test couvre le cas couverture et layout classique
+- [x] #1 Le test échoue si les classes mini-layout sont absentes
+- [x] #2 Le test couvre le cas couverture et layout classique
 <!-- AC:END -->
 
 ## Implementation Plan
