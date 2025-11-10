@@ -30,3 +30,11 @@ La bibliothèque ne sélectionne plus la photo lors d\'un changement de couvertu
 3. Ajouter un test sur StepEditor assurant la sélection de couverture
 4. Exécuter les tests ciblés
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+- Correction de src/components/editor/CoverPhotoSelector.vue pour relayer les index de slot et de photo
+- Ajout d'un test dans tests/editor/StepEditor.spec.ts vérifiant la sélection de couverture
+- Tests exécutés : npm test -- StepEditor
+<!-- SECTION:NOTES:END -->
