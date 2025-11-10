@@ -17,9 +17,9 @@ Publish v0.1.0 release on GitHub (upstream).
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Publish GitHub release v0.1.0
-- [ ] #2 Attach build artifact
-- [ ] #3 Update implementation notes and mark done
+- [x] #1 Publish GitHub release v0.1.0
+- [x] #2 Attach build artifact
+- [x] #3 Update implementation notes and mark done
 <!-- AC:END -->
 
 ## Implementation Notes
