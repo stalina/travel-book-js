@@ -266,10 +266,7 @@
           <!-- (photo selection moved into the two-column layout above) -->
         </div>
 
-        <!-- Sidebar bibliothèque (hidden - library available via popin) -->
-        <aside v-if="false" class="sidebar">
-          <!-- Library is hidden in the editor main UI; open it via slot actions -->
-        </aside>
+        <!-- Sidebar removed (library available via popin) -->
       </div>
     </div>
 
@@ -341,12 +338,7 @@ const layoutOptions: Array<{ value: StepPageLayout; label: string }> = [
   { value: 'full-page', label: 'Plein format' }
 ]
 
-const layoutPreviewBlocks: Record<StepPageLayout, number> = {
-  'grid-2x2': 4,
-  'hero-plus-2': 3,
-  'three-columns': 3,
-  'full-page': 1
-}
+// layoutPreviewBlocks removed (unused)
 
 // mapping to match mockup classes in docs/mockups/gallery.html
 const previewClassFor: Record<StepPageLayout, string> = {
@@ -538,46 +530,7 @@ const setCoverFormat = (format: 'text-image' | 'text-only') => {
   editorStore.setCurrentStepCoverFormat(format)
 }
 
-const computePhotoTransform = (photo: EditorStepPhoto): string => {
-  const zoom = Math.max(1, Math.min(3, photo.crop?.zoom ?? 1))
-  const offsetX = Math.max(-50, Math.min(50, photo.crop?.offsetX ?? 0))
-  const offsetY = Math.max(-50, Math.min(50, photo.crop?.offsetY ?? 0))
-  const rotation = photo.rotation ?? 0
-  return `scale(${zoom.toFixed(3)}) translate(${offsetX.toFixed(3)}%, ${offsetY.toFixed(3)}%) rotate(${rotation}deg)`
-}
-
-const buildPhotoStyle = (photo: EditorStepPhoto): CSSProperties => ({
-  filter: buildCssFilter(photo.adjustments, photo.filterPreset),
-  transform: computePhotoTransform(photo),
-  transformOrigin: 'center'
-})
-
-const photoStyleMap = computed(() => {
-  const map = new Map<number, CSSProperties>()
-  for (const photo of libraryPhotos.value) {
-    map.set(photo.index, buildPhotoStyle(photo))
-  }
-  return map
-})
-
-const photoStyle = (index: number): CSSProperties => {
-  return photoStyleMap.value.get(index) ?? {}
-}
-
-const selectedPhotoDetails = computed(() => {
-  if (!selectedPhotoIndices.value.length) return []
-  return selectedPhotoIndices.value
-    .map((index, position) => ({
-      position,
-      photo: libraryPhotos.value.find((photo) => photo.index === index) ?? null
-    }))
-    .filter((entry): entry is { position: number; photo: (typeof libraryPhotos.value)[number] } => entry.photo !== null)
-})
-
-const remainingSlots = computed(() => {
-  const available = layoutCapacity.value - selectedPhotoIndices.value.length
-  return available > 0 ? available : 0
-})
+// Photo transform/style helpers removed (not used in template)
 
 // slots array for active page: array of GalleryPhoto|null for each slot position
 const pageSlots = computed(() => {
