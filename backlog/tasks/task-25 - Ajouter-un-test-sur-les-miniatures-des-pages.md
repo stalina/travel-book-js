@@ -1,9 +1,11 @@
 ---
 id: task-25
 title: Ajouter un test sur les miniatures des pages
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot'
 created_date: '2025-11-10 10:02'
+updated_date: '2025-11-10 10:02'
 labels: []
 dependencies: []
 ---
