@@ -5,8 +5,8 @@
       :photo="photo"
       :slotIndex="0"
       :slotNumber="1"
-      @openLibrary="$emit('open-library')"
-      @edit="$emit('edit')"
+      @openLibrary="forwardOpenLibrary"
+      @edit="forwardEdit"
       @clear="$emit('clear')"
     />
   </section>
@@ -18,4 +18,13 @@ import type { PropType } from 'vue'
 
 const props = defineProps({ photo: { type: Object as PropType<any>, default: null } })
 const emit = defineEmits(['open-library', 'edit', 'clear'])
+
+const forwardOpenLibrary = (slotIndex: number) => emit('open-library', slotIndex)
+const forwardEdit = (index: number) => emit('edit', index)
 </script>
+
+<style scoped>
+.section { margin-bottom:24px; background:#fff; border-radius:8px; padding:16px }
+.photo-selection-column { max-width:360px }
+@media (max-width:900px) { .photo-selection-column { max-width:none } }
+</style>

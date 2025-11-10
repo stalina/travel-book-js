@@ -33,42 +33,23 @@
             @select-page="selectPage"
           />
 
-          <!-- Config page -->
-          <section v-if="activePage" class="section">
-            <h4>{{ isActivePageCover ? 'Agencement de la couverture' : 'Mise en page' }}</h4>
-            
-            <!-- Layout options (cover or page) -->
-            <LayoutOptions
-              v-if="isActivePageCover"
-              :title="'Agencement de la couverture'"
-              :options="[
-                { value: 'text-image', label: 'Texte + Image' },
-                { value: 'text-only', label: 'Texte pleine page' }
-              ]"
-              :active="coverFormat"
-              :previewClassFor="previewClassFor"
-              :descriptions="{ 'text-image': 'Texte à gauche, image à droite', 'text-only': 'Texte occupant toute la largeur' }"
-              @select="(val) => setCoverFormat(val === 'text-image' ? 'text-image' : 'text-only')"
-            />
+          <!-- Page layout configuration -->
+          <CoverLayoutOptions
+            v-if="activePage && isActivePageCover"
+            v-model="coverFormat"
+          />
 
-            <LayoutOptions
-              v-else
-              :title="'Mise en page'"
-              :options="layoutOptions"
-              :active="activeLayout"
-              :previewClassFor="previewClassFor"
-              :descriptions="{
-                'grid-2x2': 'Jusqu\u2019à 4 photos en grille équilibrée',
-                'hero-plus-2': 'Une photo principale et jusqu\u2019à 2 secondaires',
-                'three-columns': 'Trois portraits alignés verticalement',
-                'full-page': 'Une photo immersive occupant toute la page'
-              }"
-              @select="selectLayout"
-            />
-          </section>
+          <LayoutOptions
+            v-else-if="activePage"
+            :title="'Mise en page'"
+            :options="layoutOptions"
+            :active="activeLayout"
+            :previewClassFor="previewClassFor"
+            :descriptions="layoutDescriptions"
+            @select="selectLayout"
+          />
 
           <!-- Proposal (description + preview) -->
-          <!-- Proposal, selected slots and preview — componentized -->
           <ProposalSection @reset="confirmResetOpen = true">
             <template #body>
               <div>
@@ -113,12 +94,8 @@
             </template>
           </ProposalSection>
 
-          <!-- Cover photo selection removed (now handled in the two-column layout using slot/popin) -->
-
-          <!-- (photo selection moved into the two-column layout above) -->
         </div>
 
-        <!-- Sidebar removed (library available via popin) -->
       </div>
     </div>
 
@@ -141,7 +118,6 @@
       :ratioOptions="ratioOptions"
       @select="selectPhotoForSlot"
       @set-ratio="setRatio"
-      @open-upload="openUploadDialog"
       @close="closeLibrary"
       @upload="handleUpload"
     />
@@ -157,16 +133,12 @@
 
 <script setup lang="ts">
 import { computed, defineAsyncComponent, ref } from 'vue'
-import type { CSSProperties } from 'vue'
 import { useEditorStore } from '../../stores/editor.store'
-import type { StepPageLayout, PhotoRatio, EditorStepPhoto } from '../../models/editor.types'
+import type { StepPageLayout, PhotoRatio } from '../../models/editor.types'
 import { usePhotoLibrary } from '../../composables/usePhotoLibrary'
 import { getLayoutCapacity } from '../../models/layout.constants'
 import type { GalleryPhoto, PhotoAdjustments, CropSettings, PhotoFilterPreset } from '../../models/gallery.types'
-import { buildCssFilter } from '../../utils/photo-filters'
-import BaseButton from '../BaseButton.vue'
 import ConfirmDialog from '../ui/ConfirmDialog.vue'
-import SelectedSlot from './SelectedSlot.vue'
 import PagesStrip from './PagesStrip.vue'
 import LayoutOptions from './LayoutOptions.vue'
 import PhotoLibraryPopin from './PhotoLibraryPopin.vue'
@@ -175,12 +147,20 @@ import SelectedGrid from './SelectedGrid.vue'
 import PreviewSection from './PreviewSection.vue'
 import DescriptionEditor from './DescriptionEditor.vue'
 import CoverPhotoSelector from './CoverPhotoSelector.vue'
+import CoverLayoutOptions from './CoverLayoutOptions.vue'
 const layoutOptions: Array<{ value: StepPageLayout; label: string }> = [
   { value: 'grid-2x2', label: 'Grille 2×2' },
   { value: 'hero-plus-2', label: 'Héro + 2' },
   { value: 'three-columns', label: 'Trois colonnes' },
   { value: 'full-page', label: 'Plein format' }
 ]
+
+const layoutDescriptions: Record<StepPageLayout, string> = {
+  'grid-2x2': 'Jusqu\u2019à 4 photos en grille équilibrée',
+  'hero-plus-2': 'Une photo principale et jusqu\u2019à 2 secondaires',
+  'three-columns': 'Trois portraits alignés verticalement',
+  'full-page': 'Une photo immersive occupant toute la page'
+}
 
 // layoutPreviewBlocks removed (unused)
 
@@ -216,18 +196,12 @@ const StepTitleEditor = defineAsyncComponent(async () => {
   return module.default ?? module
 })
 
-const RichTextEditor = defineAsyncComponent(async () => {
-  const module = (await import('./RichTextEditor.vue')) as any
-  return module.default ?? module
-})
-
 const PhotoEditorModal = defineAsyncComponent(async () => {
   const module = (await import('./PhotoEditorModal.vue')) as any
   return module.default ?? module
 })
 
 const editorStore = useEditorStore()
-const uploadInput = ref<HTMLInputElement | null>(null)
 const confirmResetOpen = ref(false)
 const editedPhotoIndex = ref<number | null>(null)
 
@@ -243,7 +217,6 @@ const canMoveLeft = computed(() => activePageIndex.value > 0)
 const canMoveRight = computed(() => activePageIndex.value >= 0 && activePageIndex.value < pages.value.length - 1)
 const coverPhotoIndex = computed(() => editorStore.currentStepPageState?.coverPhotoIndex ?? null)
 const selectedPhotoIndices = computed(() => activePage.value?.photoIndices ?? [])
-const selectedPhotoSet = computed(() => new Set(selectedPhotoIndices.value))
 
 const proposalSummary = computed(() => {
   const s = step.value
@@ -369,10 +342,12 @@ const isActivePageCover = computed(() => {
   return activePageId.value === firstPageId
 })
 
-const coverFormat = computed(() => currentPageState.value?.coverFormat ?? 'text-image')
-const setCoverFormat = (format: 'text-image' | 'text-only') => {
-  editorStore.setCurrentStepCoverFormat(format)
-}
+const coverFormat = computed<'text-image' | 'text-only'>({
+  get: () => currentPageState.value?.coverFormat ?? 'text-image',
+  set: (format) => {
+    editorStore.setCurrentStepCoverFormat(format)
+  }
+})
 
 // Photo transform/style helpers removed (not used in template)
 
@@ -464,16 +439,6 @@ const togglePhoto = (photoIndex: number) => {
   editorStore.setCurrentPagePhotoIndices(page.id, next)
 }
 
-const isCover = (photoIndex: number) => coverPhotoIndex.value === photoIndex
-
-const toggleCover = (photoIndex: number) => {
-  if (coverPhotoIndex.value === photoIndex) {
-    editorStore.setCurrentStepCoverPhotoIndex(null)
-  } else {
-    editorStore.setCurrentStepCoverPhotoIndex(photoIndex)
-  }
-}
-
 const openPhotoEditor = (photoIndex: number) => {
   editedPhotoIndex.value = photoIndex
 }
@@ -486,10 +451,6 @@ const handlePhotoEditorApply = (payload: { state: EditorPhotoSnapshot; history?:
   if (!editedPhoto.value) return
   editorStore.applyAdjustmentsToCurrentPhoto(editedPhoto.value.index, payload.state, payload.history ?? undefined)
   closePhotoEditor()
-}
-
-const openUploadDialog = () => {
-  uploadInput.value?.click()
 }
 
 const handleUpload = async (event: Event) => {
@@ -548,16 +509,9 @@ const printPreview = () => {
     try { w.focus(); w.print(); } catch (e) { /* ignore */ }
   }, 250)
 }
-
-// format date util (used in template)
-const formatDate = (ts: number | string | Date) => {
-  if (!ts) return ''
-  const d = typeof ts === 'number' ? new Date(ts) : ts instanceof Date ? ts : new Date(ts)
-  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(d)
-}
 </script>
 
-<style>
+<style scoped>
 .step-editor {
   height: 100%;
   background: #f9fafb;
@@ -592,7 +546,7 @@ const formatDate = (ts: number | string | Date) => {
 
 .editor-header {
   padding: 24px;
-  background: white;
+  background: #fff;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -604,27 +558,18 @@ const formatDate = (ts: number | string | Date) => {
 
 .editor-layout {
   flex: 1;
-  display: flex; /* make layout a flex container so content can stretch and scroll */
+  display: flex;
   flex-direction: row;
   align-items: stretch;
   overflow: hidden;
 }
 
 .editor-content {
-  /* Allow the content area to grow and scroll within the editor-layout flex container.
-     min-height:0 is required so that the flex child can shrink and allow overflow to work. */
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   padding: 24px;
   width: 100%;
-}
-
-.section {
-  margin-bottom: 24px;
-  background: white;
-  border-radius: 8px;
-  padding: 16px;
 }
 
 .two-column-layout {
@@ -634,667 +579,9 @@ const formatDate = (ts: number | string | Date) => {
   align-items: start;
 }
 
-.photo-selection-column {
-  max-width: 360px;
-}
-
 @media (max-width: 900px) {
   .two-column-layout {
     grid-template-columns: 1fr;
   }
-  .photo-selection-column { max-width: none; }
-}
-
-.section-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.section-head h3 {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0;
-  color: #1f2937;
-}
-
-.section h4 {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0 0 12px;
-  color: #1f2937;
-}
-
-.controls {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.nav-btn {
-  width: 32px;
-  height: 32px;
-  border: 1px solid #d1d5db;
-  background: white;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.nav-btn:hover:not(:disabled) {
-  background: #f3f4f6;
-}
-
-.nav-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.pages-strip {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  padding: 8px 0;
-}
-
-.page-thumb {
-  flex-shrink: 0;
-  width: 110px;
-  border: 2px solid #e5e7eb;
-  background: white;
-  border-radius: 8px;
-  padding: 8px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  overflow: hidden;
-}
-
-.page-thumb:hover {
-  border-color: #3b82f6;
-}
-
-.page-thumb.active {
-  border-color: #3b82f6;
-  background: #eff6ff;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.thumb-preview {
-  width: 100%;
-  height: 72px; /* reduced height (about half) to fit strip */
-  background: #f3f4f6;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  box-sizing: border-box;
-  padding: 4px;
-}
-
-.thumb-cover {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.thumb-cover .mini-cover {
-  width: 100%;
-  max-width: 96px;
-  height: 100%;
-  padding: 4px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: row;
-  gap: 6px;
-  align-items: center;
-  justify-content: center;
-}
-
-.mini-cover .title-line.small { height: 8px; width: 50%; border-radius: 4px; }
-.mini-cover .title-line.medium { height: 10px; width: 60%; border-radius: 6px; }
-.mini-cover .subtitle-line.xsmall { height: 6px; width: 40%; border-radius: 4px; }
-
-.small-thumb { min-width: 32px; height: 40px; border-radius: 6px; overflow: hidden; }
-
-.thumb-grid { display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap; }
-.thumb-grid .slot { width: 40px; height: 28px; background: linear-gradient(180deg,#eef2ff,#f8fbff); border-radius: 4px; }
-
-.thumb-grid .slot {
-  background: #d1d5db;
-  border-radius: 2px;
-}
-
-.mini-layout .layout-preview {
-  width: 96px;
-  height: 56px;
-  padding: 6px;
-  box-sizing: border-box;
-  border-radius: 6px;
-  gap: 6px;
-}
-
-.mini-layout .layout-block {
-  border-radius: 4px;
-}
-
-.page-thumb .label {
-  font-size: 11px;
-  color: #6b7280;
-  text-align: center;
-}
-.empty-msg { padding: 32px; text-align: center; color:#9ca3af; background:#f9fafb; border:1px dashed #d1d5db; border-radius:8px }
-
-.options {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.option {
-  flex: 1;
-  min-width: 130px;
-  padding: 12px;
-  border: 2px solid #e5e7eb;
-  background: white;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.option:hover {
-  border-color: #3b82f6;
-  background: #eff6ff;
-}
-
-.option.active {
-  border-color: #3b82f6;
-  background: #dbeafe;
-}
-
-.icon {
-  width: 60px;
-  height: 45px;
-  background: #f3f4f6;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  font-weight: bold;
-  color: #6b7280;
-}
-
-.icon.cover-ti {
-  flex-direction: column;
-}
-
-.icon.cover-ti .sm {
-  font-size: 11px;
-}
-
-.icon.layout-grid-2x2,
-.icon.layout-hero-plus-2,
-.icon.layout-three-columns {
-  display: grid;
-  gap: 2px;
-  padding: 4px;
-}
-
-.icon.layout-grid-2x2 {
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-}
-
-.icon.layout-hero-plus-2 {
-  grid-template-columns: 2fr 1fr;
-  grid-template-rows: 1fr 1fr;
-}
-
-.icon.layout-hero-plus-2 .block:first-child {
-  grid-row: 1 / span 2;
-}
-
-.icon.layout-three-columns {
-  grid-template-columns: 1fr 1fr 1fr;
-}
-
-.icon.layout-full-page {
-  display: flex;
-}
-
-.block {
-  background: #d1d5db;
-  border-radius: 2px;
-}
-
-/* Layout card previews (professional look) */
-.layout-options-row {
-  display: flex;
-  gap: 12px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-}
-
-.layout-option {
-  border: 2px solid #e6eefc;
-  border-radius: 12px;
-  padding: 12px;
-  cursor: pointer;
-  transition: all 0.12s ease-in-out;
-  background: #f8fafc;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: stretch;
-}
-
-.layout-option:hover {
-  border-color: #2b6ef6;
-  transform: translateY(-4px);
-  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.08);
-}
-
-.layout-option.active {
-  border-color: #2b6ef6;
-  box-shadow: 0 12px 34px rgba(59, 130, 246, 0.14);
-}
-
-.layout-preview {
-  aspect-ratio: 16 / 10;
-  background: white;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  display: grid;
-  gap: 4px;
-  padding: 8px;
-  box-sizing: border-box;
-}
-
-.layout-preview.grid-2x2 {
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-}
-
-.layout-preview.hero-side {
-  grid-template-columns: 2fr 1fr;
-  grid-template-rows: 1fr 1fr;
-}
-
-.layout-preview .layout-block {
-  background: #e6eefc;
-  border-radius: 6px;
-}
-
-.layout-preview[style*="grid-template-columns: 1fr 1fr 1fr"] {
-  grid-template-columns: 1fr 1fr 1fr;
-}
-
-.layout-preview[style*="grid-template-columns: 1fr;"] {
-  grid-template-columns: 1fr;
-}
-
-.layout-name {
-  font-size: 14px;
-  font-weight: 600;
-  text-align: center;
-  color: #0f172a;
-}
-
-/* Main-branch inspired option grid + button styles */
-.layout-option-grid {
-  display: flex;
-  gap: 12px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-}
-
-.layout-option-button {
-  border: 1px solid rgba(15,23,42,0.04);
-  background: #fff;
-  padding: 0;
-  border-radius: 12px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  min-width: 220px;
-  transition: all 0.12s ease-in-out;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
-}
-
-.layout-option-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 30px rgba(15,23,42,0.06);
-}
-
-.layout-option-button .layout-preview {
-  background: linear-gradient(180deg,#fbfdff,#ffffff);
-  border-radius: 8px;
-  padding: 12px;
-  box-shadow: none;
-}
-
-.layout-option-button .layout-block {
-  display: block;
-  background: linear-gradient(180deg,#eef2ff,#e6eefc);
-  border-radius: 6px;
-}
-
-/* Hero: first block spans two rows to create vertical hero on the left */
-.layout-preview.hero-side .layout-block:first-child {
-  grid-row: 1 / span 2;
-}
-
-.layout-option-content {
-  padding: 8px 10px;
-  background: #fff;
-  border-radius: 0 0 12px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.layout-option-label {
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.layout-option-description {
-  font-size: 12px;
-  color: #64748b;
-}
-
-/* preview variants matching main branch */
-.layout-preview.grid-2x2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 6px; }
-.layout-preview.hero-side { grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 6px; }
-.layout-preview.three-columns { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
-.layout-preview.full-page { grid-template-columns: 1fr; }
-
-/* active state uses red accent like main branch */
-.layout-option-button.active {
-  border-color: #ef4444; /* red-500 */
-  box-shadow: 0 14px 36px rgba(239, 68, 68, 0.12);
-}
-
-.layout-option-button.active .layout-preview {
-  background: linear-gradient(180deg, rgba(254,228,226,0.6), rgba(255,246,245,0.6));
-}
-
-.layout-option-button.active .layout-block {
-  background: linear-gradient(180deg, rgba(255,224,224,0.6), rgba(255,240,240,0.6));
-}
-
-/* Cover specific */
-.cover-preview {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.cover-preview.text-image {
-  flex-direction: row;
-  justify-content: space-between;
-}
-
-.cover-preview.text-image .cover-text-block {
-  flex: 1 1 60%;
-  padding-right: 12px;
-}
-
-.cover-preview.text-image .cover-thumb {
-  width: 36%;
-  min-width: 120px;
-  height: 100px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: linear-gradient(180deg,#eef2ff,#e6eefc);
-}
-
-.cover-preview.text-only {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.cover-text-large {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-start;
-}
-
-.title-line.large { height: 22px; width: 70%; background: linear-gradient(180deg,#e6eefc,#eef6ff); border-radius:6px; }
-.subtitle-line.small { height: 14px; width: 40%; background: linear-gradient(180deg,#f1f5f9,#f8fafc); border-radius:6px; }
-
-.layout-option-button.active[data-test="cover-text-image"] .layout-preview {
-  background: linear-gradient(180deg, rgba(254,228,226,0.6), rgba(255,246,245,0.6));
-}
-
-.layout-option-button.active[data-test="cover-text-only"] .layout-preview {
-  background: linear-gradient(180deg, rgba(254,228,226,0.4), rgba(255,246,245,0.4));
-}
-
-.cover-text-block {
-  flex: 1;
-}
-
-.cover-text-block .title-line {
-  height: 14px;
-  background: linear-gradient(90deg,#f3f6fb,#eef7ff);
-  border-radius: 4px;
-  margin-bottom: 8px;
-}
-
-.cover-text-block .subtitle-line {
-  height: 10px;
-  width: 60%;
-  background: linear-gradient(90deg,#f7f9fc,#f2f8ff);
-  border-radius: 4px;
-}
-
-.cover-text-large .title-line.large { height: 28px; width: 80%; }
-.cover-text-large .subtitle-line.small { height: 12px; width: 50%; margin-top: 10px }
-
-.photo-grid,
-.selected-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 12px;
-}
-
-.photo-card,
-.lib-photo {
-  position: relative;
-  aspect-ratio: 1;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  overflow: hidden;
-  cursor: pointer;
-  background: white;
-}
-
-.photo-card:hover,
-.lib-photo:hover {
-  border-color: #3b82f6;
-}
-
-.photo-card.selected,
-.lib-photo.selected {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.photo-card img,
-.lib-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.badge,
-.meta {
-  position: absolute;
-  bottom: 4px;
-  right: 4px;
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.meta {
-  display: flex;
-  gap: 4px;
-}
-
-.selected-card {
-  padding: 12px;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.selected-card img {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-  border-radius: 4px;
-}
-
-.selected-card span {
-  font-size: 13px;
-  color: #6b7280;
-}
-
-.selected-card .actions {
-  display: flex;
-  gap: 4px;
-}
-
-.selected-card button {
-  flex: 1;
-  padding: 6px;
-  border: 1px solid #d1d5db;
-  background: white;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.selected-card button:hover {
-  background: #f3f4f6;
-}
-
-.selected-card.empty {
-  background: #f9fafb;
-  border-style: dashed;
-  min-height: 100px;
-  justify-content: center;
-  align-items: center;
-}
-
-.sidebar {
-  background: white;
-  border-left: 1px solid #e5e7eb;
-  padding: 24px 16px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.sidebar-header h4 {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0 0 4px;
-}
-
-.sidebar-header span {
-  display: block;
-  font-size: 13px;
-  color: #9ca3af;
-  margin-bottom: 8px;
-}
-
-.sidebar-filters input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  margin-bottom: 8px;
-}
-
-.sidebar-filters input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.ratio-btns {
-  display: flex;
-  gap: 4px;
-}
-
-.ratio-btns button {
-  flex: 1;
-  padding: 6px 8px;
-  border: 1px solid #d1d5db;
-  background: white;
-  border-radius: 4px;
-  font-size: 11px;
-  cursor: pointer;
-}
-
-.ratio-btns button:hover {
-  background: #f3f4f6;
-}
-
-.ratio-btns button.active {
-  background: #dbeafe;
-  border-color: #3b82f6;
-  color: #2563eb;
-}
-
-::v-deep(.import-btn) {
-  border-radius: 28px !important;
-  padding-left: 14px !important;
-  padding-right: 14px !important;
-  color: #ef4444 !important; /* red-500 */
-  border-color: rgba(239,68,68,0.22) !important;
-  background: linear-gradient(180deg, rgba(255,245,245,0.6), rgba(255,250,250,0.6));
-  box-shadow: 0 6px 18px rgba(239,68,68,0.06);
-}
-
-::v-deep(.import-btn):hover {
-  background: linear-gradient(180deg, rgba(255,230,230,0.9), rgba(255,245,245,0.9));
-}
-
-.sidebar-photos {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-
-.no-results {
-  text-align: center;
-  color: #9ca3af;
-  font-size: 14px;
-  padding: 32px 16px;
 }
 </style>

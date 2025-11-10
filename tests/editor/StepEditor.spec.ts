@@ -224,6 +224,41 @@ describe('StepEditor', () => {
 				expect(store.currentStepPages[0].id).toBe(store.currentStepActivePage?.id)
 		})
 
+		it('permet de sélectionner une photo de couverture via la bibliothèque', async () => {
+			vi.useFakeTimers()
+			const wrapper = mount(StepEditor)
+			const store = useEditorStore()
+			const trip = createTrip()
+
+			await store.setTrip(trip)
+			store.setCurrentStep(0)
+			await flushPromises()
+			store.setCurrentStepCoverFormat('text-image')
+			await flushPromises()
+
+			if (store.currentStepPageState?.coverPhotoIndex != null) {
+				store.setCurrentStepCoverPhotoIndex(null)
+				await flushPromises()
+			}
+
+			const firstPhotoIndex = store.currentStepPhotos[0]?.index
+			expect(firstPhotoIndex).not.toBeUndefined()
+
+			const coverButton = wrapper.find('.photo-selection-column [data-test="page-photo-open-1"]')
+			expect(coverButton.exists()).toBe(true)
+			await coverButton.trigger('click')
+			await flushPromises()
+
+			const firstLibraryItem = wrapper.find('.photo-library-popin .library-item')
+			expect(firstLibraryItem.exists()).toBe(true)
+			await firstLibraryItem.trigger('click')
+			vi.runAllTimers()
+			await flushPromises()
+
+			expect(store.currentStepPageState?.coverPhotoIndex).toBe(firstPhotoIndex)
+			expect(wrapper.find('.photo-library-popin').exists()).toBe(false)
+		})
+
 	it('filtre la bibliothèque et importe une nouvelle photo', async () => {
 		vi.useFakeTimers()
 		const wrapper = mount(StepEditor)
