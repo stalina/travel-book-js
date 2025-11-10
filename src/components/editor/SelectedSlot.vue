@@ -1,11 +1,13 @@
 <template>
   <div class="selected-slot">
     <div v-if="photo" class="selected-card">
-      <img :src="photo.url" :alt="photo.name" />
+      <!-- GalleryPhoto uses `objectUrl` for the blob URL and stores the original File in `file` -->
+      <img :src="photo.objectUrl" :alt="photo.file?.name || 'photo'" />
       <span>Slot {{ slotNumber }}</span>
       <div class="actions">
-        <button :data-test="`page-photo-edit-${photo.index}`" @click.prevent="onEdit(photo.index)">✎</button>
-        <button :data-test="`page-photo-toggle-${photo.index}`" @click.prevent="onClear">✕</button>
+        <!-- Use the provided slotIndex for test attributes and emits (photo.index doesn't exist) -->
+        <button :data-test="`page-photo-edit-${slotIndex}`" @click.prevent="onEdit(slotIndex)">✎</button>
+        <button :data-test="`page-photo-toggle-${slotIndex}`" @click.prevent="onClear">✕</button>
       </div>
     </div>
     <div v-else class="selected-card empty">
@@ -18,14 +20,22 @@
 </template>
 
 <script setup lang="ts">
-import type { PropType } from 'vue'
 import type { GalleryPhoto } from '../../models/gallery.types'
 
-const props = defineProps({
-  photo: { type: Object as PropType<GalleryPhoto | null>, default: null },
-  slotIndex: { type: Number, required: true },
-  slotNumber: { type: Number, required: true }
-})
+interface Props {
+  photo: GalleryPhoto | null
+  slotIndex: number
+  slotNumber: number
+}
+
+// Call defineProps without generic and cast to our Props interface to avoid env-specific issues
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const props = defineProps() as any as Props
+
+// expose local bindings for template consumption (helps some TS/SFC toolchains)
+const photo = props.photo
+const slotIndex = props.slotIndex
+const slotNumber = props.slotNumber
 
 const emit = defineEmits(['openLibrary', 'edit', 'clear'])
 
