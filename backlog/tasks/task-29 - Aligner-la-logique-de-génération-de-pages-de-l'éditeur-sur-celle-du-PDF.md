@@ -23,3 +23,13 @@ L'éditeur génère actuellement une page full-page par photo lors du chargement
 - [ ] #2 Les pages proposées dans l'éditeur correspondent exactement à celles du PDF généré
 - [ ] #3 La logique est centralisée pour éviter la duplication de code
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Extraire buildAutomaticPages de StepBuilder vers un utilitaire partagé
+2. Adapter l'utilitaire pour fonctionner avec EditorPhoto au lieu de PhotoWithMeta
+3. Remplacer la logique simple de populateDefaultPagesForStep par l'algorithme automatique
+4. Vérifier que les tests existants passent et en ajouter si nécessaire
+5. Tester avec le voyage Slovénie pour vérifier la correspondance
+<!-- SECTION:PLAN:END -->
