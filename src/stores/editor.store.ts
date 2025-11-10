@@ -630,6 +630,21 @@ export const useEditorStore = defineStore('editor', () => {
 	}
 
 	/**
+	 * Update trip name in a controlled way.
+	 * Centralizes autosave + preview marking behavior when the trip title changes.
+	 */
+	const updateTripName = (name: string): void => {
+		if (!currentTrip.value) return
+		if (currentTrip.value.name === name) return
+		currentTrip.value.name = name
+		triggerAutoSave()
+		markPreviewStale()
+		// regenerate preview for current step if any
+		const step = currentStep.value
+		if (step) schedulePreviewRegeneration(step.id)
+	}
+
+	/**
 	 * Réinitialise une étape à son état original (nom, description, photos, pages, histories)
 	 * Les données originales sont lues depuis window.__parsedTrip si disponible.
 	 */
@@ -982,6 +997,7 @@ export const useEditorStore = defineStore('editor', () => {
 		applyAdjustmentsToCurrentPhoto,
 		getCurrentStepPhotoHistory
 		,resetStep
+		,updateTripName
 		,generateDefaultPagesForStep
 	}
 })

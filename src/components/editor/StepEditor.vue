@@ -9,10 +9,7 @@
     <!-- Editor -->
     <div v-else class="editor">
       <!-- Header -->
-      <div class="editor-header">
-        <StepTitleEditor :model-value="step.name" @update:model-value="updateTitle" />
-        <p class="subtitle">{{ proposalSummary }}</p>
-      </div>
+      <EditorHeader :title="step?.name ?? ''" :subtitle="proposalSummary" @update-title="updateTitle" />
 
       <div class="editor-layout">
         <!-- Content principal -->
@@ -791,100 +788,7 @@ const formatDate = (ts: number | string | Date) => {
   color: #6b7280;
   text-align: center;
 }
-
-.empty-msg {
-  padding: 32px;
-  text-align: center;
-  color: #9ca3af;
-  background: #f9fafb;
-  border: 1px dashed #d1d5db;
-  border-radius: 8px;
-}
-
-/* Preview styles */
-.preview-section {
-  padding: 12px;
-}
-
-/* Photo library popin */
-.modal-overlay.active {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-}
-
-.photo-library-popin {
-  background: white;
-  width: 900px;
-  max-width: calc(100% - 40px);
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 20px 60px rgba(2,6,23,0.2);
-}
-
-.popin-header { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid #eef2f6; }
-.popin-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; padding: 16px; max-height: 60vh; overflow:auto; }
-.lib-photo img { width:100%; height:100%; object-fit:cover; border-radius:8px; }
-.library-item {
-  position: relative;
-  aspect-ratio: 1;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  overflow: hidden;
-  background: white;
-  padding: 0;
-  display: block;
-}
-.library-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.library-item .library-item-index {
-  position: absolute;
-  bottom: 6px;
-  left: 6px;
-  background: rgba(0,0,0,0.6);
-  color: white;
-  font-size: 12px;
-  padding: 2px 6px;
-  border-radius: 6px;
-}
-.btn-close { background:transparent; border:none; font-size:18px; cursor:pointer; }
-
-.preview-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.preview-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.preview-frame {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: white;
-  min-height: 240px;
-  padding: 12px;
-  overflow: auto;
-  width: 100%;
-  display: block;
-}
-
-.preview-loading {
-  padding: 24px;
-  text-align: center;
-  color: #6b7280;
-}
+.empty-msg { padding: 32px; text-align: center; color:#9ca3af; background:#f9fafb; border:1px dashed #d1d5db; border-radius:8px }
 
 .options {
   display: flex;
