@@ -1,11 +1,11 @@
 ---
 id: task-31
 title: Synchroniser les modifications de l'éditeur vers la génération PDF
-status: In Progress
+status: Done
 assignee:
   - '@agent-k'
 created_date: '2025-11-10 11:05'
-updated_date: '2025-11-10 11:07'
+updated_date: '2025-11-10 15:57'
 labels: []
 dependencies: []
 priority: high
@@ -36,3 +36,9 @@ Actuellement, les modifications faites dans l'éditeur (ajout/suppression de pag
 5. Tester en modifiant des pages dans l'éditeur et vérifier le PDF généré
 6. Ajouter des tests unitaires
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Mise à jour automatique lors du passage de version — statut basculé en Done par automatisation.
+<!-- SECTION:NOTES:END -->

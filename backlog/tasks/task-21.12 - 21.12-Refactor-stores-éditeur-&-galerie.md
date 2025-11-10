@@ -1,11 +1,11 @@
 ---
 id: task-21.12
 title: 21.12 - Refactor stores éditeur & galerie
-status: In Progress
+status: Done
 assignee:
   - '@agent-k'
 created_date: '2025-11-07 22:54'
-updated_date: '2025-11-08 13:55'
+updated_date: '2025-11-10 15:57'
 labels: []
 dependencies: []
 parent_task_id: task-21
@@ -34,3 +34,9 @@ Unifier les stores editor/trip/gallery pour partager le state étapes, pages, ph
 3. Adapter les composants/composables (Home, Gallery, Editor, Preview…) pour consommer le nouveau store et supprimer les anciens stores.
 4. Mettre à jour/ajouter les tests Vitest (stores, vues) pour couvrir le flux import → édition → preview et garantir l'absence de régressions.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Mise à jour automatique lors du passage de version — statut basculé en Done par automatisation.
+<!-- SECTION:NOTES:END -->
