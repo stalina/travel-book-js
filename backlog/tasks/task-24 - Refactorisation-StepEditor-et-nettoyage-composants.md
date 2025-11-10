@@ -24,3 +24,14 @@ Nettoyer le code de l'éditeur de step et des composants associés sans changer 
 - [ ] #4 Les commentaires obsolètes ou inutiles sont retirés dans les fichiers modifiés.
 - [ ] #5 Les tests pertinents sont mis à jour si nécessaire et l'application continue de fonctionner.
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Cartographier les composants et services utilisés par StepEditor.vue et ses vues parentes.
+2. Identifier le code mort (composants, services, styles) via recherche et vérifier qu'il n'est pas utilisé.
+3. Extraire ou créer des sous-composants autonomes (template/script/style) pour les sections de StepEditor.
+4. Nettoyer StepEditor.vue en supprimant styles/logic inutiles et en déléguant aux nouveaux composants.
+5. Supprimer les services/composants inutilisés et adapter les imports.
+6. Mettre à jour ou écrire des tests si nécessaire puis exécuter la suite pour valider.
+<!-- SECTION:PLAN:END -->
