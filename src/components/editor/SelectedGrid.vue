@@ -30,6 +30,6 @@ const emit = defineEmits(['open-library', 'edit-photo', 'clear-slot'])
 </script>
 
 <style scoped>
+.section { margin-bottom:24px; background:#fff; border-radius:8px; padding:16px }
 .selected-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap:12px }
-.selected-grid h4 { margin-bottom:12px }
 </style>

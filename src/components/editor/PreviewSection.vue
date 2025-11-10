@@ -33,6 +33,7 @@ const formatDate = (ts: number | string | Date) => {
 </script>
 
 <style scoped>
+.section { margin-bottom:24px; background:#fff; border-radius:8px; padding:16px }
 .preview-section { padding:12px }
 .preview-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px }
 .preview-actions { display:flex; gap:8px }

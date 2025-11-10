@@ -11,3 +11,8 @@ import type { PropType } from 'vue'
 const props = defineProps({ modelValue: { type: String, default: '' } })
 const emit = defineEmits(['update'])
 </script>
+
+<style scoped>
+.section { margin-bottom:24px; background:#fff; border-radius:8px; padding:16px }
+.proposal-description { padding:0 }
+</style>

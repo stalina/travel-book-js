@@ -11,12 +11,12 @@
           <div class="ratio-btns">
             <button v-for="opt in ratioOptions" :key="opt.value" :class="{ active: ratio === opt.value }" @click="$emit('set-ratio', opt.value)">{{ opt.label }}</button>
           </div>
-          <BaseButton variant="outline" size="sm" class="import-btn" @click="$emit('open-upload')">📥 Importer</BaseButton>
+          <BaseButton variant="outline" size="sm" class="import-btn" @click="openUploadDialog">📥 Importer</BaseButton>
           <button class="btn-close" @click="$emit('close')">✕</button>
         </div>
       </div>
 
-      <input ref="uploadInput" type="file" accept="image/*" style="display:none" @change="$emit('upload', $event)" />
+  <input ref="uploadInput" type="file" accept="image/*" style="display:none" @change="$emit('upload', $event)" />
 
       <div style="display:block; padding:12px;">
         <div class="popin-grid">
@@ -31,8 +31,9 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import BaseButton from '../BaseButton.vue'
-import type { PropType, Ref } from 'vue'
+import type { PropType } from 'vue'
 
 const props = defineProps({
   filtered: { type: Array as PropType<any[]>, default: () => [] },
@@ -42,7 +43,13 @@ const props = defineProps({
   ratioOptions: { type: Array as PropType<Array<{ value: string; label: string }>>, default: () => [] }
 })
 
-const emit = defineEmits(['select', 'set-ratio', 'open-upload', 'close', 'upload', 'update:query'])
+const emit = defineEmits(['select', 'set-ratio', 'close', 'upload', 'update:query'])
+
+const uploadInput = ref<HTMLInputElement | null>(null)
+
+const openUploadDialog = () => {
+  uploadInput.value?.click()
+}
 
 const onQueryInput = (event: Event) => {
   const v = (event.target as HTMLInputElement).value
@@ -62,4 +69,16 @@ const onQueryInput = (event: Event) => {
 .ratio-btns { display:flex; gap:4px }
 .ratio-btns button { flex:1; padding:6px 8px; border:1px solid #d1d5db; background:white; border-radius:4px; font-size:11px; cursor:pointer }
 .ratio-btns button.active { background:#dbeafe; border-color:#3b82f6; color:#2563eb }
+.import-btn {
+  border-radius:28px;
+  padding-left:14px;
+  padding-right:14px;
+  color:#ef4444;
+  border-color:rgba(239,68,68,0.22);
+  background:linear-gradient(180deg, rgba(255,245,245,0.6), rgba(255,250,250,0.6));
+  box-shadow:0 6px 18px rgba(239,68,68,0.06);
+}
+.import-btn:hover {
+  background:linear-gradient(180deg, rgba(255,230,230,0.9), rgba(255,245,245,0.9));
+}
 </style>
