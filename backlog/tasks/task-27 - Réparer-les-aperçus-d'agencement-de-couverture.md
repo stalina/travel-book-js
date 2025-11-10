@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-11-10 10:10'
-updated_date: '2025-11-10 10:10'
+updated_date: '2025-11-10 10:11'
 labels: []
 dependencies: []
 ---
@@ -30,3 +30,11 @@ Les aperçus graphiques des options d'agencement de la couverture n'affichent pl
 3. Ajouter un test Vue assurant la présence des placeholders
 4. Lancer les tests ciblés
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+- Ajustement des placeholders dans src/components/editor/CoverLayoutOptions.vue (texte, image, gradients)
+- Ajout du test tests/editor/CoverLayoutOptions.spec.ts garantissant la présence des éléments structuraux
+- Tests Vitest ciblés exécutés : npm test -- CoverLayoutOptions
+<!-- SECTION:NOTES:END -->
