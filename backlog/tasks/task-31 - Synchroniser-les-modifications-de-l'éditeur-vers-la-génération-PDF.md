@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@agent-k'
 created_date: '2025-11-10 11:05'
-updated_date: '2025-11-10 11:06'
+updated_date: '2025-11-10 11:07'
 labels: []
 dependencies: []
 priority: high
@@ -25,3 +25,14 @@ Actuellement, les modifications faites dans l'éditeur (ajout/suppression de pag
 - [ ] #4 La description modifiée dans l'éditeur est utilisée dans le PDF
 - [ ] #5 La photo de couverture choisie dans l'éditeur est utilisée dans le PDF
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Étendre GenerateOptions pour accepter un Map<stepId, StepGenerationPlan>
+2. Modifier useEditorGeneration pour construire ce map depuis editorStore
+3. Adapter generate.service.ts pour fusionner les plans de l'éditeur avec le parsing du fichier texte
+4. Vérifier que StepBuilder reçoit bien le plan de l'éditeur
+5. Tester en modifiant des pages dans l'éditeur et vérifier le PDF généré
+6. Ajouter des tests unitaires
+<!-- SECTION:PLAN:END -->
