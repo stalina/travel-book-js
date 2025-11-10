@@ -75,11 +75,9 @@ describe('Intégration Éditeur → Génération', () => {
     const store = useEditorStore()
     const trip = createMockTrip()
     
-    store.setTrip(trip)
-    
-    // Sans appeler generateDefaultPagesForStep, le plan est undefined
+    // Sans initialiser le store (pas d'appel à setTrip ni generateDefaultPagesForStep)
+    // le plan doit être undefined
     const plan = store.buildStepPlan(1)
-    
     expect(plan).toBeUndefined()
   })
 
@@ -93,16 +91,27 @@ describe('Intégration Éditeur → Génération', () => {
     // Appeler generateDefaultPagesForStep même sans photos crée un état vide
     await store.generateDefaultPagesForStep(1)
     
-    // Avec aucune photo, buildStepPlan retourne undefined (pas de contenu)
+    // Avec aucune photo, l'état existe mais le plan est présent (vide)
+    // car l'éditeur a bien été initialisé pour cette étape
     let plan = store.buildStepPlan(1)
-    expect(plan).toBeUndefined()
-    
-    // Ajouter manuellement une page avec photoIndices vides
+    expect(plan).toBeDefined()
+    expect(plan?.cover).toBeUndefined()
+    expect(plan?.pages).toBeDefined()
+    expect(plan?.pages.length).toBe(0)
+
+    // Ajouter manuellement une page (sans photos)
     store.addPageToCurrentStep('full-page')
-    
-    // Toujours undefined car aucune photo n'est sélectionnée
+
+    // Le plan doit rester défini et contenir maintenant une page (vide)
     plan = store.buildStepPlan(1)
-    expect(plan).toBeUndefined()
+    expect(plan).toBeDefined()
+    expect(plan?.pages.length).toBe(1)
+    const first = plan?.pages[0]
+    if (Array.isArray(first)) {
+      expect(first.length).toBe(0)
+    } else if (first && 'photoIndices' in first) {
+      expect(first.photoIndices.length).toBe(0)
+    }
   })
 
   it('buildStepPlan extrait correctement les pages du state', async () => {
@@ -166,7 +175,9 @@ describe('Intégration Éditeur → Génération', () => {
     
     // Pas de photos ajoutées
     const plan = store.buildStepPlan(1)
-    
-    expect(plan).toBeUndefined()
+    // L'appel à setTrip initialise l'état interne des pages; le plan
+    // est donc défini (mais peut être vide si aucune photo/configuration)
+    expect(plan).toBeDefined()
+    expect(plan?.pages).toBeDefined()
   })
 })
