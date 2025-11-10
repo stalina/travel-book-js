@@ -15,6 +15,7 @@ import type { CropSettings, PhotoAdjustments, PhotoFilterPreset, PhotoOrientatio
 import { DEFAULT_PHOTO_ADJUSTMENTS, DEFAULT_PHOTO_CROP, DEFAULT_PHOTO_FILTER } from '../models/photo.constants'
 import { getLayoutCapacity } from '../models/layout.constants'
 import { clampAdjustment } from '../utils/photo-filters'
+import { generateAutomaticPages } from '../utils/layout-generator'
 
 type BooleanMap = Record<number, boolean | undefined>
 type DateMap = Record<number, Date | undefined>
@@ -439,20 +440,32 @@ export const useEditorStore = defineStore('editor', () => {
 		const step = currentTrip.value?.steps.find((s) => s.id === stepId)
 		const photos = stepPhotosByStep[stepId] ?? []
 
-		// If there are photos, create a single cover page (text + photo).
-		// The cover uses state.coverPhotoIndex to reference the photo and
-		// does not place the photo in the page's photoIndices so that only
-		// the cover photo is modifiable via the cover control.
+		// If there are photos, use the automatic layout generation
 		if (photos.length > 0) {
-			const coverPage: EditorStepPage = { id: createPageId(stepId), layout: 'full-page', photoIndices: [] }
+			// Sélectionner la photo de couverture (première photo par défaut)
+			const coverPhotoIndex = photos[0].index
+			state.coverPhotoIndex = coverPhotoIndex
+			state.coverFormat = 'text-image'
+			
+			// Créer la page de couverture (vide car la photo de couverture est gérée par coverPhotoIndex)
+			const coverPage: EditorStepPage = { 
+				id: createPageId(stepId), 
+				layout: 'full-page', 
+				photoIndices: [] 
+			}
 			state.pages.push(coverPage)
 			state.activePageId = coverPage.id
-			state.coverPhotoIndex = photos[0].index
-			// default cover format: text + image when we have at least one photo
-			state.coverFormat = 'text-image'
-			// For each remaining photo, create a dedicated full-page with that photo selected
-			for (let i = 1; i < photos.length; i++) {
-				const page: EditorStepPage = { id: createPageId(stepId), layout: 'full-page', photoIndices: [photos[i].index] }
+			
+			// Générer automatiquement les pages selon la logique du PDF
+			const generatedPages = generateAutomaticPages(photos, coverPhotoIndex)
+			
+			// Ajouter toutes les pages générées
+			for (const generatedPage of generatedPages) {
+				const page: EditorStepPage = {
+					id: createPageId(stepId),
+					layout: generatedPage.layout,
+					photoIndices: generatedPage.photoIndices
+				}
 				state.pages.push(page)
 			}
 		}
