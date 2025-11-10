@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-11-10 09:14'
-updated_date: '2025-11-10 09:40'
+updated_date: '2025-11-10 09:47'
 labels: []
 dependencies: []
 ---
@@ -35,3 +35,13 @@ Nettoyer le code de l'éditeur de step et des composants associés sans changer 
 5. Supprimer les services/composants inutilisés et adapter les imports.
 6. Mettre à jour ou écrire des tests si nécessaire puis exécuter la suite pour valider.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+- Refactor StepEditor pour déléguer la configuration de couverture aux sous-composants et alléger le template.
+- Migration des styles HTML/CSS vers LayoutOptions, PagesStrip, SelectedGrid, CoverPhotoSelector, DescriptionEditor, PreviewSection et PhotoLibraryPopin pour rendre chaque bloc autonome.
+- Suppression des artefacts inutilisés (PreviewActions.vue, photo-metadata.service.ts) et création de CoverLayoutOptions.vue.
+- Ajustement du PhotoLibraryPopin pour piloter son import et nettoyage des commentaires obsolètes.
+- Typecheck + npm test: ok.
+<!-- SECTION:NOTES:END -->
