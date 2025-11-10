@@ -1,7 +1,7 @@
 ---
 id: task-32
 title: Release v0.1.0
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-11-10 13:51'
 updated_date: '2025-11-10 13:52'
