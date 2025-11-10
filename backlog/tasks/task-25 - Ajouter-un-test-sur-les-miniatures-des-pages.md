@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@copilot'
 created_date: '2025-11-10 10:02'
-updated_date: '2025-11-10 10:02'
+updated_date: '2025-11-10 10:03'
 labels: []
 dependencies: []
 ---
@@ -21,3 +21,11 @@ Un test de régression doit garantir que les miniatures du bandeau pages affiche
 - [ ] #1 Le test échoue si les classes mini-layout sont absentes
 - [ ] #2 Le test couvre le cas couverture et layout classique
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Analyser PagesStrip.vue et ses tests existants
+2. Ajouter un TU vérifiant la présence des classes miniatures pour la couverture et une page classique
+3. Lancer npm test ciblé pour valider la régression
+<!-- SECTION:PLAN:END -->
