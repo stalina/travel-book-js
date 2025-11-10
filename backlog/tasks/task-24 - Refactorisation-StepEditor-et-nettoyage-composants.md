@@ -1,9 +1,11 @@
 ---
 id: task-24
 title: Refactorisation StepEditor et nettoyage composants
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot'
 created_date: '2025-11-10 09:14'
+updated_date: '2025-11-10 09:15'
 labels: []
 dependencies: []
 ---
