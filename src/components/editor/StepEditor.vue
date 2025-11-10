@@ -17,249 +17,101 @@
       <div class="editor-layout">
         <!-- Content principal -->
         <div class="editor-content">
-          <!-- Pages -->
-          <section class="section">
-            <div class="section-head">
-              <h3>Pages & mise en page</h3>
-              <div class="controls">
-                <button class="nav-btn" :disabled="!canMoveLeft" @click="movePage(-1)" data-test="move-page-left">◀</button>
-                <button class="nav-btn" :disabled="!canMoveRight" @click="movePage(1)" data-test="move-page-right">▶</button>
-                <BaseButton variant="primary" size="sm" data-test="add-page" @click="addPage">Ajouter</BaseButton>
-                <BaseButton variant="secondary" size="sm" @click="generateDefaultPages">Générer par défaut</BaseButton>
-                <BaseButton variant="ghost" size="sm" :disabled="!activePage" @click="removeActivePage">Supprimer</BaseButton>
-              </div>
-            </div>
-
-            <div v-if="pages.length" class="pages-strip">
-              <button
-                v-for="(pageItem, idx) in pages"
-                :key="pageItem.id"
-                class="page-thumb"
-                :class="{ active: pageItem.id === activePageId }"
-                @click="selectPage(pageItem.id)"
-                :data-test="`page-chip-${idx + 1}`"
-              >
-                <div class="thumb-preview">
-                  <div v-if="idx === 0" class="thumb-cover">
-                    <!-- Render a miniature of the cover matching coverFormat -->
-                    <div v-if="coverFormat === 'text-image'" class="mini-cover layout-preview cover-preview text-image" aria-hidden="true">
-                      <div class="cover-text-block">
-                        <div class="title-line small"></div>
-                        <div class="subtitle-line xsmall"></div>
-                      </div>
-                      <div class="cover-thumb small-thumb"><div class="img-placeholder"></div></div>
-                    </div>
-                    <div v-else class="mini-cover layout-preview cover-preview text-only" aria-hidden="true">
-                      <div class="cover-text-large">
-                        <div class="title-line medium"></div>
-                        <div class="subtitle-line small"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div v-else class="thumb-grid">
-                    <div class="mini-layout" aria-hidden="true">
-                      <div :class="['layout-preview', previewClassFor[pageItem.layout]]">
-                        <template v-if="pageItem.layout === 'grid-2x2'">
-                          <span class="layout-block"></span>
-                          <span class="layout-block"></span>
-                          <span class="layout-block"></span>
-                          <span class="layout-block"></span>
-                        </template>
-                        <template v-else-if="pageItem.layout === 'hero-plus-2'">
-                          <span class="layout-block" style="grid-row: 1 / 3;"></span>
-                          <span class="layout-block"></span>
-                          <span class="layout-block"></span>
-                        </template>
-                        <template v-else-if="pageItem.layout === 'three-columns'">
-                          <span class="layout-block"></span>
-                          <span class="layout-block"></span>
-                          <span class="layout-block"></span>
-                        </template>
-                        <template v-else>
-                          <span class="layout-block"></span>
-                        </template>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <span class="label">{{ idx === 0 ? 'Couverture' : `Page ${idx + 1}` }}</span>
-              </button>
-            </div>
-            <div v-else class="empty-msg">Aucune page. Cliquez sur "Générer par défaut".</div>
-          </section>
+          <!-- Pages strip component -->
+          <PagesStrip
+            :pages="pages"
+            :activePageId="activePageId"
+            :coverFormat="coverFormat"
+            :previewClassFor="previewClassFor"
+            :canMoveLeft="canMoveLeft"
+            :canMoveRight="canMoveRight"
+            :hasActive="!!activePage"
+            @move-page="movePage"
+            @add-page="addPage"
+            @generate-default-pages="generateDefaultPages"
+            @remove-active-page="removeActivePage"
+            @select-page="selectPage"
+          />
 
           <!-- Config page -->
           <section v-if="activePage" class="section">
             <h4>{{ isActivePageCover ? 'Agencement de la couverture' : 'Mise en page' }}</h4>
             
-            <!-- Cover format -->
-            <div v-if="isActivePageCover" class="options layout-options-row">
-              <div class="layout-option-grid">
-                <button
-                  type="button"
-                  class="layout-option-button"
-                  :class="{ active: coverFormat === 'text-image' }"
-                  @click="setCoverFormat('text-image')"
-                  data-test="cover-text-image"
-                >
-                  <div class="layout-preview cover-preview text-image" aria-hidden="true">
-                    <div class="cover-text-block">
-                      <div class="title-line"></div>
-                      <div class="subtitle-line"></div>
-                    </div>
-                    <div class="cover-thumb"><div class="img-placeholder"></div></div>
-                  </div>
-                  <div class="layout-option-content">
-                    <span class="layout-option-label">Texte + Image</span>
-                    <span class="layout-option-description">Texte à gauche, image à droite</span>
-                  </div>
-                </button>
+            <!-- Layout options (cover or page) -->
+            <LayoutOptions
+              v-if="isActivePageCover"
+              :title="'Agencement de la couverture'"
+              :options="[
+                { value: 'text-image', label: 'Texte + Image' },
+                { value: 'text-only', label: 'Texte pleine page' }
+              ]"
+              :active="coverFormat"
+              :previewClassFor="previewClassFor"
+              :descriptions="{ 'text-image': 'Texte à gauche, image à droite', 'text-only': 'Texte occupant toute la largeur' }"
+              @select="(val) => setCoverFormat(val === 'text-image' ? 'text-image' : 'text-only')"
+            />
 
-                <button
-                  type="button"
-                  class="layout-option-button"
-                  :class="{ active: coverFormat === 'text-only' }"
-                  @click="setCoverFormat('text-only')"
-                  data-test="cover-text-only"
-                >
-                  <div class="layout-preview cover-preview text-only" aria-hidden="true">
-                    <div class="cover-text-large">
-                      <div class="title-line large"></div>
-                      <div class="subtitle-line small"></div>
-                    </div>
-                  </div>
-                  <div class="layout-option-content">
-                    <span class="layout-option-label">Texte pleine page</span>
-                    <span class="layout-option-description">Texte occupant toute la largeur</span>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            <!-- Photo layout -->
-            <div v-else class="options layout-options-row">
-              <div class="layout-option-grid">
-                <button
-                  v-for="opt in layoutOptions"
-                  :key="opt.value"
-                  type="button"
-                  class="layout-option-button"
-                  :class="{ active: opt.value === activeLayout }"
-                  @click="selectLayout(opt.value)"
-                  :data-test="`layout-option-${opt.value}`"
-                >
-                  <div :class="['layout-preview', previewClassFor[opt.value]]" aria-hidden="true">
-                    <template v-if="opt.value === 'grid-2x2'">
-                      <span class="layout-block"></span>
-                      <span class="layout-block"></span>
-                      <span class="layout-block"></span>
-                      <span class="layout-block"></span>
-                    </template>
-                    <template v-else-if="opt.value === 'hero-plus-2'">
-                      <span class="layout-block" style="grid-row: 1 / 3;"></span>
-                      <span class="layout-block"></span>
-                      <span class="layout-block"></span>
-                    </template>
-                    <template v-else-if="opt.value === 'three-columns'">
-                      <span class="layout-block"></span>
-                      <span class="layout-block"></span>
-                      <span class="layout-block"></span>
-                    </template>
-                    <template v-else>
-                      <span class="layout-block"></span>
-                    </template>
-                  </div>
-                  <div class="layout-option-content">
-                    <span class="layout-option-label">{{ opt.label }}</span>
-                    <span class="layout-option-description">
-                      {{ opt.value === 'grid-2x2' ? "Jusqu’à 4 photos en grille équilibrée" : opt.value === 'hero-plus-2' ? "Une photo principale et jusqu’à 2 secondaires" : opt.value === 'three-columns' ? "Trois portraits alignés verticalement" : "Une photo immersive occupant toute la page" }}
-                    </span>
-                  </div>
-                </button>
-              </div>
-            </div>
+            <LayoutOptions
+              v-else
+              :title="'Mise en page'"
+              :options="layoutOptions"
+              :active="activeLayout"
+              :previewClassFor="previewClassFor"
+              :descriptions="{
+                'grid-2x2': 'Jusqu\u2019à 4 photos en grille équilibrée',
+                'hero-plus-2': 'Une photo principale et jusqu\u2019à 2 secondaires',
+                'three-columns': 'Trois portraits alignés verticalement',
+                'full-page': 'Une photo immersive occupant toute la page'
+              }"
+              @select="selectLayout"
+            />
           </section>
 
           <!-- Proposal (description + preview) -->
-          <div class="proposal-section">
-            <div class="proposal-meta" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-              <div></div>
-              <BaseButton variant="ghost" size="sm" data-test="proposal-reset" @click="confirmResetOpen = true">Réinitialiser</BaseButton>
-            </div>
-
-            <!-- Conditional layout rules:
-                 - Cover + text-image: show description + cover-photo selector side-by-side
-                 - Cover + text-only: show description only
-                 - Non-cover page: show photo selection only
-            -->
-            <div>
-              <!-- Case: cover page -->
-              <template v-if="isActivePageCover">
-                <template v-if="coverFormat === 'text-image'">
-                  <div class="two-column-layout">
-                    <section class="section proposal-description">
-                      <RichTextEditor :model-value="step?.description ?? ''" @update:model-value="updateDescription" />
-                    </section>
-
-                    <!-- Cover photo selector uses SelectedSlot component -->
-                    <section class="section photo-selection-column">
-                      <h4>Photo de couverture</h4>
-                      <SelectedSlot
+          <!-- Proposal, selected slots and preview — componentized -->
+          <ProposalSection @reset="confirmResetOpen = true">
+            <template #body>
+              <div>
+                <template v-if="isActivePageCover">
+                  <template v-if="coverFormat === 'text-image'">
+                    <div class="two-column-layout">
+                      <DescriptionEditor :modelValue="step?.description ?? ''" @update="updateDescription" />
+                      <CoverPhotoSelector
                         :photo="coverPhoto"
-                        :slotIndex="0"
-                        :slotNumber="1"
-                        @openLibrary="openLibraryForSlot"
+                        @open-library="openLibraryForSlot"
                         @edit="openPhotoEditor"
                         @clear="clearCover"
                       />
-                    </section>
-                  </div>
+                    </div>
+                  </template>
+
+                  <template v-else>
+                    <DescriptionEditor :modelValue="step?.description ?? ''" @update="updateDescription" />
+                  </template>
                 </template>
 
                 <template v-else>
-                  <!-- coverFormat === 'text-only' -> description only -->
-                  <section class="section proposal-description">
-                    <RichTextEditor :model-value="step?.description ?? ''" @update:model-value="updateDescription" />
-                  </section>
+                  <SelectedGrid
+                    v-if="activePage"
+                    :slots="pageSlots"
+                    :selectedCount="selectedPhotoIndices.length"
+                    :capacity="layoutCapacity"
+                    @open-library="openLibraryForSlot"
+                    @edit-photo="openPhotoEditor"
+                    @clear-slot="clearSlot"
+                  />
                 </template>
-              </template>
-
-              <!-- Case: non-cover page -> show page photo selection full width -->
-              <template v-else>
-                <section v-if="activePage" class="section">
-                  <h4>Sélection ({{ selectedPhotoIndices.length }} / {{ layoutCapacity }})</h4>
-                  <div class="selected-grid">
-                    <SelectedSlot
-                      v-for="(slot, i) in pageSlots"
-                      :key="i"
-                      :photo="slot"
-                      :slotIndex="i"
-                      :slotNumber="i + 1"
-                      @openLibrary="openLibraryForSlot"
-                      @edit="openPhotoEditor"
-                      @clear="clearSlot"
-                    />
-                  </div>
-                </section>
-              </template>
-            </div>
-
-            <!-- Aperçu (preview) -->
-            <section class="section preview-section">
-              <div class="preview-head">
-                <h4>Aperçu à l'impression</h4>
-                <div class="preview-actions">
-                  <BaseButton size="sm" variant="ghost" data-test="preview-refresh" @click="refreshPreview">Rafraîchir</BaseButton>
-                  <BaseButton size="sm" variant="secondary" @click="printPreview" :disabled="!previewHtml">Imprimer</BaseButton>
-                </div>
               </div>
 
-              <div v-if="isPreviewLoading" class="preview-loading">Génération en cours…</div>
-              <iframe v-else class="preview-frame" :srcdoc="previewHtml"></iframe>
-
-              <div class="preview-updated" v-if="previewUpdatedAt != null">Mis à jour: {{ formatDate(previewUpdatedAt) }}</div>
-            </section>
-          </div>
+              <PreviewSection
+                :previewHtml="previewHtml"
+                :isLoading="isPreviewLoading"
+                :previewUpdatedAt="previewUpdatedAt"
+                @refresh="refreshPreview"
+                @print="printPreview"
+              />
+            </template>
+          </ProposalSection>
 
           <!-- Cover photo selection removed (now handled in the two-column layout using slot/popin) -->
 
@@ -279,35 +131,20 @@
       @close="closePhotoEditor"
     />
 
-    <!-- Photo library popin (used to pick a photo for a slot) -->
-    <div v-if="libraryPopinOpen" class="modal-overlay active">
-      <div class="photo-library-popin">
-        <div class="popin-header">
-          <div style="display:flex; gap:12px; align-items:center;">
-            <h3 style="margin:0;">Bibliothèque de l'étape</h3>
-            <span class="muted">{{ filteredPhotos.length }} / {{ libraryPhotos.length }}</span>
-          </div>
-          <div style="display:flex; gap:8px; align-items:center;">
-            <input v-model="photoSearch" class="library-search" type="search" placeholder="Rechercher..." style="padding:6px 8px; border:1px solid #d1d5db; border-radius:6px;" />
-            <div class="ratio-btns">
-              <button v-for="opt in ratioOptions" :key="opt.value" :class="{ active: photoRatio === opt.value }" @click="setRatio(opt.value)">{{ opt.label }}</button>
-            </div>
-            <BaseButton variant="outline" size="sm" class="import-btn" @click="openUploadDialog">📥 Importer</BaseButton>
-            <button class="btn-close" @click="closeLibrary">✕</button>
-          </div>
-        </div>
-        <!-- hidden upload input triggered by the Importer button -->
-        <input ref="uploadInput" type="file" accept="image/*" style="display:none" @change="handleUpload" />
-        <div style="display:block; padding:12px;">
-          <div class="popin-grid">
-            <button v-for="photo in filteredPhotos" :key="photo.id" class="library-item" @click="selectPhotoForSlot(photo.index)">
-              <img :src="photo.url" :alt="photo.name" />
-              <div class="library-item-index">#{{ photo.index }}</div>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Photo library popin (component) -->
+    <PhotoLibraryPopin
+      v-if="libraryPopinOpen"
+      :filtered="filteredPhotos"
+      :total="libraryPhotos.length"
+      v-model:query="photoSearch"
+      :ratio="photoRatio"
+      :ratioOptions="ratioOptions"
+      @select="selectPhotoForSlot"
+      @set-ratio="setRatio"
+      @open-upload="openUploadDialog"
+      @close="closeLibrary"
+      @upload="handleUpload"
+    />
 
     <ConfirmDialog
       :model-value="confirmResetOpen"
@@ -330,6 +167,14 @@ import { buildCssFilter } from '../../utils/photo-filters'
 import BaseButton from '../BaseButton.vue'
 import ConfirmDialog from '../ui/ConfirmDialog.vue'
 import SelectedSlot from './SelectedSlot.vue'
+import PagesStrip from './PagesStrip.vue'
+import LayoutOptions from './LayoutOptions.vue'
+import PhotoLibraryPopin from './PhotoLibraryPopin.vue'
+import ProposalSection from './ProposalSection.vue'
+import SelectedGrid from './SelectedGrid.vue'
+import PreviewSection from './PreviewSection.vue'
+import DescriptionEditor from './DescriptionEditor.vue'
+import CoverPhotoSelector from './CoverPhotoSelector.vue'
 
 const layoutOptions: Array<{ value: StepPageLayout; label: string }> = [
   { value: 'grid-2x2', label: 'Grille 2×2' },
@@ -713,7 +558,7 @@ const formatDate = (ts: number | string | Date) => {
 }
 </script>
 
-<style scoped>
+<style>
 .step-editor {
   height: 100%;
   background: #f9fafb;
