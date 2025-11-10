@@ -1,9 +1,11 @@
 ---
 id: task-28
 title: Corriger la sélection de photo de couverture
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot'
 created_date: '2025-11-10 10:17'
+updated_date: '2025-11-10 10:17'
 labels: []
 dependencies: []
 ---
