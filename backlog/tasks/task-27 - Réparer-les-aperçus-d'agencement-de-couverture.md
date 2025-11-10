@@ -1,9 +1,11 @@
 ---
 id: task-27
 title: Réparer les aperçus d'agencement de couverture
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@copilot'
 created_date: '2025-11-10 10:10'
+updated_date: '2025-11-10 10:10'
 labels: []
 dependencies: []
 ---
