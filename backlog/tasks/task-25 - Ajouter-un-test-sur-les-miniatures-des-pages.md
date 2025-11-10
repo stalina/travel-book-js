@@ -29,3 +29,11 @@ Un test de régression doit garantir que les miniatures du bandeau pages affiche
 2. Ajouter un TU vérifiant la présence des classes miniatures pour la couverture et une page classique
 3. Lancer npm test ciblé pour valider la régression
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+- Ajout d'un test de régression dans tests/editor/PagesStrip.spec.ts
+- Vérifie la présence des structures de miniatures pour la couverture et une page classique
+- Tests Vitest ciblés exécutés avec npm test -- PagesStrip
+<!-- SECTION:NOTES:END -->
