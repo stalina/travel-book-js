@@ -1,9 +1,11 @@
 ---
 id: task-29
 title: Aligner la logique de génération de pages de l'éditeur sur celle du PDF
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@agent-k'
 created_date: '2025-11-10 10:44'
+updated_date: '2025-11-10 10:44'
 labels: []
 dependencies: []
 priority: high
