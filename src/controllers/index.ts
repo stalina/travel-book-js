@@ -5,4 +5,4 @@
  * d'interaction avec les services pour les composants Vue.
  */
 
-export { ViewerController, viewerController } from './ViewerController'
+// ViewerController removed - viewer operations are handled inline in editor composable

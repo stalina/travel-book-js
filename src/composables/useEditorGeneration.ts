@@ -1,7 +1,6 @@
 import { useTripStore } from '../stores/trip.store'
 import { useEditorStore } from '../stores/editor.store'
 import { artifactGenerator, type GenerateOptions, type GeneratedArtifacts } from '../services/generate.service'
-import { viewerController } from '../controllers/ViewerController'
 import type { StepGenerationPlan } from '../models/editor.types'
 
 // Module-level lock to prevent concurrent preview generations
@@ -86,7 +85,11 @@ export function useEditorGeneration() {
   const openPreviewInViewer = async (): Promise<void> => {
     const artifacts = await previewTravelBook()
     if (!artifacts) return
-    await viewerController.openInNewTab(artifacts)
+    // Build a single-file HTML blob and open in new tab
+    const blob = await artifactGenerator.buildSingleFileHtml(artifacts)
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener,noreferrer')
+    // Note: we intentionally do not revoke immediately to avoid invalidating the opened tab
   }
 
   const exportTravelBook = async (): Promise<void> => {
@@ -114,7 +117,16 @@ export function useEditorGeneration() {
         .replace(/-+/g, '-')
         .toLowerCase()
 
-      await viewerController.download(artifacts, `${normalizedName || 'travel_book'}.html`)
+  // Build blob and trigger download
+  const blob = await artifactGenerator.buildSingleFileHtml(artifacts)
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${normalizedName || 'travel_book'}.html`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
     } catch (error) {
       setError(error)
     } finally {
