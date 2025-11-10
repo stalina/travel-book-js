@@ -151,10 +151,15 @@ export class StepBuilder {
         .map((idx) => photoByIndex.get(idx) ?? null)
         .filter((photo): photo is PhotoWithMeta => !!photo && (coverIndex == null || photo.index !== coverIndex))
 
-      pages.push({
-        layout: entry.layout,
-        photos
-      })
+      // ✅ Ne pas ajouter les pages vides : si l'utilisateur supprime toutes les photos d'une page,
+      // on ne veut pas générer une page vide avec un message "Ajoutez des photos"
+      // Si l'utilisateur veut vraiment une page vide, il doit laisser au moins une photo
+      if (photos.length > 0) {
+        pages.push({
+          layout: entry.layout,
+          photos
+        })
+      }
     }
 
     return pages

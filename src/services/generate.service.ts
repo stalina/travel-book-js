@@ -14,6 +14,7 @@ export type GeneratedArtifacts = {
 
 export type GenerateOptions = {
   photosPlan?: string // contenu texte de photos_by_pages.txt permettant d'écraser la pagination auto
+  stepPlans?: Record<number, StepGenerationPlan> // plans d'étapes depuis l'éditeur (prioritaire sur photosPlan)
 }
 
 type StepPlan = StepGenerationPlan
@@ -70,7 +71,8 @@ export class ArtifactGenerator {
 
     // 6. Construire le HTML
     const headHtml = await this.buildHtmlHead()
-    const planByStep = this.parseUserPlan(userPlanText)
+    // Fusionner les plans: stepPlans de l'éditeur prioritaire sur le parsing du fichier texte
+    const planByStep = options?.stepPlans ?? this.parseUserPlan(userPlanText)
     const bodyHtml = await this.buildHtmlBody(trip, photosMapping, photoDataUrlMap, planByStep)
 
     const html = `<!DOCTYPE html>

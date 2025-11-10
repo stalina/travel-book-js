@@ -484,7 +484,10 @@ export const useEditorStore = defineStore('editor', () => {
 
 	const buildStepPlan = (stepId: number): StepGenerationPlan | undefined => {
 		const state = stepPageStates[stepId]
+		// Si l'éditeur n'a pas encore été initialisé pour cette étape, on retourne undefined
+		// pour laisser la génération automatique faire son travail
 		if (!state) return undefined
+		
 		const cover = Number.isInteger(state.coverPhotoIndex ?? NaN)
 			? (state.coverPhotoIndex as number)
 			: undefined
@@ -492,10 +495,11 @@ export const useEditorStore = defineStore('editor', () => {
 			layout: page.layout,
 			photoIndices: Array.from(new Set(page.photoIndices.filter((index) => Number.isInteger(index))))
 		}))
-		const hasContent = (cover != null && Number.isInteger(cover)) || pages.some((entry) => entry.photoIndices.length > 0)
-		if (!hasContent) {
-			return undefined
-		}
+		
+		// ✅ IMPORTANT: On retourne TOUJOURS un plan si l'éditeur a été initialisé,
+		// même si les pages sont vides. Cela permet de refléter fidèlement l'état de l'éditeur.
+		// Par exemple: si l'utilisateur supprime toutes les pages, on veut un plan vide,
+		// pas un retour à la génération automatique.
 		return { cover, pages }
 	}
 
@@ -1008,9 +1012,10 @@ export const useEditorStore = defineStore('editor', () => {
 		setCurrentStepCoverFormat,
 		addPhotoToCurrentStep,
 		applyAdjustmentsToCurrentPhoto,
-		getCurrentStepPhotoHistory
-		,resetStep
-		,updateTripName
-		,generateDefaultPagesForStep
+		getCurrentStepPhotoHistory,
+		resetStep,
+		updateTripName,
+		generateDefaultPagesForStep,
+		buildStepPlan
 	}
 })

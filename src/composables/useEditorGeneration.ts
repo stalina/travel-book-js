@@ -2,6 +2,7 @@ import { useTripStore } from '../stores/trip.store'
 import { useEditorStore } from '../stores/editor.store'
 import { artifactGenerator, type GenerateOptions, type GeneratedArtifacts } from '../services/generate.service'
 import { viewerController } from '../controllers/ViewerController'
+import type { StepGenerationPlan } from '../models/editor.types'
 
 // Module-level lock to prevent concurrent preview generations
 let previewLock = false
@@ -16,6 +17,25 @@ export function useEditorGeneration() {
 
   const buildOptions = (): GenerateOptions | undefined => {
     const planText = tripStore.photosPlanText?.trim()
+    
+    // Construire les plans d'étapes depuis l'éditeur
+    const stepPlans: Record<number, StepGenerationPlan> = {}
+    const trip = editorStore.currentTrip
+    if (trip?.steps) {
+      for (const step of trip.steps) {
+        const plan = editorStore.buildStepPlan(step.id)
+        if (plan) {
+          stepPlans[step.id] = plan
+        }
+      }
+    }
+    
+    // Si on a des plans d'étapes de l'éditeur, on les utilise
+    if (Object.keys(stepPlans).length > 0) {
+      return { stepPlans }
+    }
+    
+    // Sinon, fallback sur le planText
     return planText ? { photosPlan: planText } : undefined
   }
 
