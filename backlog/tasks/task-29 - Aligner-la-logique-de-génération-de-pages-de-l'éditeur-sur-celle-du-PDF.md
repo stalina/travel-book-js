@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@agent-k'
 created_date: '2025-11-10 10:44'
-updated_date: '2025-11-10 10:44'
+updated_date: '2025-11-10 10:48'
 labels: []
 dependencies: []
 priority: high
@@ -19,9 +19,9 @@ L'éditeur génère actuellement une page full-page par photo lors du chargement
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 L'éditeur utilise la même logique buildAutomaticPages que StepBuilder
-- [ ] #2 Les pages proposées dans l'éditeur correspondent exactement à celles du PDF généré
-- [ ] #3 La logique est centralisée pour éviter la duplication de code
+- [x] #1 L'éditeur utilise la même logique buildAutomaticPages que StepBuilder
+- [x] #2 Les pages proposées dans l'éditeur correspondent exactement à celles du PDF généré
+- [x] #3 La logique est centralisée pour éviter la duplication de code
 <!-- AC:END -->
 
 ## Implementation Plan
