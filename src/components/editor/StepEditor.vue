@@ -9,8 +9,11 @@
     <!-- Editor -->
     <div v-else class="editor">
       <!-- Header -->
-      <EditorHeader :title="step?.name ?? ''" :subtitle="proposalSummary" @update-title="updateTitle" />
-
+      <div class="editor-header">
+        <StepTitleEditor :model-value="step.name" @update:model-value="updateTitle" />
+        <p class="subtitle">{{ proposalSummary }}</p>
+      </div>
+      
       <div class="editor-layout">
         <!-- Content principal -->
         <div class="editor-content">
@@ -172,7 +175,6 @@ import SelectedGrid from './SelectedGrid.vue'
 import PreviewSection from './PreviewSection.vue'
 import DescriptionEditor from './DescriptionEditor.vue'
 import CoverPhotoSelector from './CoverPhotoSelector.vue'
-
 const layoutOptions: Array<{ value: StepPageLayout; label: string }> = [
   { value: 'grid-2x2', label: 'Grille 2×2' },
   { value: 'hero-plus-2', label: 'Héro + 2' },
