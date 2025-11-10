@@ -1,7 +1,7 @@
 ---
 id: task-25
 title: Ajouter un test sur les miniatures des pages
-status: In Progress
+status: Done
 assignee:
   - '@copilot'
 created_date: '2025-11-10 10:02'
