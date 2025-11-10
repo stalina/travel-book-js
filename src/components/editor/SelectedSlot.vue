@@ -1,13 +1,11 @@
 <template>
   <div class="selected-slot">
     <div v-if="photo" class="selected-card">
-      <!-- GalleryPhoto uses `objectUrl` for the blob URL and stores the original File in `file` -->
-      <img :src="photo.objectUrl" :alt="photo.file?.name || 'photo'" />
+      <img :src="photoSrc" :alt="photoAlt" />
       <span>Slot {{ slotNumber }}</span>
       <div class="actions">
-        <!-- Use the provided slotIndex for test attributes and emits (photo.index doesn't exist) -->
-        <button :data-test="`page-photo-edit-${slotIndex}`" @click.prevent="onEdit(slotIndex)">✎</button>
-        <button :data-test="`page-photo-toggle-${slotIndex}`" @click.prevent="onClear">✕</button>
+        <button :data-test="`page-photo-edit-${photoIndex}`" @click.prevent="onEdit(photoIndex)">✎</button>
+        <button :data-test="`page-photo-toggle-${photoIndex}`" @click.prevent="onClear">✕</button>
       </div>
     </div>
     <div v-else class="selected-card empty">
@@ -20,30 +18,39 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import type { PropType } from 'vue'
 import type { GalleryPhoto } from '../../models/gallery.types'
+import type { EditorStepPhoto } from '../../models/editor.types'
 
-interface Props {
-  photo: GalleryPhoto | null
-  slotIndex: number
-  slotNumber: number
-}
-
-// Call defineProps without generic and cast to our Props interface to avoid env-specific issues
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const props = defineProps() as any as Props
-
-// expose local bindings for template consumption (helps some TS/SFC toolchains)
-const photo = props.photo
-const slotIndex = props.slotIndex
-const slotNumber = props.slotNumber
+const props = defineProps({
+  photo: { type: Object as PropType<EditorStepPhoto | GalleryPhoto | null>, default: null },
+  slotIndex: { type: Number, required: true },
+  slotNumber: { type: Number, required: true }
+})
 
 const emit = defineEmits(['openLibrary', 'edit', 'clear'])
 
+// Compute template-friendly values to avoid using TS casts in the template
+const photoSrc = computed(() => {
+  if (!props.photo) return ''
+  // EditorStepPhoto uses `url`, GalleryPhoto uses `objectUrl`
+  return (props.photo as any).url ?? (props.photo as any).objectUrl ?? ''
+})
+
+const photoAlt = computed(() => {
+  if (!props.photo) return ''
+  return (props.photo as any).name ?? props.photo.file?.name ?? (props.photo as any).stepName ?? props.photo.id ?? ''
+})
+
+const photoIndex = computed(() => {
+  return ((props.photo as any)?.index ?? props.slotIndex) as number
+})
+
 const onOpenLibrary = () => emit('openLibrary', props.slotIndex)
-const onEdit = (photoIndex: number) => emit('edit', photoIndex)
+const onEdit = (index: number) => emit('edit', index)
 const onClear = () => emit('clear', props.slotIndex)
 
-// note: keep as <script setup> SFC; no explicit default export
 </script>
 
 <style scoped>
