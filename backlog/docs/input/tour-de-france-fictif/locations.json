@@ -1,0 +1,17 @@
+{
+  "countries": [
+    { "code": "FR", "name": "France", "language": "fr" }
+  ],
+  "places": {
+    "paris": { "name": "Paris", "country": "FR" },
+    "rouen": { "name": "Rouen", "country": "FR" },
+    "le-havre": { "name": "Le Havre", "country": "FR" },
+    "caen": { "name": "Caen", "country": "FR" },
+    "roubaix": { "name": "Roubaix", "country": "FR" },
+    "reims": { "name": "Reims", "country": "FR" },
+    "lyon": { "name": "Lyon", "country": "FR" },
+    "grenoble": { "name": "Grenoble", "country": "FR" },
+    "nice": { "name": "Nice", "country": "FR" },
+    "marseille": { "name": "Marseille", "country": "FR" }
+  }
+}
