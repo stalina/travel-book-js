@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Éditeur - Travel Book</title>
+  <link rel="stylesheet" href="design-system.css">
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    .editor-layout {
+      display: grid;
+      grid-template-areas: 
+        "header header header"
+        "sidebar main preview";
+      grid-template-columns: 280px 1fr 400px;
+      grid-template-rows: 60px 1fr;
+      height: 100vh;
+      background: var(--color-background);
+    }
+
+    /* Header */
+    .editor-header {
+      grid-area: header;
+      background: white;
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--spacing-lg);
+      box-shadow: var(--shadow-sm);
+      z-index: var(--z-sticky);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-lg);
+    }
+
+    .logo {
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .project-title {
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text-primary);
+      padding: var(--spacing-xs) var(--spacing-md);
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .project-title:hover {
+      border-color: var(--color-border);
+      background: var(--color-background);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+
+    .save-status {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+    }
+
+    .save-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: var(--radius-full);
+      background: var(--color-success);
+      animation: pulse 2s infinite;
+    }
+
+    /* Sidebar */
+    .editor-sidebar {
+      grid-area: sidebar;
+      background: white;
+      border-right: 1px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-background);
+    }
+
+    .sidebar-tab {
+      flex: 1;
+      padding: var(--spacing-md);
+      text-align: center;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all var(--transition-fast);
+      color: var(--color-text-secondary);
+    }
+
+    .sidebar-tab:hover {
+      background: white;
+      color: var(--color-text-primary);
+    }
+
+    .sidebar-tab.active {
+      background: white;
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
+    }
+
+    .sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--spacing-md);
+    }
+
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
+    }
+
+    .step-item {
+      background: var(--color-surface);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-md);
+      cursor: move;
+      transition: all var(--transition-base);
+      position: relative;
+    }
+
+    .step-item:hover {
+      border-color: var(--color-primary-light);
+      box-shadow: var(--shadow-md);
+    }
+
+    .step-item.active {
+      border-color: var(--color-primary);
+      background: linear-gradient(to right, rgba(255, 107, 107, 0.05), transparent);
+    }
+
+    .step-item.dragging {
+      opacity: 0.5;
+      transform: rotate(2deg);
+    }
+
+    .step-drag-handle {
+      position: absolute;
+      left: var(--spacing-sm);
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-text-tertiary);
+      font-size: var(--font-size-lg);
+      cursor: move;
+    }
+
+    .step-content {
+      margin-left: var(--spacing-lg);
+    }
+
+    .step-name {
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text-primary);
+      margin-bottom: var(--spacing-xs);
+      font-size: var(--font-size-sm);
+    }
+
+    .step-meta {
+      display: flex;
+      gap: var(--spacing-sm);
+      font-size: var(--font-size-xs);
+      color: var(--color-text-secondary);
+    }
+
+    .step-photo-count {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    /* Main Editor */
+    .editor-main {
+      grid-area: main;
+      overflow-y: auto;
+      padding: var(--spacing-xl);
+    }
+
+    .editor-toolbar {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-md);
+      margin-bottom: var(--spacing-lg);
+      display: flex;
+      gap: var(--spacing-sm);
+      flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .toolbar-group {
+      display: flex;
+      gap: var(--spacing-xs);
+      padding-right: var(--spacing-md);
+      border-right: 1px solid var(--color-border);
+    }
+
+    .toolbar-group:last-child {
+      border-right: none;
+    }
+
+    .toolbar-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+      font-size: var(--font-size-base);
+    }
+
+    .toolbar-btn:hover {
+      background: var(--color-background);
+      border-color: var(--color-primary-light);
+    }
+
+    .toolbar-btn.active {
+      background: var(--color-primary-light);
+      border-color: var(--color-primary);
+      color: var(--color-primary-dark);
+    }
+
+    .editor-canvas {
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: var(--spacing-2xl);
+      box-shadow: var(--shadow-lg);
+      min-height: 800px;
+    }
+
+    .canvas-step-title {
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-primary);
+      margin-bottom: var(--spacing-lg);
+      border: none;
+      width: 100%;
+      padding: var(--spacing-sm);
+      border-radius: var(--radius-md);
+      transition: background var(--transition-fast);
+    }
+
+    .canvas-step-title:hover {
+      background: var(--color-background);
+    }
+
+    .canvas-step-title:focus {
+      outline: 2px solid var(--color-primary-light);
+      background: white;
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: var(--spacing-md);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .photo-slot {
+      aspect-ratio: 4/3;
+      border: 2px dashed var(--color-border);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition-base);
+      position: relative;
+      overflow: hidden;
+      background: var(--color-background);
+    }
+
+    .photo-slot:hover {
+      border-color: var(--color-primary);
+      background: var(--color-primary-light);
+      transform: scale(1.02);
+    }
+
+    .photo-slot.has-photo {
+      border-style: solid;
+      padding: 0;
+      background: none;
+    }
+
+    .photo-slot img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .photo-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+    }
+
+    .photo-slot:hover .photo-overlay {
+      opacity: 1;
+    }
+
+    .photo-action {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-full);
+      background: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform var(--transition-fast);
+    }
+
+    .photo-action:hover {
+      transform: scale(1.1);
+    }
+
+    .text-editor {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      min-height: 200px;
+      font-size: var(--font-size-base);
+      line-height: var(--line-height-relaxed);
+      transition: all var(--transition-fast);
+    }
+
+    .text-editor:hover {
+      border-color: var(--color-primary-light);
+    }
+
+    .text-editor:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+    }
+
+    /* Preview Panel */
+    .editor-preview {
+      grid-area: preview;
+      background: var(--color-background);
+      border-left: 1px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .preview-header {
+      padding: var(--spacing-md);
+      border-bottom: 1px solid var(--color-border);
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .preview-title {
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+    }
+
+    .preview-modes {
+      display: flex;
+      gap: var(--spacing-xs);
+    }
+
+    .preview-mode-btn {
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: white;
+      cursor: pointer;
+      font-size: var(--font-size-sm);
+      transition: all var(--transition-fast);
+    }
+
+    .preview-mode-btn:hover {
+      background: var(--color-background);
+    }
+
+    .preview-mode-btn.active {
+      background: var(--color-primary);
+      color: white;
+      border-color: var(--color-primary);
+    }
+
+    .preview-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--spacing-lg);
+    }
+
+    .preview-page {
+      background: white;
+      border-radius: var(--radius-md);
+      padding: var(--spacing-xl);
+      box-shadow: var(--shadow-md);
+      transform: scale(0.9);
+      transform-origin: top center;
+    }
+
+    .preview-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--spacing-md);
+      margin-top: var(--spacing-lg);
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
+      color: white;
+      padding: var(--spacing-md);
+      border-radius: var(--radius-lg);
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-bold);
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .stat-label {
+      font-size: var(--font-size-xs);
+      opacity: 0.9;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Drag & Drop Feedback */
+    .drop-zone-active {
+      background: linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(78, 205, 196, 0.1));
+      border-color: var(--color-primary);
+    }
+
+    .drag-ghost {
+      position: fixed;
+      pointer-events: none;
+      z-index: var(--z-modal);
+      opacity: 0.8;
+      transform: rotate(-5deg);
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .editor-layout {
+        grid-template-columns: 250px 1fr 300px;
+      }
+    }
+
+    @media (max-width: 992px) {
+      .editor-layout {
+        grid-template-areas: 
+          "header header"
+          "sidebar main";
+        grid-template-columns: 250px 1fr;
+      }
+      
+      .editor-preview {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="editor-layout">
+    <!-- Header -->
+    <header class="editor-header">
+      <div class="header-left">
+        <div class="logo">✈️ Travel Book</div>
+        <div class="project-title" contenteditable="true">Mon voyage en Slovénie 🇸🇮</div>
+      </div>
+      <div class="header-right">
+        <div class="save-status">
+          <span class="save-indicator"></span>
+          <span>Enregistré</span>
+        </div>
+        <button class="btn btn-outline btn-sm">📥 Importer</button>
+        <button class="btn btn-secondary btn-sm">👁️ Prévisualiser</button>
+        <button class="btn btn-primary btn-sm">📤 Exporter</button>
+      </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="editor-sidebar">
+      <div class="sidebar-tabs">
+        <div class="sidebar-tab active">📍 Étapes</div>
+        <div class="sidebar-tab">🎨 Thèmes</div>
+        <div class="sidebar-tab">⚙️ Options</div>
+      </div>
+      <div class="sidebar-content">
+        <div class="step-list">
+          <div class="step-item active">
+            <div class="step-drag-handle">⋮⋮</div>
+            <div class="step-content">
+              <div class="step-name">🏔️ Ljubljana - Capitale verdoyante</div>
+              <div class="step-meta">
+                <span class="step-photo-count">📸 12</span>
+                <span>•</span>
+                <span>2 jours</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-item">
+            <div class="step-drag-handle">⋮⋮</div>
+            <div class="step-content">
+              <div class="step-name">🏰 Château de Predjama</div>
+              <div class="step-meta">
+                <span class="step-photo-count">📸 8</span>
+                <span>•</span>
+                <span>1 jour</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-item">
+            <div class="step-drag-handle">⋮⋮</div>
+            <div class="step-content">
+              <div class="step-name">🌊 Lac de Bled</div>
+              <div class="step-meta">
+                <span class="step-photo-count">📸 24</span>
+                <span>•</span>
+                <span>3 jours</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-item">
+            <div class="step-drag-handle">⋮⋮</div>
+            <div class="step-content">
+              <div class="step-name">⛰️ Parc du Triglav</div>
+              <div class="step-meta">
+                <span class="step-photo-count">📸 31</span>
+                <span>•</span>
+                <span>4 jours</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-item">
+            <div class="step-drag-handle">⋮⋮</div>
+            <div class="step-content">
+              <div class="step-name">🏖️ Piran - Côte adriatique</div>
+              <div class="step-meta">
+                <span class="step-photo-count">📸 15</span>
+                <span>•</span>
+                <span>2 jours</span>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-ghost btn-sm" style="width: 100%; margin-top: var(--spacing-md);">
+            ➕ Ajouter une étape
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Editor -->
+    <main class="editor-main">
+      <div class="editor-toolbar">
+        <div class="toolbar-group">
+          <button class="toolbar-btn active" title="Texte">📝</button>
+          <button class="toolbar-btn" title="Photo">📷</button>
+          <button class="toolbar-btn" title="Carte">🗺️</button>
+        </div>
+        <div class="toolbar-group">
+          <button class="toolbar-btn" title="Gras">B</button>
+          <button class="toolbar-btn" title="Italique">I</button>
+          <button class="toolbar-btn" title="Souligner">U</button>
+        </div>
+        <div class="toolbar-group">
+          <button class="toolbar-btn" title="Emoji">😊</button>
+          <button class="toolbar-btn" title="Lien">🔗</button>
+        </div>
+        <div class="toolbar-group">
+          <button class="toolbar-btn" title="Annuler">↶</button>
+          <button class="toolbar-btn" title="Refaire">↷</button>
+        </div>
+      </div>
+
+      <div class="editor-canvas">
+        <input 
+          type="text" 
+          class="canvas-step-title" 
+          value="🏔️ Ljubljana - Capitale verdoyante"
+          placeholder="Titre de l'étape..."
+        />
+
+        <div class="photo-grid">
+          <div class="photo-slot has-photo">
+            <img src="https://images.unsplash.com/photo-1608408891486-f5cade977d19?w=400" alt="Ljubljana">
+            <div class="photo-overlay">
+              <button class="photo-action">✏️</button>
+              <button class="photo-action">🔄</button>
+              <button class="photo-action">🗑️</button>
+            </div>
+          </div>
+          <div class="photo-slot has-photo">
+            <img src="https://images.unsplash.com/photo-1585214726913-94c4f0c57d83?w=400" alt="Ljubljana">
+            <div class="photo-overlay">
+              <button class="photo-action">✏️</button>
+              <button class="photo-action">🔄</button>
+              <button class="photo-action">🗑️</button>
+            </div>
+          </div>
+          <div class="photo-slot">
+            <span style="font-size: 2rem;">➕</span>
+          </div>
+        </div>
+
+        <div 
+          class="text-editor" 
+          contenteditable="true"
+          placeholder="Racontez votre étape..."
+        >
+          <p>Ljubljana est une ville à taille humaine, parfaite pour se perdre dans ses ruelles médiévales. Le château perché offre une vue panoramique imprenable sur toute la ville et ses toits orangés.</p>
+          <p>Nous avons adoré flâner le long de la rivière Ljubljanica, franchir ses nombreux ponts conçus par l'architecte Jože Plečnik, et nous installer en terrasse pour déguster des spécialités slovènes.</p>
+          <p>🍷 <strong>Conseil :</strong> Ne manquez pas le marché central le samedi matin, une explosion de couleurs et de saveurs locales !</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Preview Panel -->
+    <aside class="editor-preview">
+      <div class="preview-header">
+        <div class="preview-title">
+          👁️ Aperçu
+        </div>
+        <div class="preview-modes">
+          <button class="preview-mode-btn active">📱</button>
+          <button class="preview-mode-btn">💻</button>
+          <button class="preview-mode-btn">📄</button>
+        </div>
+      </div>
+      <div class="preview-content">
+        <div class="preview-page">
+          <h3 style="font-size: var(--font-size-2xl); margin-bottom: var(--spacing-md);">
+            🏔️ Ljubljana
+          </h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-sm); margin-bottom: var(--spacing-md);">
+            <img src="https://images.unsplash.com/photo-1608408891486-f5cade977d19?w=200" style="width: 100%; border-radius: var(--radius-md);" alt="Preview">
+            <img src="https://images.unsplash.com/photo-1585214726913-94c4f0c57d83?w=200" style="width: 100%; border-radius: var(--radius-md);" alt="Preview">
+          </div>
+          <p style="font-size: var(--font-size-sm); color: var(--color-text-secondary); line-height: var(--line-height-relaxed);">
+            Ljubljana est une ville à taille humaine, parfaite pour se perdre dans ses ruelles médiévales...
+          </p>
+        </div>
+
+        <div class="preview-stats">
+          <div class="stat-card">
+            <div class="stat-value">75</div>
+            <div class="stat-label">Photos</div>
+          </div>
+          <div class="stat-card" style="background: linear-gradient(135deg, var(--color-secondary-light), var(--color-secondary));">
+            <div class="stat-value">5</div>
+            <div class="stat-label">Étapes</div>
+          </div>
+          <div class="stat-card" style="background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));">
+            <div class="stat-value">12</div>
+            <div class="stat-label">Jours</div>
+          </div>
+          <div class="stat-card" style="background: linear-gradient(135deg, var(--color-success), #38a169);">
+            <div class="stat-value">42</div>
+            <div class="stat-label">Pages</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    // Drag & Drop pour les étapes
+    const stepItems = document.querySelectorAll('.step-item');
+    let draggedElement = null;
+
+    stepItems.forEach(item => {
+      item.setAttribute('draggable', 'true');
+
+      item.addEventListener('dragstart', (e) => {
+        draggedElement = item;
+        item.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+
+      item.addEventListener('dragend', () => {
+        item.classList.remove('dragging');
+        draggedElement = null;
+      });
+
+      item.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const afterElement = getDragAfterElement(item.parentElement, e.clientY);
+        if (afterElement == null) {
+          item.parentElement.appendChild(draggedElement);
+        } else {
+          item.parentElement.insertBefore(draggedElement, afterElement);
+        }
+      });
+
+      item.addEventListener('click', () => {
+        document.querySelector('.step-item.active')?.classList.remove('active');
+        item.classList.add('active');
+      });
+    });
+
+    function getDragAfterElement(container, y) {
+      const draggableElements = [...container.querySelectorAll('.step-item:not(.dragging)')];
+      
+      return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        
+        if (offset < 0 && offset > closest.offset) {
+          return { offset: offset, element: child };
+        } else {
+          return closest;
+        }
+      }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    // Tabs sidebar
+    document.querySelectorAll('.sidebar-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelector('.sidebar-tab.active').classList.remove('active');
+        tab.classList.add('active');
+      });
+    });
+
+    // Preview modes
+    document.querySelectorAll('.preview-mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelector('.preview-mode-btn.active').classList.remove('active');
+        btn.classList.add('active');
+      });
+    });
+
+    // Toolbar buttons
+    document.querySelectorAll('.toolbar-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!btn.title.includes('Annuler') && !btn.title.includes('Refaire')) {
+          btn.classList.toggle('active');
+        }
+      });
+    });
+
+    // Auto-save simulation
+    let saveTimeout;
+    const saveIndicator = document.querySelector('.save-indicator');
+    const saveStatus = document.querySelector('.save-status span:last-child');
+
+    document.querySelectorAll('[contenteditable], input').forEach(el => {
+      el.addEventListener('input', () => {
+        saveStatus.textContent = 'Enregistrement...';
+        saveIndicator.style.background = 'var(--color-warning)';
+        
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+          saveStatus.textContent = 'Enregistré';
+          saveIndicator.style.background = 'var(--color-success)';
+        }, 1000);
+      });
+    });
+  </script>
+</body>
+</html>

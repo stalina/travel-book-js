@@ -1,0 +1,256 @@
+{
+  "id": "tour-de-france-fictif-2025",
+  "name": "Tour de France Fictif 2025",
+  "start_date": 1711920000,
+  "end_date": 1712832000,
+  "cover_photo": {
+    "path": "cover.jpg",
+    "caption": "Couverture – Tour de France Fictif",
+    "attribution": "picsum.photos (seed: cover-tour-de-france)"
+  },
+  "total_km": 1200,
+  "steps": [
+    {
+      "id": "paris",
+      "name": "Paris",
+      "lat": 48.8566,
+      "lon": 2.3522,
+      "date": 1711920000,
+      "description": "Départ à Paris — balades le long de la Seine et cafés historiques. Photos placeholders: picsum.photos seeds: paris1, paris1b, paris1c, paris1d, paris1e, paris1f, paris1g",
+      "photos": [
+        { "src": "photos/1.jpg", "attribution": "picsum.photos (seed: paris1)" },
+        { "src": "photos/2.jpg", "attribution": "picsum.photos (seed: paris1b)" },
+        { "src": "photos/3.jpg", "attribution": "picsum.photos (seed: paris1c)" },
+        { "src": "photos/4.jpg", "attribution": "picsum.photos (seed: paris1d)" },
+        { "src": "photos/5.jpg", "attribution": "picsum.photos (seed: paris1e)" },
+        { "src": "photos/6.jpg", "attribution": "picsum.photos (seed: paris1f)" },
+        { "src": "photos/7.jpg", "attribution": "picsum.photos (seed: paris1g)" }
+      ]
+    },
+    {
+      "id": "rouen",
+      "name": "Rouen",
+      "lat": 49.4431,
+      "lon": 1.0993,
+      "date": 1711970400,
+      "description": "Rouen — cathédrale et vieux quartier médiéval. Photos placeholders: picsum.photos seeds: rouen2, rouen2b, rouen2c, rouen2d, rouen2e, rouen2f, rouen2g",
+      "photos": [
+        { "src": "photos/1.jpg", "attribution": "picsum.photos (seed: rouen2)" },
+        { "src": "photos/2.jpg", "attribution": "picsum.photos (seed: rouen2b)" },
+        { "src": "photos/3.jpg", "attribution": "picsum.photos (seed: rouen2c)" },
+        { "src": "photos/4.jpg", "attribution": "picsum.photos (seed: rouen2d)" },
+        { "src": "photos/5.jpg", "attribution": "picsum.photos (seed: rouen2e)" },
+        { "src": "photos/6.jpg", "attribution": "picsum.photos (seed: rouen2f)" },
+        { "src": "photos/7.jpg", "attribution": "picsum.photos (seed: rouen2g)" }
+      ]
+    },
+    {
+      "id": "le-havre",
+      "name": "Le Havre",
+      "lat": 49.4944,
+      "lon": 0.1079,
+      "date": 1712035200,
+      "description": "Le Havre — port moderne et façades reconstruites. Photos placeholders: picsum.photos seeds: le-havre3, le-havre3b, le-havre3c, le-havre3d, le-havre3e, le-havre3f, le-havre3g",
+      "photos": [
+        { "src": "photos/1.jpg", "attribution": "picsum.photos (seed: le-havre3)" },
+        { "src": "photos/2.jpg", "attribution": "picsum.photos (seed: le-havre3b)" },
+        { "src": "photos/3.jpg", "attribution": "picsum.photos (seed: le-havre3c)" },
+        { "src": "photos/4.jpg", "attribution": "picsum.photos (seed: le-havre3d)" },
+        { "src": "photos/5.jpg", "attribution": "picsum.photos (seed: le-havre3e)" },
+        { "src": "photos/6.jpg", "attribution": "picsum.photos (seed: le-havre3f)" },
+        { "src": "photos/7.jpg", "attribution": "picsum.photos (seed: le-havre3g)" }
+      ]
+    },
+    {
+      "id": "caen",
+      "name": "Caen",
+      "lat": 49.1829,
+      "lon": -0.3707,
+      "date": 1712096400,
+      "description": "Caen — mémoriaux et rues historiques. Photos placeholders: picsum.photos seeds: caen4, caen4b, caen4c, caen4d, caen4e, caen4f, caen4g",
+      "photos": [
+        { "src": "photos/1.jpg", "attribution": "picsum.photos (seed: caen4)" },
+        { "src": "photos/2.jpg", "attribution": "picsum.photos (seed: caen4b)" },
+        { "src": "photos/3.jpg", "attribution": "picsum.photos (seed: caen4c)" },
+        { "src": "photos/4.jpg", "attribution": "picsum.photos (seed: caen4d)" },
+        { "src": "photos/5.jpg", "attribution": "picsum.photos (seed: caen4e)" },
+        { "src": "photos/6.jpg", "attribution": "picsum.photos (seed: caen4f)" },
+        { "src": "photos/7.jpg", "attribution": "picsum.photos (seed: caen4g)" }
+      ]
+    },
+    {
+      "id": "roubaix",
+      "name": "Roubaix",
+      "lat": 50.6928,
+      "lon": 3.1741,
+      "date": 1712161200,
+      "description": "Roubaix — ambiance industrielle et musées. Photos placeholders: picsum.photos seeds: roubaix5, roubaix5b, roubaix5c, roubaix5d, roubaix5e, roubaix5f, roubaix5g",
+      "photos": [
+        { "src": "photos/1.jpg", "attribution": "picsum.photos (seed: roubaix5)" },
+        { "src": "photos/2.jpg", "attribution": "picsum.photos (seed: roubaix5b)" },
+        { "src": "photos/3.jpg", "attribution": "picsum.photos (seed: roubaix5c)" },
+        { "src": "photos/4.jpg", "attribution": "picsum.photos (seed: roubaix5d)" },
+        { "src": "photos/5.jpg", "attribution": "picsum.photos (seed: roubaix5e)" },
+        { "src": "photos/6.jpg", "attribution": "picsum.photos (seed: roubaix5f)" },
+        { "src": "photos/7.jpg", "attribution": "picsum.photos (seed: roubaix5g)" }
+      ]
+    },
+    {
+      "id": "reims",
+      "name": "Reims",
+      "lat": 49.2583,
+      "lon": 4.0317,
+      "date": 1712226000,
+      "description": "Reims — cathédrale et maisons de champagne. Photos placeholders: picsum.photos seeds: reims6, reims6b, reims6c, reims6d, reims6e, reims6f, reims6g",
+      "photos": [
+        { "src": "photos/1.jpg", "attribution": "picsum.photos (seed: reims6)" },
+        { "src": "photos/2.jpg", "attribution": "picsum.photos (seed: reims6b)" },
+        { "src": "photos/3.jpg", "attribution": "picsum.photos (seed: reims6c)" },
+        { "src": "photos/4.jpg", "attribution": "picsum.photos (seed: reims6d)" },
+        { "src": "photos/5.jpg", "attribution": "picsum.photos (seed: reims6e)" },
+        { "src": "photos/6.jpg", "attribution": "picsum.photos (seed: reims6f)" },
+        { "src": "photos/7.jpg", "attribution": "picsum.photos (seed: reims6g)" }
+      ]
+    },
+    {
+      "id": "lyon",
+      "name": "Lyon",
+      "lat": 45.764,
+      "lon": 4.8357,
+      "date": 1712290800,
+      "description": "Lyon — bouchons, vieux Lyon et collines panoramiques. Photos placeholders: picsum.photos seeds: lyon7, lyon7b, lyon7c, lyon7d, lyon7e, lyon7f, lyon7g",
+      "photos": [
+        { "src": "photos/1.jpg", "attribution": "picsum.photos (seed: lyon7)" },
+        { "src": "photos/2.jpg", "attribution": "picsum.photos (seed: lyon7b)" },
+        { "src": "photos/3.jpg", "attribution": "picsum.photos (seed: lyon7c)" },
+        { "src": "photos/4.jpg", "attribution": "picsum.photos (seed: lyon7d)" },
+        { "src": "photos/5.jpg", "attribution": "picsum.photos (seed: lyon7e)" },
+        { "src": "photos/6.jpg", "attribution": "picsum.photos (seed: lyon7f)" },
+        { "src": "photos/7.jpg", "attribution": "picsum.photos (seed: lyon7g)" }
+      ]
+    },
+    {
+      "id": "grenoble",
+      "name": "Grenoble",
+      "lat": 45.1885,
+      "lon": 5.7245,
+      "date": 1712355600,
+      "description": "Grenoble — montagnes et paysages alpins. Photos placeholders: picsum.photos seeds: grenoble8, grenoble8b, grenoble8c, grenoble8d, grenoble8e, grenoble8f, grenoble8g",
+      "photos": [
+        { "src": "photos/1.jpg", "attribution": "picsum.photos (seed: grenoble8)" },
+        { "src": "photos/2.jpg", "attribution": "picsum.photos (seed: grenoble8b)" },
+        { "src": "photos/3.jpg", "attribution": "picsum.photos (seed: grenoble8c)" },
+        { "src": "photos/4.jpg", "attribution": "picsum.photos (seed: grenoble8d)" },
+        { "src": "photos/5.jpg", "attribution": "picsum.photos (seed: grenoble8e)" },
+        { "src": "photos/6.jpg", "attribution": "picsum.photos (seed: grenoble8f)" },
+        { "src": "photos/7.jpg", "attribution": "picsum.photos (seed: grenoble8g)" }
+      ]
+    },
+    {
+      "id": "nice",
+      "name": "Nice",
+      "lat": 43.7102,
+      "lon": 7.262,
+      "date": 1712474400,
+      "description": "Nice — promenade des Anglais et bord de mer. Photos placeholders: picsum.photos seeds: nice9, nice9b, nice9c, nice9d, nice9e, nice9f, nice9g",
+      "photos": [
+        { "src": "photos/1.jpg", "attribution": "picsum.photos (seed: nice9)" },
+        { "src": "photos/2.jpg", "attribution": "picsum.photos (seed: nice9b)" },
+        { "src": "photos/3.jpg", "attribution": "picsum.photos (seed: nice9c)" },
+        { "src": "photos/4.jpg", "attribution": "picsum.photos (seed: nice9d)" },
+        { "src": "photos/5.jpg", "attribution": "picsum.photos (seed: nice9e)" },
+        { "src": "photos/6.jpg", "attribution": "picsum.photos (seed: nice9f)" },
+        { "src": "photos/7.jpg", "attribution": "picsum.photos (seed: nice9g)" }
+      ]
+    },
+    {
+      "id": "marseille",
+      "name": "Marseille",
+      "lat": 43.2965,
+      "lon": 5.3698,
+      "date": 1712832000,
+      "description": "Marseille — vieux port et calanques à proximité. Photos placeholders: picsum.photos seeds: marseille10, marseille10b, marseille10c, marseille10d, marseille10e, marseille10f, marseille10g",
+      "photos": [
+        { "src": "photos/1.jpg", "attribution": "picsum.photos (seed: marseille10)" },
+        { "src": "photos/2.jpg", "attribution": "picsum.photos (seed: marseille10b)" },
+        { "src": "photos/3.jpg", "attribution": "picsum.photos (seed: marseille10c)" },
+        { "src": "photos/4.jpg", "attribution": "picsum.photos (seed: marseille10d)" },
+        { "src": "photos/5.jpg", "attribution": "picsum.photos (seed: marseille10e)" },
+        { "src": "photos/6.jpg", "attribution": "picsum.photos (seed: marseille10f)" },
+        { "src": "photos/7.jpg", "attribution": "picsum.photos (seed: marseille10g)" }
+      ]
+    }
+  ],
+  "all_steps": [
+    {
+      "id": 1,
+      "slug": "paris",
+      "display_name": "Paris",
+      "description": "Départ à Paris — balades le long de la Seine et cafés historiques.",
+      "location": { "name": "Paris", "lat": 48.8566, "lon": 2.3522, "country_code": "FR", "detail": "France" }
+    },
+    {
+      "id": 2,
+      "slug": "rouen",
+      "display_name": "Rouen",
+      "description": "Rouen — cathédrale et vieux quartier médiéval.",
+      "location": { "name": "Rouen", "lat": 49.4431, "lon": 1.0993, "country_code": "FR", "detail": "France" }
+    },
+    {
+      "id": 3,
+      "slug": "le-havre",
+      "display_name": "Le Havre",
+      "description": "Le Havre — port moderne et façades reconstruites.",
+      "location": { "name": "Le Havre", "lat": 49.4944, "lon": 0.1079, "country_code": "FR", "detail": "France" }
+    },
+    {
+      "id": 4,
+      "slug": "caen",
+      "display_name": "Caen",
+      "description": "Caen — mémoriaux et rues historiques.",
+      "location": { "name": "Caen", "lat": 49.1829, "lon": -0.3707, "country_code": "FR", "detail": "France" }
+    },
+    {
+      "id": 5,
+      "slug": "roubaix",
+      "display_name": "Roubaix",
+      "description": "Roubaix — ambiance industrielle et musées.",
+      "location": { "name": "Roubaix", "lat": 50.6928, "lon": 3.1741, "country_code": "FR", "detail": "France" }
+    },
+    {
+      "id": 6,
+      "slug": "reims",
+      "display_name": "Reims",
+      "description": "Reims — cathédrale et maisons de champagne.",
+      "location": { "name": "Reims", "lat": 49.2583, "lon": 4.0317, "country_code": "FR", "detail": "France" }
+    },
+    {
+      "id": 7,
+      "slug": "lyon",
+      "display_name": "Lyon",
+      "description": "Lyon — bouchons, vieux Lyon et collines panoramiques.",
+      "location": { "name": "Lyon", "lat": 45.764, "lon": 4.8357, "country_code": "FR", "detail": "France" }
+    },
+    {
+      "id": 8,
+      "slug": "grenoble",
+      "display_name": "Grenoble",
+      "description": "Grenoble — montagnes et paysages alpins.",
+      "location": { "name": "Grenoble", "lat": 45.1885, "lon": 5.7245, "country_code": "FR", "detail": "France" }
+    },
+    {
+      "id": 9,
+      "slug": "nice",
+      "display_name": "Nice",
+      "description": "Nice — promenade des Anglais et bord de mer.",
+      "location": { "name": "Nice", "lat": 43.7102, "lon": 7.262, "country_code": "FR", "detail": "France" }
+    },
+    {
+      "id": 10,
+      "slug": "marseille",
+      "display_name": "Marseille",
+      "description": "Marseille — vieux port et calanques à proximité.",
+      "location": { "name": "Marseille", "lat": 43.2965, "lon": 5.3698, "country_code": "FR", "detail": "France" }
+    }
+  ]
+}
