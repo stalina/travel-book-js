@@ -1,8 +1,11 @@
 <template>
+  <CookieConsent />
   <router-view />
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import CookieConsent from './components/CookieConsent.vue'
+</script>
 
 <style>
 /**
