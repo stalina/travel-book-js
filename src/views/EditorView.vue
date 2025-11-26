@@ -40,17 +40,10 @@ import StepEditor from '../components/editor/StepEditor.vue'
 import BaseButton from '../components/BaseButton.vue'
 import { useEditorGeneration } from '../composables/useEditorGeneration'
 import type { Trip } from '../models/types'
-import { analyticsService, AnalyticsEvent } from '../services/analytics.service'
 
 const editorStore = useEditorStore()
 const tripStore = useTripStore()
 const { previewTravelBook } = useEditorGeneration()
-
-// Track editor view on mount
-onMounted(() => {
-  analyticsService.trackPageView('editor')
-  analyticsService.trackEvent(AnalyticsEvent.EDITOR_VIEW)
-})
 
 // Use store flag to adjust layout (preview column width)
 const layoutStyle = computed(() => ({

@@ -1,6 +1,5 @@
 import { ref } from 'vue'
 import { useTripStore } from '../stores/trip.store'
-import { analyticsService, AnalyticsEvent } from '../services/analytics.service'
 
 /**
  * Composable pour gérer le processus de génération du travel book
@@ -40,18 +39,14 @@ export function useGeneration() {
     try {
       isWorking.value = true
       error.value = ''
-      analyticsService.trackEvent(AnalyticsEvent.GENERATE_START)
       
       stepIndex.value = 4
       await store.finalizeWithPlanAndOpenViewer()
       
       stepIndex.value = 5
-      analyticsService.trackEvent(AnalyticsEvent.GENERATE_SUCCESS)
-      analyticsService.trackEvent(AnalyticsEvent.VIEWER_OPEN)
       return true
     } catch (e: any) {
       error.value = e?.message || String(e)
-      analyticsService.trackEvent(AnalyticsEvent.GENERATE_ERROR, { error: e?.message })
       return false
     } finally {
       isWorking.value = false
