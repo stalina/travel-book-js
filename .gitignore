@@ -6,4 +6,3 @@ coverage
 *.log
 docs/input
 docs/output
-.env.local

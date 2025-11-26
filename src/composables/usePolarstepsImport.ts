@@ -3,7 +3,6 @@ import { useTripStore } from '../stores/trip.store'
 import { tripParser } from '../services/parse.service'
 import { fileSystemService, FFInput } from '../services/fs.service'
 import { loggerService } from '../services/logger.service'
-import { analyticsService, AnalyticsEvent } from '../services/analytics.service'
 
 /**
  * Composable spécialisé pour l'import d'un dossier Polarsteps
@@ -26,7 +25,6 @@ export function usePolarstepsImport() {
   /** Sélection via picker directory */
   async function selectDirectory() {
     error.value = null
-    analyticsService.trackEvent(AnalyticsEvent.UPLOAD_START)
     if ('showDirectoryPicker' in window) {
       try {
         const input = await fileSystemService.readTripDirectory()
@@ -101,15 +99,12 @@ export function usePolarstepsImport() {
   async function parse() {
     try {
       phase.value = 'parsing'
-      analyticsService.trackEvent(AnalyticsEvent.ALBUM_CREATE_START)
       await tripParser.parse(store.input!)
       phase.value = 'ready'
-      analyticsService.trackEvent(AnalyticsEvent.UPLOAD_SUCCESS)
       loggerService.info('polarsteps-import', 'Import terminé')
     } catch (e: any) {
       error.value = e.message || 'Échec du parsing'
       phase.value = 'error'
-      analyticsService.trackEvent(AnalyticsEvent.UPLOAD_ERROR, { error: e.message })
     }
   }
 

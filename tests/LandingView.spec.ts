@@ -51,40 +51,15 @@ describe('LandingView', () => {
           LandingHero: true,
           LandingFeatures: true,
           LandingHowItWorks: true,
-          LandingCTA: true,
-          RouterLink: true
-        }
-      }
-    })
-    
-    // Le deuxième lien est "Retour en haut" (le premier est la politique de confidentialité)
-    const footerLinks = wrapper.findAll('.footer-link')
-    expect(footerLinks.length).toBeGreaterThan(0)
-    
-    // Trouver le lien "Retour en haut" par son texte
-    const scrollTopLink = footerLinks.find(link => link.text().includes('Retour en haut'))
-    expect(scrollTopLink).toBeDefined()
-    
-    await scrollTopLink!.trigger('click')
-    
-    expect(scrollToSpy).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' })
-    scrollToSpy.mockRestore()
-  })
-
-  it('renders privacy policy link in footer', () => {
-    const wrapper = mount(LandingView, {
-      global: {
-        stubs: {
-          LandingHero: true,
-          LandingFeatures: true,
-          LandingHowItWorks: true,
           LandingCTA: true
         }
       }
     })
     
-    // Vérifier que le footer contient le texte "Politique de confidentialité"
-    const footer = wrapper.find('.landing-footer')
-    expect(footer.text()).toContain('Politique de confidentialité')
+    const footerLink = wrapper.find('.footer-link')
+    await footerLink.trigger('click')
+    
+    expect(scrollToSpy).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' })
+    scrollToSpy.mockRestore()
   })
 })
