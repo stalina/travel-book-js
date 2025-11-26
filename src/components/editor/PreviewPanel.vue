@@ -81,6 +81,7 @@ import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useEditorStore } from '../../stores/editor.store'
 import { usePreview } from '../../composables/usePreview'
 import { useEditorGeneration } from '../../composables/useEditorGeneration'
+import { analyticsService } from '../../services/analytics.service'
 
 const editorStore = useEditorStore()
 const expanded = ref(false)
@@ -93,6 +94,8 @@ const openPanel = async () => {
   expanded.value = true
   // update central store so layout can react
   editorStore.setPreviewOpen(true)
+  // Tracker l'ouverture de la prévisualisation
+  analyticsService.trackPreviewOpened()
   void previewTravelBook()
 }
 
@@ -106,6 +109,9 @@ const closePanel = () => {
 const previewFrame = ref<HTMLIFrameElement | null>(null)
 
 const printPreview = () => {
+  // Tracker l'export PDF
+  analyticsService.trackPdfExported()
+  
   // Try printing from iframe.contentWindow, fallback to opening a window
   try {
     const iframe = previewFrame.value
