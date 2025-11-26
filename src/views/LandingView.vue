@@ -11,6 +11,7 @@
           © {{ currentYear }} Travel Book - Créé avec ❤️ pour les voyageurs
         </p>
         <nav class="footer-links">
+          <router-link to="/privacy" class="footer-link">Politique de confidentialité</router-link>
           <a href="#" class="footer-link" @click.prevent="scrollToTop">Retour en haut ↑</a>
         </nav>
       </div>
@@ -30,13 +31,21 @@
  * - Footer: Pied de page
  */
 
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import LandingHero from '../components/landing/LandingHero.vue'
 import LandingFeatures from '../components/landing/LandingFeatures.vue'
 import LandingHowItWorks from '../components/landing/LandingHowItWorks.vue'
 import LandingCTA from '../components/landing/LandingCTA.vue'
+import { analyticsService, AnalyticsEvent } from '../services/analytics.service'
 
 const currentYear = computed(() => new Date().getFullYear())
+
+onMounted(() => {
+  // Track landing page view avec la source de trafic
+  const trafficSource = analyticsService.getTrafficSource()
+  analyticsService.trackPageView('landing', { source: trafficSource })
+  analyticsService.trackEvent(AnalyticsEvent.LANDING_VIEW, { referrer: trafficSource })
+})
 
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
