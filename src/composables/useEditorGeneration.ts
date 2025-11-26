@@ -2,6 +2,7 @@ import { useTripStore } from '../stores/trip.store'
 import { useEditorStore } from '../stores/editor.store'
 import { artifactGenerator, type GenerateOptions, type GeneratedArtifacts } from '../services/generate.service'
 import type { StepGenerationPlan } from '../models/editor.types'
+import { analyticsService, AnalyticsEvent } from '../services/analytics.service'
 
 // Module-level lock to prevent concurrent preview generations
 let previewLock = false
@@ -99,6 +100,7 @@ export function useEditorGeneration() {
 
     editorStore.setPreviewError(null)
     editorStore.setExporting(true)
+    analyticsService.trackEvent(AnalyticsEvent.EXPORT_PDF_START)
 
     try {
       const artifacts = await ensureArtifacts()
@@ -127,7 +129,12 @@ export function useEditorGeneration() {
   a.click()
   a.remove()
   URL.revokeObjectURL(url)
+  
+      analyticsService.trackEvent(AnalyticsEvent.EXPORT_PDF_SUCCESS)
     } catch (error) {
+      analyticsService.trackEvent(AnalyticsEvent.EXPORT_PDF_ERROR, { 
+        error: error instanceof Error ? error.message : String(error) 
+      })
       setError(error)
     } finally {
       editorStore.setExporting(false)
