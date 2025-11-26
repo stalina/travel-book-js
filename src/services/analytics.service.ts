@@ -1,6 +1,9 @@
+import Clarity from '@microsoft/clarity'
+
 /**
  * Service de tracking analytics avec Microsoft Clarity
  * Pattern Singleton pour centraliser tous les appels analytics
+ * Utilise le package officiel @microsoft/clarity
  */
 
 /**
@@ -71,7 +74,7 @@ export class AnalyticsService {
   }
 
   /**
-   * Initialise Microsoft Clarity
+   * Initialise Microsoft Clarity avec le package officiel
    * À appeler au démarrage de l'application
    */
   public initialize(): void {
@@ -86,35 +89,13 @@ export class AnalyticsService {
     }
 
     try {
-      // Injection du script Clarity
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(function (c: any, l: any, a: string, r: string, i: string, t?: any, y?: any) {
-        c[a] =
-          c[a] ||
-          function () {
-            // eslint-disable-next-line prefer-rest-params
-            ;(c[a].q = c[a].q || []).push(arguments)
-          }
-        t = l.createElement(r)
-        t.async = 1
-        t.src = 'https://www.clarity.ms/tag/' + i
-        y = l.getElementsByTagName(r)[0]
-        y.parentNode.insertBefore(t, y)
-      })(window, document, 'clarity', 'script', this.clarityProjectId)
-
+      // Initialisation via le package officiel @microsoft/clarity
+      Clarity.init(this.clarityProjectId)
       this.clarityInitialized = true
-      console.log('[Analytics] Microsoft Clarity initialized')
+      console.log('[Analytics] Microsoft Clarity initialized with project ID:', this.clarityProjectId)
     } catch (error) {
       console.error('[Analytics] Failed to initialize Clarity:', error)
     }
-  }
-
-  /**
-   * Vérifie si Clarity est disponible
-   * @returns true si Clarity est chargé et prêt
-   */
-  private isClarityAvailable(): boolean {
-    return this.clarityInitialized && typeof window !== 'undefined' && 'clarity' in window
   }
 
   /**
@@ -123,18 +104,24 @@ export class AnalyticsService {
    * @param metadata - Métadonnées optionnelles associées à l'événement
    */
   public trackEvent(event: AnalyticsEvent, metadata?: AnalyticsMetadata): void {
-    if (!this.isClarityAvailable()) {
+    if (!this.clarityInitialized) {
       return
     }
 
     try {
-      // Clarity utilise clarity("event", eventName)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(window as any).clarity('event', event)
+      // Utilisation de l'API officielle Clarity.event()
+      Clarity.event(event)
 
       // Log les métadonnées si présentes (pour debug)
       if (metadata && Object.keys(metadata).length > 0) {
         console.debug(`[Analytics] Event: ${event}`, metadata)
+        
+        // Ajouter les métadonnées comme tags personnalisés
+        Object.entries(metadata).forEach(([key, value]) => {
+          if (value !== undefined) {
+            Clarity.setTag(`${event}_${key}`, String(value))
+          }
+        })
       }
     } catch (error) {
       console.error('[Analytics] Failed to track event:', event, error)
@@ -147,17 +134,19 @@ export class AnalyticsService {
    * @param metadata - Métadonnées optionnelles (referrer, etc.)
    */
   public trackPageView(pageName: string, metadata?: AnalyticsMetadata): void {
-    if (!this.isClarityAvailable()) {
+    if (!this.clarityInitialized) {
       return
     }
 
     try {
-      // Clarity track automatiquement les pages, mais on peut ajouter un événement custom
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(window as any).clarity('set', 'page', pageName)
-
+      // Clarity track automatiquement les pages, on peut juste logger
       if (metadata) {
         console.debug(`[Analytics] Page view: ${pageName}`, metadata)
+        
+        // Ajouter la source de trafic comme tag
+        if (metadata.source) {
+          Clarity.setTag('traffic_source', String(metadata.source))
+        }
       }
     } catch (error) {
       console.error('[Analytics] Failed to track page view:', pageName, error)
@@ -167,35 +156,34 @@ export class AnalyticsService {
   /**
    * Identifie un utilisateur (optionnel, pour sessions multi-visites)
    * @param userId - Identifiant utilisateur anonyme
+   * @param friendlyName - Nom convivial (optionnel)
    */
-  public identifyUser(userId: string): void {
-    if (!this.isClarityAvailable()) {
+  public identifyUser(userId: string, friendlyName?: string): void {
+    if (!this.clarityInitialized) {
       return
     }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(window as any).clarity('identify', userId)
+      Clarity.identify(userId, undefined, undefined, friendlyName)
     } catch (error) {
       console.error('[Analytics] Failed to identify user:', error)
     }
   }
 
   /**
-   * Définit une propriété personnalisée pour la session
-   * @param key - Clé de la propriété
-   * @param value - Valeur de la propriété
+   * Définit un tag personnalisé pour la session
+   * @param key - Clé du tag
+   * @param value - Valeur du tag
    */
-  public setCustomProperty(key: string, value: string | number | boolean): void {
-    if (!this.isClarityAvailable()) {
+  public setCustomTag(key: string, value: string | string[]): void {
+    if (!this.clarityInitialized) {
       return
     }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(window as any).clarity('set', key, value)
+      Clarity.setTag(key, value)
     } catch (error) {
-      console.error('[Analytics] Failed to set custom property:', key, error)
+      console.error('[Analytics] Failed to set custom tag:', key, error)
     }
   }
 
