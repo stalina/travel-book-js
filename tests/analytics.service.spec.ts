@@ -1,6 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { AnalyticsService, AnalyticsEvent } from '../src/services/analytics.service'
 
+// Mock du package @microsoft/clarity
+vi.mock('@microsoft/clarity', () => ({
+  default: {
+    init: vi.fn(),
+    event: vi.fn(),
+    setTag: vi.fn(),
+    identify: vi.fn()
+  }
+}))
+
 describe('AnalyticsService', () => {
   let service: AnalyticsService
 
