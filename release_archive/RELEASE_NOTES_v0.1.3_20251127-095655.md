@@ -1,5 +1,3 @@
-Release v0.1.4 — patch release
-
 Release v0.1.3 — patch release
 
 Release v0.1.2 — patch release
@@ -13,7 +11,3 @@ Generated on 2025-11-27 09:31:04
 ---
 
 Generated on 2025-11-27 09:49:54
-
----
-
-Generated on 2025-11-27 09:56:55
