@@ -183,21 +183,14 @@ jobs:
             console.log(`PR créée: #${pr.number}`);
             return pr.number;
 
-      - name: Enable auto-merge
+      - name: Merge Pull Request
         uses: actions/github-script@v7
         with:
           script: |
             const prNumber = ${{ steps.create_pr.outputs.result }};
             
-            await github.rest.pulls.createReview({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber,
-              event: 'APPROVE',
-              body: '✅ Auto-approuvée par GitHub Actions'
-            });
-            
-            // Merger la PR immédiatement si aucune protection n'est requise
+            // Merger la PR directement sans approbation
+            // (GitHub Actions ne peut pas approuver ses propres PRs)
             try {
               await github.rest.pulls.merge({
                 owner: context.repo.owner,
@@ -207,10 +200,12 @@ jobs:
                 commit_title: `chore(release): bump version to v${{ steps.new_version.outputs.version }}`,
                 commit_message: 'Automated release version bump'
               });
-              console.log('PR mergée avec succès');
+              console.log('✅ PR mergée avec succès');
             } catch (error) {
-              console.log('Impossible de merger automatiquement, merge manuel requis');
-              console.log(error.message);
+              console.log('⚠️ Impossible de merger automatiquement');
+              console.log('Raison:', error.message);
+              console.log('📋 Action requise: Mergez manuellement la PR #' + prNumber);
+              // Ne pas faire échouer le workflow, continuer pour créer le tag/release après merge manuel
             }
 
       - name: Wait for PR merge and fetch latest
@@ -249,5 +244,10 @@ jobs:
           echo "- **Pull Request:** #${{ steps.create_pr.outputs.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Tag créé:** v${{ steps.new_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🔗 [Voir la release](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.new_version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
-          echo "🔗 [Voir la PR](https://github.com/${{ github.repository }}/pull/${{ steps.create_pr.outputs.result }})" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Liens" >> $GITHUB_STEP_SUMMARY
+          echo "- [Voir la release](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.new_version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [Voir la PR](https://github.com/${{ github.repository }}/pull/${{ steps.create_pr.outputs.result }})" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 Déploiement" >> $GITHUB_STEP_SUMMARY
+          echo "Le déploiement sur GitHub Pages sera automatiquement déclenché suite à la création du tag." >> $GITHUB_STEP_SUMMARY
+          echo "Consultez l'onglet [Actions](https://github.com/${{ github.repository }}/actions/workflows/deploy.yml) pour suivre le déploiement." >> $GITHUB_STEP_SUMMARY
