@@ -97,9 +97,9 @@ ${bodyHtml}
   private async loadAssets(manifest: Record<string, Blob>): Promise<void> {
     this.loggerService.info('generate', 'Chargement des assets CSS et fonts')
     
-    const cssResp = await fetch('/assets/style.css')
+    const cssResp = await fetch(`${import.meta.env.BASE_URL}assets/style.css`)
     const cssText = await cssResp.text()
-    const fontsCssResp = await fetch('/assets/fonts/fonts.css')
+    const fontsCssResp = await fetch(`${import.meta.env.BASE_URL}assets/fonts/fonts.css`)
     const fontsCssText = await fontsCssResp.text()
     
     manifest['assets/style.css'] = new Blob([cssText], { type: 'text/css' })
@@ -107,7 +107,7 @@ ${bodyHtml}
 
     // Brandon Grotesque font
     try {
-      const fontResp = await fetch('/assets/fonts/Brandon_Grotesque_medium.otf')
+      const fontResp = await fetch(`${import.meta.env.BASE_URL}assets/fonts/Brandon_Grotesque_medium.otf`)
       if (fontResp.ok) {
         const ct = fontResp.headers.get('content-type') || ''
         if (!/text\/html/i.test(ct)) {
@@ -121,7 +121,7 @@ ${bodyHtml}
     // Noto Serif fonts
     for (const f of ['NotoSerif-Regular.woff2', 'NotoSerif-Italic.woff2', 'NotoSerif-Bold.woff2', 'NotoSerif-BoldItalic.woff2']) {
       try {
-        const resp = await fetch(`/assets/fonts/${f}`)
+        const resp = await fetch(`${import.meta.env.BASE_URL}assets/fonts/${f}`)
         if (resp.ok) {
           const ct = resp.headers.get('content-type') || ''
           if (!/text\/html/i.test(ct)) {
@@ -264,7 +264,7 @@ ${bodyHtml}
     )
 
     for (const code of usedCountries) {
-      const localUrl = `/assets/images/maps/${code.toLowerCase()}.svg`
+      const localUrl = `${import.meta.env.BASE_URL}assets/images/maps/${code.toLowerCase()}.svg`
       try {
         const resp = await fetch(localUrl, { cache: 'no-store' })
         if (resp.ok) {
@@ -296,7 +296,7 @@ ${bodyHtml}
   </head>`
 
     try {
-      const headTpl = await fetch('/templates/index.html').then(r => r.text())
+      const headTpl = await fetch(`${import.meta.env.BASE_URL}templates/index.html`).then(r => r.text())
       const match = headTpl.match(/<head>[\s\S]*?<\/head>/i)
       if (match) {
         let h = match[0]
