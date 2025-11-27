@@ -1,10 +1,10 @@
 name: Deploy to GitHub Pages
 
 on:
-  # Déclenche le workflow sur push vers la branche main
+  # Déclenche le workflow sur création de tag de version
   push:
-    branches:
-      - main
+    tags:
+      - 'v*.*.*'
   # Permet de déclencher manuellement depuis l'interface GitHub
   workflow_dispatch:
 
@@ -42,8 +42,21 @@ jobs:
       - name: Run tests
         run: npm run test
 
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            VERSION=$(node -p "require('./package.json').version")
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Deploying version: $VERSION"
+
       - name: Build
         run: npm run build
+        env:
+          VITE_APP_VERSION: ${{ steps.get_version.outputs.version }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
