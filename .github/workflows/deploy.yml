@@ -4,7 +4,7 @@ on:
   # Déclenche le workflow sur création de tag de version
   push:
     tags:
-      - 'v*.*.*'
+      - 'v*'
   # Permet de déclencher manuellement depuis l'interface GitHub
   workflow_dispatch:
 
