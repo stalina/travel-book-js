@@ -1,0 +1,168 @@
+name: Release
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Type de version'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      release_notes:
+        description: 'Notes de version (optionnel, sinon utilise RELEASE_NOTES.md)'
+        required: false
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Get current version
+        id: current_version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Calculate new version
+        id: new_version
+        run: |
+          CURRENT_VERSION="${{ steps.current_version.outputs.version }}"
+          IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+          MAJOR=${VERSION_PARTS[0]}
+          MINOR=${VERSION_PARTS[1]}
+          PATCH=${VERSION_PARTS[2]}
+          
+          case "${{ github.event.inputs.version_type }}" in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+          
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+
+      - name: Update package.json version
+        run: |
+          NEW_VERSION="${{ steps.new_version.outputs.version }}"
+          npm version $NEW_VERSION --no-git-tag-version
+
+      - name: Prepare release notes
+        id: release_notes
+        run: |
+          NEW_VERSION="${{ steps.new_version.outputs.version }}"
+          VERSION_TYPE="${{ github.event.inputs.version_type }}"
+          
+          if [ -n "${{ github.event.inputs.release_notes }}" ]; then
+            # Utilise les notes fournies manuellement
+            NOTES="${{ github.event.inputs.release_notes }}"
+          elif [ -f "RELEASE_NOTES.md" ]; then
+            # Utilise le fichier RELEASE_NOTES.md
+            NOTES=$(cat RELEASE_NOTES.md)
+          else
+            # Notes par défaut
+            NOTES="Release v${NEW_VERSION} — ${VERSION_TYPE} release"
+          fi
+          
+          # Sauvegarde les notes dans un fichier temporaire
+          echo "$NOTES" > /tmp/release_notes.txt
+          
+          # Archive l'ancienne version si RELEASE_NOTES.md existe
+          if [ -f "RELEASE_NOTES.md" ]; then
+            TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+            mkdir -p release_archive
+            cp RELEASE_NOTES.md "release_archive/RELEASE_NOTES_v${{ steps.current_version.outputs.version }}_${TIMESTAMP}.md"
+          fi
+          
+          # Crée les nouvelles release notes
+          cat > RELEASE_NOTES.md << EOF
+          Release v${NEW_VERSION} — ${VERSION_TYPE} release
+          
+          ${NOTES}
+          
+          ---
+          
+          Generated on $(date '+%Y-%m-%d %H:%M:%S')
+          EOF
+
+      - name: Commit version bump and release notes
+        run: |
+          NEW_VERSION="${{ steps.new_version.outputs.version }}"
+          git add package.json package-lock.json RELEASE_NOTES.md
+          if [ -d "release_archive" ]; then
+            git add release_archive/
+          fi
+          git commit -m "chore(release): bump version to v${NEW_VERSION}"
+          git push origin ${{ github.ref_name }}
+
+      - name: Create Git tag
+        run: |
+          NEW_VERSION="${{ steps.new_version.outputs.version }}"
+          git tag -a "v${NEW_VERSION}" -m "Release v${NEW_VERSION}"
+          git push origin "v${NEW_VERSION}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.new_version.outputs.version }}
+          name: Release v${{ steps.new_version.outputs.version }}
+          body_path: /tmp/release_notes.txt
+          draft: false
+          prerelease: false
+          files: |
+            dist/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "## ✅ Release créée avec succès" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version précédente:** v${{ steps.current_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Nouvelle version:** v${{ steps.new_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Type de version:** ${{ github.event.inputs.version_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag créé:** v${{ steps.new_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 [Voir la release](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.new_version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
