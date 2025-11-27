@@ -2,6 +2,7 @@ name: Release
 
 permissions:
   contents: write
+  pull-requests: write
 
 on:
   workflow_dispatch:
@@ -127,15 +128,96 @@ jobs:
           Generated on $(date '+%Y-%m-%d %H:%M:%S')
           EOF
 
-      - name: Commit version bump and release notes
+      - name: Create release branch and commit changes
+        id: create_branch
         run: |
           NEW_VERSION="${{ steps.new_version.outputs.version }}"
+          BRANCH_NAME="release/v${NEW_VERSION}"
+          
+          git checkout -b "$BRANCH_NAME"
           git add package.json package-lock.json RELEASE_NOTES.md
           if [ -d "release_archive" ]; then
             git add release_archive/
           fi
           git commit -m "chore(release): bump version to v${NEW_VERSION}"
-          git push origin ${{ github.ref_name }}
+          git push origin "$BRANCH_NAME"
+          
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        id: create_pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const newVersion = '${{ steps.new_version.outputs.version }}';
+            const versionType = '${{ github.event.inputs.version_type }}';
+            const branchName = '${{ steps.create_branch.outputs.branch_name }}';
+            
+            // Lire les release notes
+            const fs = require('fs');
+            const releaseNotes = fs.readFileSync('/tmp/release_notes.txt', 'utf8');
+            
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Release v${newVersion}`,
+              head: branchName,
+              base: 'main',
+              body: `## 🚀 Release v${newVersion} (${versionType})
+            
+            ### Changements
+            - Mise à jour de la version à \`${newVersion}\`
+            - Mise à jour des release notes
+            - Archivage de l'ancienne version
+            
+            ### Release Notes
+            
+            ${releaseNotes}
+            
+            ---
+            
+            Cette PR sera automatiquement mergée si les tests passent.
+            Créée automatiquement par GitHub Actions.`
+            });
+            
+            console.log(`PR créée: #${pr.number}`);
+            return pr.number;
+
+      - name: Enable auto-merge
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ steps.create_pr.outputs.result }};
+            
+            await github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              event: 'APPROVE',
+              body: '✅ Auto-approuvée par GitHub Actions'
+            });
+            
+            // Merger la PR immédiatement si aucune protection n'est requise
+            try {
+              await github.rest.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+                merge_method: 'squash',
+                commit_title: `chore(release): bump version to v${{ steps.new_version.outputs.version }}`,
+                commit_message: 'Automated release version bump'
+              });
+              console.log('PR mergée avec succès');
+            } catch (error) {
+              console.log('Impossible de merger automatiquement, merge manuel requis');
+              console.log(error.message);
+            }
+
+      - name: Wait for PR merge and fetch latest
+        run: |
+          sleep 5
+          git checkout main
+          git pull origin main
 
       - name: Create Git tag
         run: |
@@ -163,6 +245,9 @@ jobs:
           echo "- **Version précédente:** v${{ steps.current_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Nouvelle version:** v${{ steps.new_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Type de version:** ${{ github.event.inputs.version_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branche de release:** ${{ steps.create_branch.outputs.branch_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Pull Request:** #${{ steps.create_pr.outputs.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Tag créé:** v${{ steps.new_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "🔗 [Voir la release](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.new_version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 [Voir la PR](https://github.com/${{ github.repository }}/pull/${{ steps.create_pr.outputs.result }})" >> $GITHUB_STEP_SUMMARY
