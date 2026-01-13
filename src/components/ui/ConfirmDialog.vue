@@ -13,7 +13,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue'
 import BaseButton from '../BaseButton.vue'
 
 const props = defineProps<{
