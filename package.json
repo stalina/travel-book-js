@@ -19,7 +19,7 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "6.0.3",
+    "@vitejs/plugin-vue": "6.0.4",
     "@vitest/coverage-v8": "4.0.18",
     "@vue/test-utils": "2.4.6",
     "happy-dom": "20.3.9",
