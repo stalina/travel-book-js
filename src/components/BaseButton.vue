@@ -36,7 +36,6 @@ interface Props {
   disabled?: boolean
   loading?: boolean
 }
-
 const props = withDefaults(defineProps<Props>(), {
   variant: 'primary',
   size: 'md',
@@ -44,10 +43,7 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   loading: false
 })
-
-const emit = defineEmits<{
-  click: [event: MouseEvent]
-}>()
+const emit = defineEmits(['click'])
 
 function handleClick(event: MouseEvent) {
   if (!props.disabled && !props.loading) {
