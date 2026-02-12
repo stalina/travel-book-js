@@ -16,6 +16,8 @@ import { DEFAULT_PHOTO_ADJUSTMENTS, DEFAULT_PHOTO_CROP, DEFAULT_PHOTO_FILTER } f
 import { getLayoutCapacity } from '../models/layout.constants'
 import { clampAdjustment } from '../utils/photo-filters'
 import { generateAutomaticPages } from '../utils/layout-generator'
+import { DraftStorageService } from '../services/draft-storage.service'
+import type { DraftSnapshot, DraftPhotoEntry } from '../models/draft.types'
 
 type BooleanMap = Record<number, boolean | undefined>
 type DateMap = Record<number, Date | undefined>
@@ -956,6 +958,100 @@ export const useEditorStore = defineStore('editor', () => {
 		return prepared
 	}
 
+	/**
+	 * Sauvegarde l'état complet de l'éditeur dans IndexedDB (brouillon).
+	 */
+	const saveDraftToStorage = async (): Promise<void> => {
+		const trip = currentTrip.value
+		if (!trip) return
+
+		const service = DraftStorageService.getInstance()
+		await service.saveDraft(trip, currentStepIndex.value, stepPhotosByStep, stepPageStates)
+		// Visual feedback
+		autoSaveStatus.value = 'saved'
+		lastSaveTime.value = new Date()
+		setTimeout(() => {
+			if (autoSaveStatus.value === 'saved') {
+				autoSaveStatus.value = 'idle'
+			}
+		}, 2000)
+	}
+
+	/**
+	 * Restaure l'état éditeur à partir d'un brouillon chargé depuis IndexedDB.
+	 * Les blobs photos sont convertis en File puis en EditorStepPhoto avec object URL.
+	 */
+	const restoreFromDraft = async (snapshot: DraftSnapshot, photoBlobs: Record<string, Blob>): Promise<void> => {
+		cleanupContext()
+
+		const clonedTrip = deepClone(snapshot.trip)
+		currentTrip.value = clonedTrip
+		originalTrip.value = deepClone(snapshot.trip)
+		currentStepIndex.value = snapshot.currentStepIndex
+		invalidatePreview()
+
+		// Restore photos from blobs
+		isPreparingPhotos.value = true
+		try {
+			for (const step of clonedTrip.steps ?? []) {
+				const draftPhotos: DraftPhotoEntry[] = snapshot.stepPhotosByStep[step.id] ?? []
+				const prepared: EditorStepPhoto[] = []
+
+				for (const meta of draftPhotos) {
+					const blobKey = `${step.id}-${meta.index}`
+					const blob = photoBlobs[blobKey]
+					const file = blob ? new File([blob], meta.name, { type: blob.type }) : undefined
+					const url = file ? createObjectUrl(file) : `data:///${meta.name}`
+
+					prepared.push({
+						id: meta.id,
+						index: meta.index,
+						url,
+						ratio: meta.ratio,
+						name: meta.name,
+						file,
+						width: meta.width,
+						height: meta.height,
+						orientation: meta.orientation,
+						fileSize: meta.fileSize,
+						filterPreset: meta.filterPreset,
+						adjustments: { ...meta.adjustments },
+						rotation: meta.rotation,
+						crop: { ...meta.crop }
+					})
+				}
+
+				stepPhotosByStep[step.id] = prepared
+
+				// Restore photo histories (empty since we don't persist undo/redo)
+				const historyMap = ensurePhotoHistoryMap(step.id)
+				for (const photo of prepared) {
+					historyMap[photo.index] = { past: [], future: [] }
+				}
+			}
+		} finally {
+			isPreparingPhotos.value = false
+		}
+
+		// Restore page states
+		for (const step of clonedTrip.steps ?? []) {
+			const savedState = snapshot.stepPageStates[step.id]
+			if (savedState) {
+				stepPageStates[step.id] = reactive(deepClone(savedState)) as StepPageState
+			} else {
+				stepPageStates[step.id] = reactive(createEmptyPageState()) as StepPageState
+				await populateDefaultPagesForStep(step.id)
+			}
+		}
+
+		// Generate preview for the first visible step
+		const firstStep = clonedTrip.steps?.[snapshot.currentStepIndex] ?? clonedTrip.steps?.[0]
+		if (firstStep) {
+			await regenerateStepPreview(firstStep.id)
+			clearStepBuilderMock()
+		}
+	}
+
 	return {
 		currentTrip,
 		currentStepIndex,
@@ -1016,6 +1112,10 @@ export const useEditorStore = defineStore('editor', () => {
 		resetStep,
 		updateTripName,
 		generateDefaultPagesForStep,
-		buildStepPlan
+		buildStepPlan,
+		saveDraftToStorage,
+		restoreFromDraft,
+		stepPhotosByStep,
+		stepPageStates
 	}
 })

@@ -24,6 +24,15 @@
         📥 Importer
       </BaseButton>
       <BaseButton
+        variant="outline"
+        size="sm"
+        :loading="isSavingDraft"
+        :disabled="!editorStore.currentTrip"
+        @click="onSaveDraft"
+      >
+        💾 Sauvegarder
+      </BaseButton>
+      <BaseButton
         variant="primary"
         size="sm"
         :loading="editorStore.isExporting"
@@ -46,6 +55,7 @@ import HeaderStats from './HeaderStats.vue'
 
 const editorStore = useEditorStore()
 const projectTitle = ref('')
+const isSavingDraft = ref(false)
 const { exportTravelBook } = useEditorGeneration()
 
 // Computed fallbacks so initial render and tests don't show undefined
@@ -69,6 +79,16 @@ const onTitleBlur = () => {
 const onImport = () => {
   // Navigation vers la page d'import
   window.location.hash = '#/'
+}
+
+const onSaveDraft = async () => {
+  if (isSavingDraft.value || !editorStore.currentTrip) return
+  isSavingDraft.value = true
+  try {
+    await editorStore.saveDraftToStorage()
+  } finally {
+    isSavingDraft.value = false
+  }
 }
 
 
