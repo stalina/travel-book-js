@@ -2,6 +2,7 @@ import { Trip, Step } from '../../models/types'
 import type { StepGenerationPlan, StepPageLayout, StepPagePlanItem } from '../../models/editor.types'
 import { getPositionPercentage } from '../map.service'
 import { elevationService } from '../elevation.service'
+import { generateAutomaticPages, inferLayoutFromCount } from '../../utils/layout-generator'
 import { 
   esc, 
   numberFr0, 
@@ -126,7 +127,7 @@ export class StepBuilder {
   private normalizePlanEntry(entry: StepPagePlanItem | number[]): StepPagePlanItem {
     if (Array.isArray(entry)) {
       return {
-        layout: this.inferLayoutFromCount(entry.length),
+        layout: inferLayoutFromCount(entry.length),
         photoIndices: [...entry]
       }
     }
@@ -150,67 +151,38 @@ export class StepBuilder {
         .map((idx) => photoByIndex.get(idx) ?? null)
         .filter((photo): photo is PhotoWithMeta => !!photo && (coverIndex == null || photo.index !== coverIndex))
 
-      pages.push({
-        layout: entry.layout,
-        photos
-      })
+      // ✅ Ne pas ajouter les pages vides : si l'utilisateur supprime toutes les photos d'une page,
+      // on ne veut pas générer une page vide avec un message "Ajoutez des photos"
+      // Si l'utilisateur veut vraiment une page vide, il doit laisser au moins une photo
+      if (photos.length > 0) {
+        pages.push({
+          layout: entry.layout,
+          photos
+        })
+      }
     }
 
     return pages
-  }
-
-  private inferLayoutFromCount(count: number): StepPageLayout {
-    if (count >= 4) return 'grid-2x2'
-    if (count === 3) return 'three-columns'
-    if (count === 2) return 'hero-plus-2'
-    return 'full-page'
   }
 
   private buildAutomaticPages(photosArr: PhotoWithMeta[], cover: PhotoWithMeta | null): ResolvedPage[] {
-    const coverIndex = cover?.index
-    const portraits = photosArr.filter((photo) => photo.ratio === 'PORTRAIT' && photo.index !== coverIndex)
-    const landscapes = photosArr.filter((photo) => photo.ratio === 'LANDSCAPE' && photo.index !== coverIndex)
-    const others = photosArr.filter((photo) => photo.ratio === 'UNKNOWN' && photo.index !== coverIndex)
-
-    const pages: ResolvedPage[] = []
-    const pushPage = (layout: StepPageLayout, photos: PhotoWithMeta[]) => {
-      if (!photos.length) return
-      pages.push({ layout, photos })
+    const coverIndex = cover?.index ?? null
+    
+    // Utiliser l'utilitaire partagé pour générer les pages
+    const generatedPages = generateAutomaticPages(photosArr, coverIndex)
+    
+    // Convertir en ResolvedPage avec les photos complètes
+    const photoByIndex = new Map<number, PhotoWithMeta>()
+    for (const photo of photosArr) {
+      photoByIndex.set(photo.index, photo)
     }
-
-    while (landscapes.length >= 4) {
-      pushPage('grid-2x2', landscapes.splice(0, 4))
-    }
-
-    while (landscapes.length >= 2 && portraits.length >= 1) {
-      pushPage('hero-plus-2', [landscapes.shift()!, landscapes.shift()!, portraits.shift()!])
-    }
-
-    while (portraits.length >= 3) {
-      pushPage('three-columns', portraits.splice(0, 3))
-    }
-
-    while (portraits.length >= 2) {
-      pushPage('hero-plus-2', portraits.splice(0, 2))
-    }
-
-    while (landscapes.length >= 2) {
-      pushPage('hero-plus-2', landscapes.splice(0, 2))
-    }
-
-    if (portraits.length === 1) {
-      pushPage('full-page', portraits.splice(0, 1))
-    }
-
-    if (landscapes.length === 1) {
-      pushPage('full-page', landscapes.splice(0, 1))
-    }
-
-    while (others.length) {
-      pushPage('full-page', [others.shift()!])
-    }
-
-    return pages
+    
+    return generatedPages.map((page) => ({
+      layout: page.layout,
+      photos: page.photoIndices
+        .map((idx) => photoByIndex.get(idx))
+        .filter((photo): photo is PhotoWithMeta => !!photo)
+    }))
   }
 
   /**

@@ -112,8 +112,8 @@ const handleKeydown = (event: KeyboardEvent) => {
 .editor-content {
   flex: 1;
   padding: var(--spacing-lg, 24px);
-  min-height: 300px;
-  max-height: 600px;
+  min-height: 150px;
+  max-height: 300px;
   overflow-y: auto;
   outline: none;
   font-size: var(--font-size-base, 16px);

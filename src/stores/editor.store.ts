@@ -8,22 +8,15 @@ import type {
 	PhotoRatio,
 	StepGenerationPlan,
 	StepPageLayout,
-	StepPageState,
-	StepProposal
+	StepPageState
 } from '../models/editor.types'
-import { stepProposalService } from '../services/editor/step-proposal.service'
 import { StepBuilder } from '../services/builders/step.builder'
 import type { CropSettings, PhotoAdjustments, PhotoFilterPreset, PhotoOrientation } from '../models/gallery.types'
 import { DEFAULT_PHOTO_ADJUSTMENTS, DEFAULT_PHOTO_CROP, DEFAULT_PHOTO_FILTER } from '../models/photo.constants'
 import { getLayoutCapacity } from '../models/layout.constants'
 import { clampAdjustment } from '../utils/photo-filters'
+import { generateAutomaticPages } from '../utils/layout-generator'
 
-interface ProposalState {
-	draft: StepProposal
-	accepted?: StepProposal
-}
-
-type ProposalMap = Record<number, ProposalState | undefined>
 type BooleanMap = Record<number, boolean | undefined>
 type DateMap = Record<number, Date | undefined>
 type PreviewHtmlMap = Record<number, string | undefined>
@@ -157,9 +150,7 @@ const readParsedStepPhotos = (): Record<number, File[]> => {
 	return {}
 }
 
-const cloneProposal = (proposal: StepProposal): StepProposal => {
-	return JSON.parse(JSON.stringify(proposal)) as StepProposal
-}
+
 
 const buildStepPreviewDocument = async (
 	trip: Trip,
@@ -251,6 +242,8 @@ const createEmptyPageState = (): StepPageState => ({
  */
 export const useEditorStore = defineStore('editor', () => {
 	const currentTrip = ref<Trip | null>(null)
+	// keep an internal original snapshot of the trip to allow resets
+	const originalTrip = ref<Trip | null>(null)
 	const currentStepIndex = ref<number>(0)
 	const autoSaveStatus = ref<SaveStatus>('idle')
 	const lastSaveTime = ref<Date | null>(null)
@@ -262,10 +255,12 @@ export const useEditorStore = defineStore('editor', () => {
 	const isPreviewLoading = ref(false)
 	const isExporting = ref(false)
 	const isPreviewStale = ref(true)
+	// Whether the right-side preview panel is open/expanded
+	const isPreviewOpen = ref(false)
 
 	const stepPhotosByStep = reactive<Record<number, EditorStepPhoto[]>>({})
 	const photoHistoriesByStep = reactive<Record<number, Record<number, PhotoEditHistory>>>({})
-	const proposalStates = reactive<ProposalMap>({})
+	// proposal system removed
 	const proposalLoadingByStep = reactive<BooleanMap>({})
 	const previewHtmlByStep = reactive<PreviewHtmlMap>({})
 	const previewUpdatedAtByStep = reactive<DateMap>({})
@@ -351,23 +346,7 @@ export const useEditorStore = defineStore('editor', () => {
 		return state.pages.find((page) => page.id === state.activePageId) ?? null
 	})
 
-	const currentStepProposal = computed<StepProposal | null>(() => {
-		const step = currentStep.value
-		if (!step) return null
-		return proposalStates[step.id]?.draft ?? null
-	})
-
-	const currentStepAcceptedProposal = computed<StepProposal | null>(() => {
-		const step = currentStep.value
-		if (!step) return null
-		return proposalStates[step.id]?.accepted ?? null
-	})
-
-	const isCurrentStepProposalLoading = computed(() => {
-		const step = currentStep.value
-		if (!step) return isPreparingPhotos.value
-		return proposalLoadingByStep[step.id] ?? isPreparingPhotos.value
-	})
+	const isCurrentStepProposalLoading = computed(() => isPreparingPhotos.value)
 
 	const currentStepPreviewHtml = computed(() => {
 		const step = currentStep.value
@@ -396,8 +375,7 @@ export const useEditorStore = defineStore('editor', () => {
 			}
 		}
 		clearObjectMap(stepPhotosByStep)
-		clearObjectMap(proposalStates)
-		clearObjectMap(previewHtmlByStep)
+	clearObjectMap(previewHtmlByStep)
 		clearObjectMap(previewUpdatedAtByStep)
 		clearObjectMap(previewLoadingByStep)
 		clearObjectMap(proposalLoadingByStep)
@@ -438,45 +416,78 @@ export const useEditorStore = defineStore('editor', () => {
 		}
 	}
 
-	const ensureStepProposal = async (stepId: number, force = false): Promise<StepProposal | null> => {
-		const trip = currentTrip.value
-		if (!trip) return null
-		const step = trip.steps.find((s) => s.id === stepId)
-		if (!step) return null
-
-		if (!force && proposalStates[stepId]?.draft) {
-			return proposalStates[stepId]!.draft
-		}
-
-		if (proposalLoadingByStep[stepId]) {
-			return proposalStates[stepId]?.draft ?? null
-		}
-
-		proposalLoadingByStep[stepId] = true
-		try {
-			const photos = stepPhotosByStep[stepId] ?? []
-			const proposal = stepProposalService.generate(trip, step, photos)
-			const previous = proposalStates[stepId]
-			proposalStates[stepId] = {
-				draft: proposal,
-				accepted: previous?.accepted
-			}
-			return proposal
-		} finally {
-			proposalLoadingByStep[stepId] = false
-		}
-	}
+	// proposal generation removed: editing applies directly to steps
 
 	const ensurePageState = (stepId: number): StepPageState => {
-		if (!stepPageStates[stepId]) {
-			stepPageStates[stepId] = reactive(createEmptyPageState()) as StepPageState
+			if (!stepPageStates[stepId]) {
+				stepPageStates[stepId] = reactive(createEmptyPageState()) as StepPageState
+				// populate defaults
+				void populateDefaultPagesForStep(stepId)
+			}
+			return stepPageStates[stepId]!
+	}
+
+	/**
+	 * Populate default pages for a step: cover + sample photo pages
+	 */
+	const populateDefaultPagesForStep = async (stepId: number): Promise<void> => {
+		const state = stepPageStates[stepId] ?? reactive(createEmptyPageState())
+		// clear existing
+		state.pages = []
+		state.activePageId = null
+		state.coverPhotoIndex = null
+
+		const step = currentTrip.value?.steps.find((s) => s.id === stepId)
+		const photos = stepPhotosByStep[stepId] ?? []
+
+		// If there are photos, use the automatic layout generation
+		if (photos.length > 0) {
+			// Sélectionner la photo de couverture (première photo par défaut)
+			const coverPhotoIndex = photos[0].index
+			state.coverPhotoIndex = coverPhotoIndex
+			state.coverFormat = 'text-image'
+			
+			// Créer la page de couverture (vide car la photo de couverture est gérée par coverPhotoIndex)
+			const coverPage: EditorStepPage = { 
+				id: createPageId(stepId), 
+				layout: 'full-page', 
+				photoIndices: [] 
+			}
+			state.pages.push(coverPage)
+			state.activePageId = coverPage.id
+			
+			// Générer automatiquement les pages selon la logique du PDF
+			const generatedPages = generateAutomaticPages(photos, coverPhotoIndex)
+			
+			// Ajouter toutes les pages générées
+			for (const generatedPage of generatedPages) {
+				const page: EditorStepPage = {
+					id: createPageId(stepId),
+					layout: generatedPage.layout,
+					photoIndices: generatedPage.photoIndices
+				}
+				state.pages.push(page)
+			}
 		}
-		return stepPageStates[stepId]!
+
+		// If no photos, leave pages empty (editor can add pages manually)
+
+		stepPageStates[stepId] = state as StepPageState
+		notifyPageChange(stepId)
+	}
+
+	const generateDefaultPagesForStep = async (stepId: number): Promise<void> => {
+		// public method to (re)generate default pages for a step
+		stepPageStates[stepId] = reactive(createEmptyPageState()) as StepPageState
+		await populateDefaultPagesForStep(stepId)
 	}
 
 	const buildStepPlan = (stepId: number): StepGenerationPlan | undefined => {
 		const state = stepPageStates[stepId]
+		// Si l'éditeur n'a pas encore été initialisé pour cette étape, on retourne undefined
+		// pour laisser la génération automatique faire son travail
 		if (!state) return undefined
+		
 		const cover = Number.isInteger(state.coverPhotoIndex ?? NaN)
 			? (state.coverPhotoIndex as number)
 			: undefined
@@ -484,10 +495,11 @@ export const useEditorStore = defineStore('editor', () => {
 			layout: page.layout,
 			photoIndices: Array.from(new Set(page.photoIndices.filter((index) => Number.isInteger(index))))
 		}))
-		const hasContent = (cover != null && Number.isInteger(cover)) || pages.some((entry) => entry.photoIndices.length > 0)
-		if (!hasContent) {
-			return undefined
-		}
+		
+		// ✅ IMPORTANT: On retourne TOUJOURS un plan si l'éditeur a été initialisé,
+		// même si les pages sont vides. Cela permet de refléter fidèlement l'état de l'éditeur.
+		// Par exemple: si l'utilisateur supprime toutes les pages, on veut un plan vide,
+		// pas un retour à la génération automatique.
 		return { cover, pages }
 	}
 
@@ -540,6 +552,10 @@ export const useEditorStore = defineStore('editor', () => {
 		isPreviewLoading.value = loading
 	}
 
+	const setPreviewOpen = (open: boolean) => {
+		isPreviewOpen.value = !!open
+	}
+
 	const setExporting = (loading: boolean) => {
 		isExporting.value = loading
 	}
@@ -572,6 +588,8 @@ export const useEditorStore = defineStore('editor', () => {
 		cleanupContext()
 		const clonedTrip = deepClone(trip)
 		currentTrip.value = clonedTrip
+		// store an immutable original snapshot for restores when parsedTrip is unavailable
+		originalTrip.value = deepClone(trip)
 		currentStepIndex.value = 0
 		invalidatePreview()
 
@@ -581,9 +599,17 @@ export const useEditorStore = defineStore('editor', () => {
 
 		await prepareStepPhotosForTrip(clonedTrip)
 
+		// After photos are prepared, populate default pages for each step so the
+		// Pages & mise en page section is not empty on first load.
+		for (const step of clonedTrip.steps ?? []) {
+			// ensure we have an empty state (may already exist)
+			stepPageStates[step.id] = stepPageStates[step.id] ?? reactive(createEmptyPageState()) as StepPageState
+			// populate synchronously so the UI sees pages immediately
+			await populateDefaultPagesForStep(step.id)
+		}
+
 		const firstStep = clonedTrip.steps?.[0]
 		if (firstStep) {
-			await ensureStepProposal(firstStep.id, true)
 			await regenerateStepPreview(firstStep.id)
 			clearStepBuilderMock()
 		}
@@ -593,7 +619,6 @@ export const useEditorStore = defineStore('editor', () => {
 		if (currentTrip.value?.steps && index >= 0 && index < currentTrip.value.steps.length) {
 			currentStepIndex.value = index
 			const step = currentTrip.value.steps[index]
-			void ensureStepProposal(step.id)
 			ensurePageState(step.id)
 			if (!previewHtmlByStep[step.id]) {
 				void regenerateStepPreview(step.id)
@@ -619,6 +644,94 @@ export const useEditorStore = defineStore('editor', () => {
 			markPreviewStale()
 			schedulePreviewRegeneration(step.id)
 		}
+	}
+
+	/**
+	 * Update trip name in a controlled way.
+	 * Centralizes autosave + preview marking behavior when the trip title changes.
+	 */
+	const updateTripName = (name: string): void => {
+		if (!currentTrip.value) return
+		if (currentTrip.value.name === name) return
+		currentTrip.value.name = name
+		triggerAutoSave()
+		markPreviewStale()
+		// regenerate preview for current step if any
+		const step = currentStep.value
+		if (step) schedulePreviewRegeneration(step.id)
+	}
+
+	/**
+	 * Réinitialise une étape à son état original (nom, description, photos, pages, histories)
+	 * Les données originales sont lues depuis window.__parsedTrip si disponible.
+	 */
+	const resetStep = async (stepId: number): Promise<void> => {
+		if (!currentTrip.value) return
+		const index = currentTrip.value.steps.findIndex((s) => s.id === stepId)
+	if (index === -1) return
+
+		// Restore step fields from parsedTrip if available, otherwise from internal originalTrip
+		const parsed = (typeof window !== 'undefined' ? (window as any).__parsedTrip : undefined)
+		let originalStep: Step | undefined
+		if (parsed?.trip) {
+			originalStep = (parsed.trip as Trip).steps.find((s: Step) => s.id === stepId)
+		}
+		if (!originalStep && originalTrip.value) {
+			originalStep = originalTrip.value.steps.find((s) => s.id === stepId)
+		}
+		if (originalStep) {
+			// copy back all fields from original step except the id to restore editable data
+			const target = currentTrip.value.steps[index]
+			const keys = Object.keys(originalStep) as Array<keyof Step>
+			for (const key of keys) {
+				if (key === 'id') continue
+				;(target as any)[key] = (originalStep as any)[key]
+			}
+		}
+
+		// Reset page state for this step
+		stepPageStates[stepId] = reactive(createEmptyPageState()) as StepPageState
+
+		// Rebuild editor photo list from parsed files if available, otherwise clear
+		const parsedFiles: File[] = parsed?.stepPhotos?.[stepId] ?? []
+		// Revoke previous urls
+		const previous = stepPhotosByStep[stepId] ?? []
+		for (const p of previous) {
+			revokeObjectUrl(p.url)
+		}
+		if (parsedFiles.length) {
+			const prepared: EditorStepPhoto[] = []
+			for (let i = 0; i < parsedFiles.length; i++) {
+				// prepareEditorPhoto can be async
+				prepared.push(await prepareEditorPhoto(stepId, i + 1, parsedFiles[i]))
+			}
+			stepPhotosByStep[stepId] = prepared
+			// reset photo histories
+			const historyMap = ensurePhotoHistoryMap(stepId)
+			for (const key of Object.keys(historyMap)) {
+				delete historyMap[Number(key)]
+			}
+			for (const photo of prepared) {
+				historyMap[photo.index] = { past: [], future: [] }
+			}
+		} else {
+			// No parsed files: clear photos and histories
+			stepPhotosByStep[stepId] = []
+			const historyMap = ensurePhotoHistoryMap(stepId)
+			for (const key of Object.keys(historyMap)) {
+				delete historyMap[Number(key)]
+			}
+		}
+
+	// Clear previews for this step
+	proposalLoadingByStep[stepId] = false
+		previewHtmlByStep[stepId] = ''
+		previewUpdatedAtByStep[stepId] = undefined
+		previewLoadingByStep[stepId] = false
+
+		triggerAutoSave()
+		markPreviewStale()
+		schedulePreviewRegeneration(stepId)
 	}
 
 	const reorderSteps = (newSteps: Step[]) => {
@@ -659,31 +772,6 @@ export const useEditorStore = defineStore('editor', () => {
 		autoSaveStatus.value = status
 	}
 
-	const regenerateCurrentStepProposal = async () => {
-		const step = currentStep.value
-		if (!step) return
-		await ensureStepProposal(step.id, true)
-	}
-
-	const acceptCurrentStepProposal = () => {
-		const step = currentStep.value
-		if (!step) return
-		const state = proposalStates[step.id]
-		if (!state?.draft) return
-		const alreadyAccepted = state.accepted?.generatedAt === state.draft.generatedAt
-		if (alreadyAccepted) {
-			return
-		}
-		const acceptedCopy = cloneProposal(state.draft)
-		proposalStates[step.id] = {
-			draft: state.draft,
-			accepted: acceptedCopy
-		}
-		step.description = acceptedCopy.description
-		triggerAutoSave()
-		markPreviewStale()
-		schedulePreviewRegeneration(step.id, 0)
-	}
 
 	const regenerateCurrentStepPreview = async () => {
 		const step = currentStep.value
@@ -791,6 +879,18 @@ export const useEditorStore = defineStore('editor', () => {
 		notifyPageChange(step.id)
 	}
 
+	const setCurrentStepCoverFormat = (format: 'text-image' | 'text-only'): void => {
+		const step = currentStep.value
+		if (!step) return
+		const state = ensurePageState(step.id)
+		if (state.coverFormat === format) return
+		state.coverFormat = format
+		notifyPageChange(step.id)
+		triggerAutoSave()
+		markPreviewStale()
+		schedulePreviewRegeneration(step.id)
+	}
+
 	const getCurrentStepPhotoHistory = (photoIndex: number): PhotoEditHistory => {
 		const step = currentStep.value
 		if (!step) {
@@ -869,14 +969,13 @@ export const useEditorStore = defineStore('editor', () => {
 		isPreviewLoading,
 		isExporting,
 		isPreviewStale,
+		isPreviewOpen,
 		currentStepPhotos,
 		currentStepPageState,
 		currentStepPages,
 		currentStepActivePage,
 		currentStepActivePageId,
-		currentStepProposal,
-		currentStepAcceptedProposal,
-		currentStepPreviewHtml,
+	currentStepPreviewHtml,
 		currentStepPreviewUpdatedAt,
 		isCurrentStepProposalLoading,
 		isCurrentStepPreviewLoading,
@@ -897,12 +996,11 @@ export const useEditorStore = defineStore('editor', () => {
 		setAutoSaveStatus,
 		setPreviewLoading,
 		setExporting,
+		setPreviewOpen,
 		setPreviewHtml,
 		setPreviewError,
 		markPreviewStale,
 		invalidatePreview,
-		regenerateCurrentStepProposal,
-		acceptCurrentStepProposal,
 		regenerateCurrentStepPreview,
 		addPageToCurrentStep,
 		removePageFromCurrentStep,
@@ -911,8 +1009,13 @@ export const useEditorStore = defineStore('editor', () => {
 		setCurrentPageLayout,
 		setCurrentPagePhotoIndices,
 		setCurrentStepCoverPhotoIndex,
+		setCurrentStepCoverFormat,
 		addPhotoToCurrentStep,
 		applyAdjustmentsToCurrentPhoto,
-		getCurrentStepPhotoHistory
+		getCurrentStepPhotoHistory,
+		resetStep,
+		updateTripName,
+		generateDefaultPagesForStep,
+		buildStepPlan
 	}
 })

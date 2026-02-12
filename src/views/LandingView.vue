@@ -9,6 +9,7 @@
       <div class="footer-container">
         <p class="footer-text">
           © {{ currentYear }} Travel Book - Créé avec ❤️ pour les voyageurs
+          <span v-if="appVersion" class="footer-version"> · v{{ appVersion }}</span>
         </p>
         <nav class="footer-links">
           <a href="#" class="footer-link" @click.prevent="scrollToTop">Retour en haut ↑</a>
@@ -37,6 +38,7 @@ import LandingHowItWorks from '../components/landing/LandingHowItWorks.vue'
 import LandingCTA from '../components/landing/LandingCTA.vue'
 
 const currentYear = computed(() => new Date().getFullYear())
+const appVersion = import.meta.env.VITE_APP_VERSION || null
 
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -71,6 +73,11 @@ function scrollToTop() {
   font-size: var(--font-size-sm);
   margin: 0;
   opacity: 0.8;
+}
+
+.footer-version {
+  font-size: var(--font-size-xs);
+  opacity: 0.6;
 }
 
 .footer-links {

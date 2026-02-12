@@ -1,4 +1,6 @@
 
+<CRITICAL_INSTRUCTION>
+
 <!-- BACKLOG.MD GUIDELINES START -->
 # Instructions for the usage of Backlog.md CLI Tool
 
@@ -302,6 +304,7 @@ implementation.
 - When you begin work, switch to edit, set the task in progress and assign to yourself
   `backlog task edit <id> -s "In Progress" -a "..."`.
 - Think about how you would solve the task and add the plan: `backlog task edit <id> --plan "..."`.
+- After updating the plan, share it with the user and ask for confirmation. Do not begin coding until the user approves the plan or explicitly tells you to skip the review.
 - Add Implementation Notes only after completing the work: `backlog task edit <id> --notes "..."` (replace) or append progressively using `--append-notes`.
 
 ## Phase discipline: What goes where
@@ -332,19 +335,21 @@ backlog task edit 42 -s "In Progress" -a @myself
 # 4. Add implementation plan
 backlog task edit 42 --plan "1. Analyze\n2. Refactor\n3. Test"
 
-# 5. Work on the task (write code, test, etc.)
+# 5. Share the plan with the user and wait for approval (do not write code yet)
 
-# 6. Mark acceptance criteria as complete (supports multiple in one command)
+# 6. Work on the task (write code, test, etc.)
+
+# 7. Mark acceptance criteria as complete (supports multiple in one command)
 backlog task edit 42 --check-ac 1 --check-ac 2 --check-ac 3  # Check all at once
 # Or check them individually if preferred:
 # backlog task edit 42 --check-ac 1
 # backlog task edit 42 --check-ac 2
 # backlog task edit 42 --check-ac 3
 
-# 7. Add implementation notes (PR Description)
+# 8. Add implementation notes (PR Description)
 backlog task edit 42 --notes "Refactored using strategy pattern, updated tests"
 
-# 8. Mark task as done
+# 9. Mark task as done
 backlog task edit 42 -s Done
 ```
 
@@ -528,6 +533,26 @@ Descriptions support literal newlines; shell examples may show escaped `\\n`, bu
 Full help available: `backlog --help`
 
 <!-- BACKLOG.MD GUIDELINES END -->
+
+
+</CRITICAL_INSTRUCTION>
+ 
+## ADR Creation (Backlog decisions)
+
+- To create a new ADR (Decision), run:
+  - `backlog decision create "<ADR-Title>"`
+- After creation, edit the generated file in `backlog/decisions/` and fill at minimum the sections:
+  - `## Context`
+  - `## Decision`
+  - `## Consequences`
+- Note: All ADRs must be written in English.
+
+### When to propose an ADR
+
+- The assistant (Copilot) SHOULD proactively propose creating an ADR whenever it performs or implements a complex task that modifies, documents, or takes decisions affecting the project's global architecture, structure, or long-lived conventions.
+- A proposal must include the recommended ADR title and the suggested minimal content (Context, Decision, Consequences) and the CLI command to create it (`backlog decision create "<ADR-Title>"`).
+- The assistant should offer to create the decision file and populate it in `backlog/decisions/` (in English), or provide the exact `backlog decision create` command plus the ADR body so the developer can run it.
+- The goal is to ensure ADRs are created automatically and maintained over the project lifetime whenever architecture-relevant choices are made.
 
 ---
 # Section technique du projet (Travel Book JS)

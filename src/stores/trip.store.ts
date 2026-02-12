@@ -3,6 +3,7 @@ import { fileSystemService, FFInput } from '../services/fs.service'
 import { tripParser } from '../services/parse.service'
 import { artifactGenerator, GeneratedArtifacts, GenerateOptions } from '../services/generate.service'
 import type { Trip } from '../models/types'
+import { analyticsService } from '../services/analytics.service'
 
 export const useTripStore = defineStore('trip', {
   state: () => ({
@@ -19,9 +20,13 @@ export const useTripStore = defineStore('trip', {
     async pickDirectory() {
       const inp = await fileSystemService.readTripDirectory()
       this.input = inp
+      // Tracker le début de création d'album
+      analyticsService.trackAlbumCreationStart()
     },
     setFiles(files: FileList) {
       this.input = { kind: 'files', files: Array.from(files) }
+      // Tracker le début de création d'album
+      analyticsService.trackAlbumCreationStart()
     },
     async handleDropItems(items: DataTransferItemList) {
       const entry = items[0] && (items[0].webkitGetAsEntry?.() as any)

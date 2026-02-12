@@ -17,7 +17,7 @@ let cache: CountryBoundingBoxes | null = null;
 
 async function loadBoxes(): Promise<CountryBoundingBoxes> {
   if (cache) return cache;
-  const res = await fetch('/data/country_bounding_boxes.json');
+  const res = await fetch(`${import.meta.env.BASE_URL}data/country_bounding_boxes.json`);
   if (!res.ok) throw new Error(`Failed to load country_bounding_boxes.json: ${res.status}`);
   cache = (await res.json()) as CountryBoundingBoxes;
   return cache!;

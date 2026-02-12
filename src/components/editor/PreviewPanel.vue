@@ -81,6 +81,7 @@ import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useEditorStore } from '../../stores/editor.store'
 import { usePreview } from '../../composables/usePreview'
 import { useEditorGeneration } from '../../composables/useEditorGeneration'
+import { analyticsService } from '../../services/analytics.service'
 
 const editorStore = useEditorStore()
 const expanded = ref(false)
@@ -91,11 +92,153 @@ const openPanel = async () => {
   // open panel and request preview generation (non-blocking)
   editorStore.setPreviewMode('desktop')
   expanded.value = true
+  // update central store so layout can react
+  editorStore.setPreviewOpen(true)
+  // Tracker l'ouverture de la prévisualisation
+  analyticsService.trackPreviewOpened()
   void previewTravelBook()
 }
 
 const closePanel = () => {
   expanded.value = false
+  // update central store so layout can react
+  editorStore.setPreviewOpen(false)
+}
+
+// iframe reference used for print/open/download actions
+const previewFrame = ref<HTMLIFrameElement | null>(null)
+
+const printPreview = () => {
+  // Tracker l'export PDF
+  analyticsService.trackPdfExported()
+  
+  // Try printing from iframe.contentWindow, fallback to opening a window
+  try {
+    const iframe = previewFrame.value
+    const printed = iframe?.contentWindow && typeof iframe.contentWindow.print === 'function'
+    if (printed) {
+      iframe!.contentWindow!.focus()
+      iframe!.contentWindow!.print()
+      return
+    }
+  } catch (err) {
+    // ignore and fallback
+  }
+
+  // Fallback: open a new window/tab with the preview HTML and print it
+  try {
+    const html = previewContent.value || ''
+    const w = window.open('', '_blank')
+    if (w) {
+  // Append a small script that waits for images/tiles to load before print.
+      const waitAndPrintScript = `
+        <script>
+          (function(){
+            const TIMEOUT = 8000;
+            function allImagesLoaded() {
+              const imgs = Array.from(document.images || [])
+              if (imgs.length === 0) return true
+              return imgs.every(i => i.complete && (i.naturalWidth !== 0))
+            }
+            function onReady() {
+              try { window.focus(); window.print(); } catch(e) { /* ignore */ }
+            }
+            if (allImagesLoaded()) {
+              onReady();
+            } else {
+              let called = false;
+              const attempt = () => { if (called) return; if (allImagesLoaded()) { called = true; onReady(); } };
+              const timer = setTimeout(() => { if (!called) { called = true; onReady(); } }, TIMEOUT);
+              // Listen to load/error on images
+              Array.from(document.images || []).forEach(img => {
+                img.addEventListener('load', attempt, { once: true })
+                img.addEventListener('error', attempt, { once: true })
+              })
+            }
+          })();
+        <\/script>
+      `
+
+      w.document.open()
+    // Insert the wait script before closing </body>
+  const injected = html.replace(/<\/body>/i, waitAndPrintScript + '\n</body>')
+      w.document.write(injected)
+      w.document.close()
+      w.focus()
+      // In some test/headless environments the new window may not expose print()
+      // so call window.print() as a fallback.
+      if (typeof (w as any).print !== 'function') {
+        try { window.print() } catch (e) { /* ignore */ }
+      }
+      return
+    }
+  } catch (err) {
+    // ignore
+  }
+
+  // Last-resort fallback
+  window.print()
+}
+
+const openInNewTab = () => {
+  try {
+    const iframe = previewFrame.value
+    if (iframe && iframe.contentWindow && iframe.contentWindow.document) {
+      const docHtml = iframe.contentWindow.document.documentElement.outerHTML
+      const w = window.open('', '_blank')
+      if (w) {
+        w.document.open()
+        w.document.write(docHtml)
+        w.document.close()
+        w.focus()
+        return
+      }
+    }
+  } catch (err) {
+    // fallback to previewContent
+  }
+
+  try {
+    const html = previewContent.value || ''
+    const w = window.open('', '_blank')
+    if (w) {
+      w.document.open()
+      w.document.write(html)
+      w.document.close()
+      w.focus()
+      return
+    }
+  } catch (err) {
+    // ignore
+  }
+}
+
+const downloadHtml = () => {
+  try {
+    let html = ''
+    try {
+      const iframe = previewFrame.value
+      if (iframe && iframe.contentWindow && iframe.contentWindow.document) {
+        html = iframe.contentWindow.document.documentElement.outerHTML
+      }
+    } catch (err) {
+      // fallback to previewContent
+    }
+    if (!html) html = previewContent.value || ''
+
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'preview.html'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+    return
+  } catch (err) {
+    // ignore
+  }
 }
 
 // iframe reference used for print/open/download actions
@@ -240,14 +383,12 @@ const { content: previewContent, setMode, mode } = usePreview({
 onMounted(() => {
   editorStore.setPreviewMode('desktop')
   setMode('desktop')
-  const onToggle = (ev: any) => {
-    expanded.value = !!ev.detail?.open
-  }
-  window.addEventListener('toggle-preview', onToggle)
-  // remove listener on unmount
-  onUnmounted(() => {
-    window.removeEventListener('toggle-preview', onToggle)
+  // Sync local expanded state with store
+  const stop = watch(() => editorStore.isPreviewOpen, (val) => {
+    expanded.value = !!val
   })
+  // Sync local expanded state with store; no legacy global listener.
+  onUnmounted(() => stop())
 })
 
 const isGenerating = computed(() => editorStore.isPreviewLoading)
@@ -318,6 +459,9 @@ watch(
     z-index: 1050;
     display: flex;
     flex-direction: column;
+    transition: transform 240ms ease, opacity 200ms ease;
+    transform: translateX(0);
+    opacity: 1;
   }
 
   .preview-overlay-header {
@@ -439,6 +583,48 @@ watch(
   @media (max-width: 1200px) {
     .preview-toggle { right: 4px; }
     .preview-frame-expanded { width: calc(100% - 32px); height: calc(100vh - var(--header-height, 64px) - 80px); }
+  }
+
+  /* Mobile: overlay uses full width and covers content under header */
+  @media (max-width: 768px) {
+    .preview-overlay-panel {
+      left: 0;
+      right: 0;
+      width: 100vw;
+      max-width: none;
+      top: var(--header-height, 64px);
+      height: calc(100vh - var(--header-height, 64px));
+      border-radius: 0;
+      padding: 0;
+      box-shadow: none;
+    }
+
+    .preview-overlay-content {
+      padding: 12px;
+    }
+
+    .preview-frame-expanded {
+      width: 100%;
+      height: calc(100vh - var(--header-height, 64px) - 96px);
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    /* Move toggle to bottom-right on small screens for easier reachability */
+    .preview-toggle {
+      top: auto;
+      bottom: 16px;
+      right: 16px;
+      transform: translateY(0);
+      padding: 12px 14px;
+    }
+
+    /* Slightly larger action buttons for touch */
+    .preview-overlay-actions button {
+      width: 44px;
+      height: 44px;
+      font-size: 18px;
+    }
   }
 
   </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="editor-layout">
+  <div class="editor-layout" :style="layoutStyle">
     <EditorHeader />
     <EditorSidebar>
       <template #default="{ activeTab }">
@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch, nextTick } from 'vue'
+import { onMounted, watch, nextTick, computed } from 'vue'
 import { useEditorStore } from '../stores/editor.store'
 import { useTripStore } from '../stores/trip.store'
 import { useHistory } from '../composables/useHistory'
@@ -40,10 +40,16 @@ import StepEditor from '../components/editor/StepEditor.vue'
 import BaseButton from '../components/BaseButton.vue'
 import { useEditorGeneration } from '../composables/useEditorGeneration'
 import type { Trip } from '../models/types'
+import { analyticsService } from '../services/analytics.service'
 
 const editorStore = useEditorStore()
 const tripStore = useTripStore()
 const { previewTravelBook } = useEditorGeneration()
+
+// Use store flag to adjust layout (preview column width)
+const layoutStyle = computed(() => ({
+  '--editor-preview-width': editorStore.isPreviewOpen ? '400px' : '0px'
+}))
 
 // Undo/Redo avec useHistory
 const {
@@ -74,7 +80,9 @@ onMounted(async () => {
   // Si on a déjà un voyage parsé dans le tripStore, on l'utilise
   if (tripStore.hasParsedTrip && tripStore.parsedTrip) {
     // Le Trip a déjà été chargé et passé à l'editor par HomeView
-    // Rien à faire ici
+    // Tracker l'ouverture de l'éditeur avec le nombre d'étapes
+    const stepCount = tripStore.parsedTrip.steps?.length || 0
+    analyticsService.trackEditorOpened(stepCount)
     return
   }
   
@@ -84,9 +92,14 @@ onMounted(async () => {
     const trip = tripStore.parsedTrip
     if (trip) {
       editorStore.setTrip(trip)
+      // Tracker l'ouverture de l'éditeur avec le nombre d'étapes
+      const stepCount = trip.steps?.length || 0
+      analyticsService.trackEditorOpened(stepCount)
     }
   }
 })
+
+// No global event listener required; layoutStyle reads store directly
 
   // Lancer en tâche de fond la génération des previews pour toutes les étapes
   const generateAllPreviewsInBackground = async () => {
@@ -146,6 +159,19 @@ const goHome = () => {
   height: 100vh;
   background: var(--color-background, #f5f5f5);
   overflow: hidden;
+}
+
+/* Smooth transition when preview column width changes */
+.editor-layout {
+  transition: grid-template-columns 220ms ease;
+}
+
+/* If preview width is set to 0, collapse the preview area cleanly */
+.editor-layout[style*="--editor-preview-width: 0px"] {
+  grid-template-areas:
+    "header header"
+    "sidebar main";
+  grid-template-columns: var(--editor-sidebar-width, 280px) 1fr;
 }
 
 .editor-main {
