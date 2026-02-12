@@ -46,11 +46,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits(['click'])
 
 function handleClick(event: MouseEvent) {
-  // Accès direct aux props via variables du template
-  // @ts-ignore pour TypeScript strict
-  // eslint-disable-next-line
-  // @ts-ignore
-  if (!disabled && !loading) {
+  if (!props.disabled && !props.loading) {
     emit('click', event)
   }
 }
