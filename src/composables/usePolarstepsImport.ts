@@ -59,8 +59,44 @@ export function usePolarstepsImport() {
   /** Drop direct dans la zone */
   async function onDrop(e: DragEvent) {
     e.preventDefault()
+    error.value = null
     const items = e.dataTransfer?.items
     if (!items) return
+
+    // Tente d'abord getAsFileSystemHandle (Chrome 86+) pour récupérer un dossier
+    for (const it of Array.from(items)) {
+      if ('getAsFileSystemHandle' in it) {
+        try {
+          const handle = await (it as any).getAsFileSystemHandle()
+          if (handle && handle.kind === 'directory') {
+            const input: FFInput = { kind: 'fs', dirHandle: handle as FileSystemDirectoryHandle }
+            await processInput(input)
+            return
+          }
+        } catch {
+          // Fallback ci-dessous
+        }
+      }
+    }
+
+    // Fallback : webkitGetAsEntry pour parcourir le dossier récursivement
+    for (const it of Array.from(items)) {
+      const entry = (it as any).webkitGetAsEntry?.() as FileSystemEntry | null
+      if (entry && entry.isDirectory) {
+        try {
+          const fileList = await readEntriesRecursively(entry as FileSystemDirectoryEntry)
+          if (fileList.length) {
+            const input: FFInput = { kind: 'files', files: fileList }
+            await processInput(input)
+            return
+          }
+        } catch {
+          // Fallback simple ci-dessous
+        }
+      }
+    }
+
+    // Dernier recours : récupérer les fichiers plats (marche pour fichiers individuels)
     const fileList: File[] = []
     for (const it of Array.from(items)) {
       const f = it.getAsFile()
@@ -70,6 +106,60 @@ export function usePolarstepsImport() {
       const input: FFInput = { kind: 'files', files: fileList }
       await processInput(input)
     }
+  }
+
+  /**
+   * Parcourt récursivement un FileSystemDirectoryEntry issu d'un drop
+   * et renvoie la liste plate de File avec webkitRelativePath simulé
+   */
+  async function readEntriesRecursively(dirEntry: FileSystemDirectoryEntry): Promise<File[]> {
+    const files: File[] = []
+
+    async function traverse(entry: FileSystemEntry, path: string) {
+      if (entry.isFile) {
+        const file = await new Promise<File>((resolve, reject) => {
+          (entry as FileSystemFileEntry).file(resolve, reject)
+        })
+        // Simule webkitRelativePath pour compatibilité avec le code existant
+        Object.defineProperty(file, 'webkitRelativePath', {
+          value: path + file.name,
+          writable: false
+        })
+        files.push(file)
+      } else if (entry.isDirectory) {
+        const reader = (entry as FileSystemDirectoryEntry).createReader()
+        let entries: FileSystemEntry[] = []
+        // readEntries peut renvoyer un lot partiel, il faut boucler
+        let batch: FileSystemEntry[]
+        do {
+          batch = await new Promise<FileSystemEntry[]>((resolve, reject) => {
+            reader.readEntries(resolve, reject)
+          })
+          entries = entries.concat(batch)
+        } while (batch.length > 0)
+
+        for (const child of entries) {
+          await traverse(child, path + entry.name + '/')
+        }
+      }
+    }
+
+    // On commence avec le nom du dossier racine comme préfixe
+    const reader = dirEntry.createReader()
+    let entries: FileSystemEntry[] = []
+    let batch: FileSystemEntry[]
+    do {
+      batch = await new Promise<FileSystemEntry[]>((resolve, reject) => {
+        reader.readEntries(resolve, reject)
+      })
+      entries = entries.concat(batch)
+    } while (batch.length > 0)
+
+    for (const child of entries) {
+      await traverse(child, dirEntry.name + '/')
+    }
+
+    return files
   }
 
   function onDragOver(e: DragEvent) { e.preventDefault() }
