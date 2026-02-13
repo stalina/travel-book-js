@@ -1,12 +1,13 @@
 ---
-id: task-32
+id: TASK-32
 title: Release v0.1.0
 status: Done
 assignee: []
 created_date: '2025-11-10 13:51'
-updated_date: '2025-11-10 13:52'
+updated_date: '2026-02-13 12:51'
 labels: []
 dependencies: []
+ordinal: 3000
 ---
 
 ## Description

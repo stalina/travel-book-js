@@ -1,12 +1,14 @@
 ---
 id: TASK-35
 title: Sauvegarde et reprise de brouillon dans le navigateur
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-02-12 01:39'
+updated_date: '2026-02-13 12:52'
 labels: []
 dependencies: []
 priority: high
+ordinal: 2000
 ---
 
 ## Description
