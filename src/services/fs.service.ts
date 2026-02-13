@@ -58,11 +58,13 @@ export class FileSystemService {
       if (input.kind === 'fs') {
         let handle: FileSystemHandle = input.dirHandle
         for (const part of pathParts) {
-          // @ts-ignore
-          handle = await (handle as any).getDirectoryHandle?.(part) ?? await (handle as any).getFileHandle?.(part)
+          try {
+            handle = await (handle as FileSystemDirectoryHandle).getDirectoryHandle(part)
+          } catch {
+            handle = await (handle as FileSystemDirectoryHandle).getFileHandle(part)
+          }
         }
-        // @ts-ignore
-        const file = await (handle as any).getFile?.()
+        const file = await (handle as FileSystemFileHandle).getFile()
         if (file) {
           loggerService.debug('FileSystemService', `Fichier trouvé: ${path}`, { size: file.size })
         }
@@ -97,8 +99,10 @@ export class FileSystemService {
     if (input.kind === 'fs') {
       const photos: File[] = []
       try {
-        const stepDir = await input.dirHandle.getDirectoryHandle(dir, { create: false })
-        for await (const entry of (stepDir as any).values()) {
+        const stepDirName = `${stepSlug}_${stepId}`
+        const stepDir = await input.dirHandle.getDirectoryHandle(stepDirName, { create: false })
+        const photosDir = await stepDir.getDirectoryHandle('photos', { create: false })
+        for await (const entry of (photosDir as any).values()) {
           if (entry.kind === 'file') {
             const f = await entry.getFile()
             photos.push(f)
