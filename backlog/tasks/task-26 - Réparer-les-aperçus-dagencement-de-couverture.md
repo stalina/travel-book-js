@@ -1,11 +1,13 @@
 ---
-id: task-26
+id: TASK-26
 title: Réparer les aperçus d'agencement de couverture
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-11-10 10:09'
+updated_date: '2026-02-13 12:52'
 labels: []
 dependencies: []
+ordinal: 3000
 ---
 
 ## Description

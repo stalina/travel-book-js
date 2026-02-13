@@ -1,12 +1,14 @@
 ---
-id: task-30
+id: TASK-30
 title: Synchroniser les modifications de l'éditeur vers la génération PDF
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-11-10 11:05'
+updated_date: '2026-02-13 12:52'
 labels: []
 dependencies: []
 priority: high
+ordinal: 1000
 ---
 
 ## Description
