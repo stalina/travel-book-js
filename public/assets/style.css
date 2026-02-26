@@ -1,27 +1,54 @@
 :root {
+  /* --- Thème : couleurs (surchargées par <style id="theme-overrides">) --- */
   --theme-color: rgb(71, 174, 162);
+  --theme-primary: rgb(71, 174, 162);
   --theme-secondary: rgb(0, 46, 61);
-  --dark-1: rgb(0, 46, 61);
+  --theme-accent: rgb(71, 174, 162);
+  --theme-bg: #ffffff;
+  --theme-text-primary: rgb(0, 46, 61);
+  --theme-text-secondary: #4b5a6c;
+  --theme-border-color: #e7eaee;
+
+  /* Alias rétrocompatibilité */
+  --dark-1: var(--theme-text-primary);
   --grey-9: #4b5a6c;
   --grey-15: #8a99ad;
   --grey-19: #b7c0cd;
-  --grey-23: #e7eaee;
+  --grey-23: var(--theme-border-color);
+
+  /* --- Thème : polices --- */
+  --theme-heading-font: "BrandonGrotesque", sans-serif;
+  --theme-body-font: "Noto Serif", serif;
+  --theme-label-font: "BrandonGrotesque", sans-serif;
+
+  /* --- Thème : décorations --- */
+  --theme-border-style: none;
+  --theme-border-radius: 0px;
+  --theme-separator-style: line;
+  --theme-cover-overlay-opacity: 0.35;
+
+  /* --- Thème : espacements --- */
+  --theme-content-padding: 202px;
+  --theme-photo-gap: 8px;
+  --theme-section-gap: 24px;
 
   /* Header height used by the preview overlay positioning */
   --header-height: 64px;
 
-  --content-padding: 202px;
+  --content-padding: var(--theme-content-padding);
   --full-to-relative: 0.35;
   --country-shape-size: 348px;
   --bar-height: calc(12px * var(--full-to-relative));
 }
 
 html {
-  font-family: "Noto Serif", serif;
+  font-family: var(--theme-body-font);
   font-optical-sizing: auto;
   font-weight: 400;
   font-style: normal;
   font-variation-settings: "wdth" 100;
+  color: var(--theme-text-primary);
+  background-color: var(--theme-bg);
 }
 
 html, body {
@@ -73,7 +100,7 @@ html, body {
   justify-content: center;
   width: calc(204px * var(--full-to-relative));
   height: calc(78px * var(--full-to-relative));
-  font-family: "BrandonGrotesque";
+  font-family: var(--theme-label-font);
   font-weight: 500;
   font-size: calc(40px * var(--full-to-relative));
   color: white;
@@ -160,7 +187,7 @@ html, body {
 }
 
 .step-country-name {
-  font-family: "BrandonGrotesque";
+  font-family: var(--theme-heading-font);
   font-weight: 500;
   color: var(--dark-1);
   font-size: calc(69px * var(--full-to-relative));
@@ -170,7 +197,7 @@ html, body {
 
 /* Détails ville + coordonnées (même esprit que le mois: plus petit et gris) */
 .step-country-extra {
-  font-family: "BrandonGrotesque";
+  font-family: var(--theme-label-font);
   font-weight: 500;
   color: var(--grey-15);
   font-size: calc(30px * var(--full-to-relative));
@@ -180,7 +207,7 @@ html, body {
 }
 
 .step-title {
-  font-family: "BrandonGrotesque";
+  font-family: var(--theme-heading-font);
   font-weight: 500;
   color: var(--dark-1);
   font-size: calc(100px * var(--full-to-relative));
@@ -198,7 +225,7 @@ html, body {
   justify-content: space-between;
   width: 100%;
   margin-top: calc(100px * var(--full-to-relative));
-  font-family: "BrandonGrotesque";
+  font-family: var(--theme-label-font);
   font-weight: 500;
 }
 
@@ -265,7 +292,7 @@ html, body {
   left: 50%;
   transform: translate(-50%, 0);
   font-size: 40px;
-  font-family: "BrandonGrotesque";
+  font-family: var(--theme-label-font);
   font-weight: 500;
   color: red;
 }
@@ -305,7 +332,7 @@ html, body {
   border-radius: 0;
   background: transparent;
   color: red;
-  font-family: "BrandonGrotesque";
+  font-family: var(--theme-label-font);
   font-weight: 500;
   font-size: 40px;
 }
@@ -357,7 +384,7 @@ html, body {
 }
 
 .layout-empty-message {
-  font-family: "BrandonGrotesque";
+  font-family: var(--theme-label-font);
   font-size: 36px;
   color: rgba(0, 0, 0, 0.4);
   text-align: center;
@@ -423,7 +450,7 @@ html, body {
   position: relative;
   text-align: center;
   color: #fff;
-  font-family: "BrandonGrotesque";
+  font-family: var(--theme-heading-font);
   text-transform: uppercase;
   display: flex;
   flex-direction: column;
@@ -458,7 +485,7 @@ html, body {
 /* --- Page Statistiques -------------------------------------------------- */
 
 /* Container général nouvelle mise en page */
-.stats-page { position: relative; min-height: calc(100vh - 40px); font-family: "BrandonGrotesque"; }
+.stats-page { position: relative; min-height: calc(100vh - 40px); font-family: var(--theme-label-font); }
 .stats-layout { display: flex; height: calc(100vh - 40px); }
 .stats-left { flex: 0 0 33%; background: var(--dark-1); color: #fff; display: flex; align-items: stretch; justify-content: center; padding: 40px 20px; }
 /* La colonne inner répartit verticalement l'espace; chaque pays grandit puis rétrécit pour tenir */
@@ -533,7 +560,7 @@ html, body {
 .stats-distance-diagram .stats-far { position: relative; z-index: 2; }
 .stats-distance-diagram .stats-distance-text { font-size: 12px; text-transform: uppercase; color: var(--grey-15); text-align: center; line-height: 1.3; }
 .stats-distance-diagram .stats-arc { position: absolute; top: 0; left: 0; right: 0; height: 160px; pointer-events: none; }
-.stats-distance-diagram .stats-arc span { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); background: var(--theme-secondary); color: #fff; padding: 6px 18px 8px; font-size: 15px; border-radius: 4px; z-index: 2; font-family: "BrandonGrotesque"; font-weight: 500; letter-spacing: .5px; }
+.stats-distance-diagram .stats-arc span { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); background: var(--theme-secondary); color: #fff; padding: 6px 18px 8px; font-size: 15px; border-radius: 4px; z-index: 2; font-family: var(--theme-label-font); font-weight: 500; letter-spacing: .5px; }
 .stats-distance-diagram .stats-arc span:after { content: ""; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid var(--theme-secondary); }
 .stats-distance-diagram .stats-arc-svg { position: absolute; inset: 0; width:80%; height: 100%; margin-left: 10%;}
 .stats-distance-diagram .stats-arc-path { fill: none; stroke: var(--grey-19); stroke-width: 6; stroke-linecap: round; }

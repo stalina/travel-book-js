@@ -35,3 +35,30 @@
   font-style: italic;
   font-display: swap;
 }
+
+/* Playfair Display (variable font, latin subset) */
+@font-face {
+  font-family: "Playfair Display";
+  src: url("./PlayfairDisplay-Variable.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Montserrat (variable font, latin subset) */
+@font-face {
+  font-family: "Montserrat";
+  src: url("./Montserrat-Variable.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Caveat (variable font, latin subset) */
+@font-face {
+  font-family: "Caveat";
+  src: url("./Caveat-Variable.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}

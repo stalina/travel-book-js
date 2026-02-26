@@ -1,6 +1,7 @@
 import type { DraftSnapshot, DraftInfo, DraftPhotoEntry } from '../models/draft.types'
 import type { EditorStepPhoto, StepPageState } from '../models/editor.types'
 import type { Trip } from '../models/types'
+import type { ThemeOverrides } from '../models/theme.types'
 import { LoggerService } from './logger.service'
 
 const DB_NAME = 'travel-book-drafts'
@@ -131,7 +132,9 @@ export class DraftStorageService {
     trip: Trip,
     currentStepIndex: number,
     stepPhotosByStep: Record<number, EditorStepPhoto[]>,
-    stepPageStates: Record<number, StepPageState | undefined>
+    stepPageStates: Record<number, StepPageState | undefined>,
+    themeId?: string,
+    themeOverrides?: ThemeOverrides
   ): DraftSnapshot {
     const serializedPhotos: Record<number, DraftPhotoEntry[]> = {}
     for (const [stepId, photos] of Object.entries(stepPhotosByStep)) {
@@ -151,7 +154,11 @@ export class DraftStorageService {
       trip: JSON.parse(JSON.stringify(trip)) as Trip,
       currentStepIndex,
       stepPhotosByStep: serializedPhotos,
-      stepPageStates: serializedPages
+      stepPageStates: serializedPages,
+      themeId: themeId ?? 'default',
+      themeOverrides: themeOverrides && Object.keys(themeOverrides).length > 0
+        ? JSON.parse(JSON.stringify(themeOverrides)) as ThemeOverrides
+        : undefined
     }
   }
 
@@ -166,11 +173,13 @@ export class DraftStorageService {
     trip: Trip,
     currentStepIndex: number,
     stepPhotosByStep: Record<number, EditorStepPhoto[]>,
-    stepPageStates: Record<number, StepPageState | undefined>
+    stepPageStates: Record<number, StepPageState | undefined>,
+    themeId?: string,
+    themeOverrides?: ThemeOverrides
   ): Promise<void> {
     this.logger.info('DraftStorageService', 'Saving draft…')
 
-    const snapshot = this.buildSnapshot(trip, currentStepIndex, stepPhotosByStep, stepPageStates)
+    const snapshot = this.buildSnapshot(trip, currentStepIndex, stepPhotosByStep, stepPageStates, themeId, themeOverrides)
 
     // Collect all photo blobs for storage
     const photoBlobs: Array<{ key: string; blob: Blob }> = []

@@ -1,6 +1,7 @@
 import type { Trip } from './types'
 import type { PhotoRatio, StepPageState } from './editor.types'
 import type { PhotoAdjustments, CropSettings, PhotoFilterPreset, PhotoOrientation } from './gallery.types'
+import type { ThemeOverrides } from './theme.types'
 
 /**
  * Snapshot sérialisable d'une photo de l'éditeur.
@@ -48,4 +49,8 @@ export interface DraftSnapshot {
   stepPhotosByStep: Record<number, DraftPhotoEntry[]>
   /** Layout de pages par step id */
   stepPageStates: Record<number, StepPageState>
+  /** Identifiant du thème sélectionné (optionnel pour rétrocompatibilité) */
+  themeId?: string
+  /** Surcharges utilisateur du thème (optionnel pour rétrocompatibilité) */
+  themeOverrides?: ThemeOverrides
 }

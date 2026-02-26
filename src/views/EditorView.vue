@@ -4,8 +4,9 @@
     <EditorSidebar>
       <template #default="{ activeTab }">
         <StepList v-if="activeTab === 'steps'" />
-        <div v-else-if="activeTab === 'themes'">
-          <p>Thèmes (à venir)</p>
+        <div v-else-if="activeTab === 'themes'" class="themes-panel">
+          <ThemeSelector />
+          <ThemeCustomizer />
         </div>
         <div v-else>
           <p>Options (à venir)</p>
@@ -37,6 +38,8 @@ import EditorSidebar from '../components/editor/EditorSidebar.vue'
 import PreviewPanel from '../components/editor/PreviewPanel.vue'
 import StepList from '../components/editor/StepList.vue'
 import StepEditor from '../components/editor/StepEditor.vue'
+import ThemeSelector from '../components/editor/ThemeSelector.vue'
+import ThemeCustomizer from '../components/editor/ThemeCustomizer.vue'
 import BaseButton from '../components/BaseButton.vue'
 import { useEditorGeneration } from '../composables/useEditorGeneration'
 import type { Trip } from '../models/types'
@@ -241,5 +244,10 @@ const goHome = () => {
   .editor-main {
     padding: var(--spacing-md, 16px);
   }
+}
+
+.themes-panel {
+  overflow-y: auto;
+  max-height: 100%;
 }
 </style>

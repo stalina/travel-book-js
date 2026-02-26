@@ -6,7 +6,9 @@ import { StatsBuilder } from './builders/stats.builder'
 import { MapBuilder } from './builders/map.builder'
 import { StepBuilder } from './builders/step.builder'
 import type { StepGenerationPlan } from '../models/editor.types'
+import type { ThemeOverrides } from '../models/theme.types'
 import { loggerService, LoggerService } from './logger.service'
+import { themeService } from './theme.service'
 
 export type GeneratedArtifacts = {
   manifest: Record<string, Blob>
@@ -15,6 +17,8 @@ export type GeneratedArtifacts = {
 export type GenerateOptions = {
   photosPlan?: string // contenu texte de photos_by_pages.txt permettant d'écraser la pagination auto
   stepPlans?: Record<number, StepGenerationPlan> // plans d'étapes depuis l'éditeur (prioritaire sur photosPlan)
+  themeId?: string // identifiant du thème visuel sélectionné
+  themeOverrides?: ThemeOverrides // surcharges utilisateur sur le thème
 }
 
 type StepPlan = StepGenerationPlan
@@ -70,7 +74,7 @@ export class ArtifactGenerator {
     await this.loadCountryMaps(trip, manifest)
 
     // 6. Construire le HTML
-    const headHtml = await this.buildHtmlHead()
+    const headHtml = await this.buildHtmlHead(options)
     // Fusionner les plans: stepPlans de l'éditeur prioritaire sur le parsing du fichier texte
     const planByStep = options?.stepPlans ?? this.parseUserPlan(userPlanText)
     const bodyHtml = await this.buildHtmlBody(trip, photosMapping, photoDataUrlMap, planByStep)
@@ -120,6 +124,20 @@ ${bodyHtml}
 
     // Noto Serif fonts
     for (const f of ['NotoSerif-Regular.woff2', 'NotoSerif-Italic.woff2', 'NotoSerif-Bold.woff2', 'NotoSerif-BoldItalic.woff2']) {
+      try {
+        const resp = await fetch(`${import.meta.env.BASE_URL}assets/fonts/${f}`)
+        if (resp.ok) {
+          const ct = resp.headers.get('content-type') || ''
+          if (!/text\/html/i.test(ct)) {
+            manifest[`assets/fonts/${f}`] = await resp.blob()
+            this.loggerService.debug('generate', `Font inclus: ${f}`)
+          }
+        }
+      } catch {}
+    }
+
+    // Additional theme fonts (Playfair Display, Montserrat, Caveat)
+    for (const f of ['PlayfairDisplay-Variable.woff2', 'Montserrat-Variable.woff2', 'Caveat-Variable.woff2']) {
       try {
         const resp = await fetch(`${import.meta.env.BASE_URL}assets/fonts/${f}`)
         if (resp.ok) {
@@ -285,7 +303,7 @@ ${bodyHtml}
   /**
    * Construit la section <head> du HTML
    */
-  private async buildHtmlHead(): Promise<string> {
+  private async buildHtmlHead(options?: GenerateOptions): Promise<string> {
     let headHtml = `
   <head>
     <meta charset="UTF-8" />
@@ -313,6 +331,14 @@ ${bodyHtml}
         this.loggerService.debug('generate', 'Template HTML personnalisé appliqué')
       }
     } catch {}
+
+    // Injecter le bloc de surcharge thème juste avant </head>
+    const themeId = options?.themeId ?? 'default'
+    const themeBlock = themeService.buildThemeStyleBlock(themeId, options?.themeOverrides)
+    if (themeBlock) {
+      headHtml = headHtml.replace(/<\/head>/i, `${themeBlock}\n</head>`)
+      this.loggerService.debug('generate', `Thème appliqué: ${themeId}`)
+    }
 
     return headHtml
   }
@@ -510,6 +536,14 @@ ${bodyHtml}
     if (styles.length) {
       const styleTag = `<style>${styles.join('\n')}</style>`
       html = html.replace(/<head>([\s\S]*?)<\/head>/i, (m, inner) => `<head>${inner}\n${styleTag}</head>`)
+    }
+
+    // Déplacer le bloc theme-overrides en fin de <head> pour qu'il surcharge le CSS inliné
+    const themeRe = /<style\s+id=["']theme-overrides["']>[\s\S]*?<\/style>/i
+    const themeMatch = html.match(themeRe)
+    if (themeMatch) {
+      html = html.replace(themeRe, '')
+      html = html.replace(/<\/head>/i, `${themeMatch[0]}\n</head>`)
     }
 
     // 3) Réécrire tous les href/src/url vers data: URLs

@@ -31,11 +31,24 @@ export function useEditorGeneration() {
     
     // Si on a des plans d'étapes de l'éditeur, on les utilise
     if (Object.keys(stepPlans).length > 0) {
-      return { stepPlans }
+      return {
+        stepPlans,
+        themeId: editorStore.selectedThemeId,
+        themeOverrides: Object.keys(editorStore.themeOverrides).length > 0 ? editorStore.themeOverrides : undefined
+      }
     }
     
     // Sinon, fallback sur le planText
-    return planText ? { photosPlan: planText } : undefined
+    return planText
+      ? {
+          photosPlan: planText,
+          themeId: editorStore.selectedThemeId,
+          themeOverrides: Object.keys(editorStore.themeOverrides).length > 0 ? editorStore.themeOverrides : undefined
+        }
+      : {
+          themeId: editorStore.selectedThemeId,
+          themeOverrides: Object.keys(editorStore.themeOverrides).length > 0 ? editorStore.themeOverrides : undefined
+        }
   }
 
   const ensureArtifacts = async (): Promise<GeneratedArtifacts> => {

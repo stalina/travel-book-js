@@ -18,6 +18,8 @@ import { clampAdjustment } from '../utils/photo-filters'
 import { generateAutomaticPages } from '../utils/layout-generator'
 import { DraftStorageService } from '../services/draft-storage.service'
 import type { DraftSnapshot, DraftPhotoEntry } from '../models/draft.types'
+import type { ThemeOverrides } from '../models/theme.types'
+import { themeService } from '../services/theme.service'
 
 type BooleanMap = Record<number, boolean | undefined>
 type DateMap = Record<number, Date | undefined>
@@ -158,7 +160,9 @@ const buildStepPreviewDocument = async (
 	trip: Trip,
 	step: Step,
 	photos: EditorStepPhoto[],
-	plan?: StepGenerationPlan
+	plan?: StepGenerationPlan,
+	themeId?: string,
+	themeOverridesParam?: ThemeOverrides
 ): Promise<string> => {
 	const mapping: Record<number, Record<number, any>> = {
 		[step.id]: {}
@@ -176,6 +180,8 @@ const buildStepPreviewDocument = async (
 	const builder = new StepBuilder(trip, step, mapping, {}, plan)
 	const stepHtml = await builder.build()
 
+	const themeBlock = themeService.buildThemeStyleBlock(themeId ?? 'default', themeOverridesParam)
+
 	return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -185,6 +191,7 @@ const buildStepPreviewDocument = async (
 		body { margin: 0; padding: 24px; background: #f5f5f5; }
 		.step-preview-wrapper { max-width: 1024px; margin: 0 auto; }
 	</style>
+	${themeBlock}
 </head>
 <body>
 	<div class="step-preview-wrapper">
@@ -259,6 +266,10 @@ export const useEditorStore = defineStore('editor', () => {
 	const isPreviewStale = ref(true)
 	// Whether the right-side preview panel is open/expanded
 	const isPreviewOpen = ref(false)
+
+	// --- Thème ---
+	const selectedThemeId = ref<string>('default')
+	const themeOverrides = ref<ThemeOverrides>({})
 
 	const stepPhotosByStep = reactive<Record<number, EditorStepPhoto[]>>({})
 	const photoHistoriesByStep = reactive<Record<number, Record<number, PhotoEditHistory>>>({})
@@ -515,7 +526,7 @@ export const useEditorStore = defineStore('editor', () => {
 		try {
 			const photos = stepPhotosByStep[stepId] ?? []
 			const plan = buildStepPlan(stepId)
-			const html = await buildStepPreviewDocument(trip, step, photos, plan)
+			const html = await buildStepPreviewDocument(trip, step, photos, plan, selectedThemeId.value, themeOverrides.value)
 			previewHtmlByStep[stepId] = html
 			previewUpdatedAtByStep[stepId] = new Date()
 		} catch {
@@ -584,6 +595,10 @@ export const useEditorStore = defineStore('editor', () => {
 		previewUpdatedAt.value = null
 		previewError.value = null
 		isPreviewStale.value = true
+		// Invalider aussi les previews d'étape (nécessaire quand le thème change)
+		for (const key of Object.keys(previewHtmlByStep)) {
+			previewHtmlByStep[Number(key)] = undefined
+		}
 	}
 
 	const setTrip = async (trip: Trip) => {
@@ -754,6 +769,41 @@ export const useEditorStore = defineStore('editor', () => {
 
 	const setActiveSidebarTab = (tab: 'steps' | 'themes' | 'options') => {
 		activeSidebarTab.value = tab
+	}
+
+	/**
+	 * Définit le thème sélectionné et invalide la preview.
+	 */
+	const setTheme = (id: string) => {
+		if (selectedThemeId.value !== id) {
+			selectedThemeId.value = id
+			invalidatePreview()
+			// Régénérer la preview de l'étape courante avec le nouveau thème
+			const step = currentTrip.value?.steps?.[currentStepIndex.value]
+			if (step) {
+				void regenerateStepPreview(step.id)
+			}
+		}
+	}
+
+	/**
+	 * Met à jour les surcharges utilisateur du thème et invalide la preview.
+	 */
+	const setThemeOverrides = (overrides: ThemeOverrides) => {
+		themeOverrides.value = { ...overrides }
+		invalidatePreview()
+		const step = currentTrip.value?.steps?.[currentStepIndex.value]
+		if (step) void regenerateStepPreview(step.id)
+	}
+
+	/**
+	 * Réinitialise les surcharges utilisateur.
+	 */
+	const resetThemeOverrides = () => {
+		themeOverrides.value = {}
+		invalidatePreview()
+		const step = currentTrip.value?.steps?.[currentStepIndex.value]
+		if (step) void regenerateStepPreview(step.id)
 	}
 
 	const triggerAutoSave = () => {
@@ -966,7 +1016,7 @@ export const useEditorStore = defineStore('editor', () => {
 		if (!trip) return
 
 		const service = DraftStorageService.getInstance()
-		await service.saveDraft(trip, currentStepIndex.value, stepPhotosByStep, stepPageStates)
+		await service.saveDraft(trip, currentStepIndex.value, stepPhotosByStep, stepPageStates, selectedThemeId.value, themeOverrides.value)
 		// Visual feedback
 		autoSaveStatus.value = 'saved'
 		lastSaveTime.value = new Date()
@@ -989,6 +1039,10 @@ export const useEditorStore = defineStore('editor', () => {
 		originalTrip.value = deepClone(snapshot.trip)
 		currentStepIndex.value = snapshot.currentStepIndex
 		invalidatePreview()
+
+		// Restore theme
+		selectedThemeId.value = snapshot.themeId ?? 'default'
+		themeOverrides.value = snapshot.themeOverrides ?? {}
 
 		// Restore photos from blobs
 		isPreparingPhotos.value = true
@@ -1059,6 +1113,8 @@ export const useEditorStore = defineStore('editor', () => {
 		lastSaveTime,
 		previewMode,
 		activeSidebarTab,
+		selectedThemeId,
+		themeOverrides,
 		previewHtml,
 		previewError,
 		previewUpdatedAt,
@@ -1088,6 +1144,9 @@ export const useEditorStore = defineStore('editor', () => {
 		reorderSteps,
 		setPreviewMode,
 		setActiveSidebarTab,
+		setTheme,
+		setThemeOverrides,
+		resetThemeOverrides,
 		triggerAutoSave,
 		setAutoSaveStatus,
 		setPreviewLoading,
