@@ -1,5 +1,3 @@
-Release v0.2.0 — minor release
-
 Release v0.1.6 — patch release
 
 Release v0.1.5 — patch release
@@ -31,7 +29,3 @@ Generated on 2026-01-23 22:04:29
 ---
 
 Generated on 2026-02-12 02:11:35
-
----
-
-Generated on 2026-02-28 14:46:57
