@@ -24,10 +24,10 @@ describe('CoverLayoutOptions', () => {
 
     const imageFullPreview = options[2].find('.cover-preview.image-full')
     expect(imageFullPreview.exists()).toBe(true)
-    expect(imageFullPreview.findAll('.title-line').length).toBeGreaterThan(0)
+    expect(imageFullPreview.findAll('.pv-line').length).toBeGreaterThan(0)
 
     const imageTwoPreview = options[3].find('.cover-preview.image-two')
     expect(imageTwoPreview.exists()).toBe(true)
-    expect(imageTwoPreview.findAll('.title-line').length).toBeGreaterThan(0)
+    expect(imageTwoPreview.findAll('.pv-line').length).toBeGreaterThan(0)
   })
 })
