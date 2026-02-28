@@ -15,6 +15,7 @@ export type GeneratedArtifacts = {
 export type GenerateOptions = {
   photosPlan?: string // contenu texte de photos_by_pages.txt permettant d'écraser la pagination auto
   stepPlans?: Record<number, StepGenerationPlan> // plans d'étapes depuis l'éditeur (prioritaire sur photosPlan)
+  hiddenStepIds?: Set<number> // IDs des étapes à exclure de la génération
 }
 
 type StepPlan = StepGenerationPlan
@@ -73,7 +74,8 @@ export class ArtifactGenerator {
     const headHtml = await this.buildHtmlHead()
     // Fusionner les plans: stepPlans de l'éditeur prioritaire sur le parsing du fichier texte
     const planByStep = options?.stepPlans ?? this.parseUserPlan(userPlanText)
-    const bodyHtml = await this.buildHtmlBody(trip, photosMapping, photoDataUrlMap, planByStep)
+    const hiddenStepIds = options?.hiddenStepIds ?? new Set<number>()
+    const bodyHtml = await this.buildHtmlBody(trip, photosMapping, photoDataUrlMap, planByStep, hiddenStepIds)
 
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -373,28 +375,33 @@ ${bodyHtml}
     trip: Trip,
     photosMapping: Record<number, Record<number, any>>,
     photoDataUrlMap: Record<string, string>,
-    planByStep: Record<number, StepPlan>
+    planByStep: Record<number, StepPlan>,
+    hiddenStepIds: Set<number> = new Set()
   ): Promise<string> {
     let bodyHtml = ''
 
+    // Build a filtered trip (without hidden steps) for global builders
+    const visibleSteps = trip.steps.filter(s => !hiddenStepIds.has(s.id))
+    const filteredTrip: Trip = { ...trip, steps: visibleSteps }
+
     // Couverture
     this.loggerService.info('generate', 'Génération de la page de couverture')
-    const coverBuilder = new CoverBuilder(trip, photosMapping, photoDataUrlMap)
+    const coverBuilder = new CoverBuilder(filteredTrip, photosMapping, photoDataUrlMap)
     bodyHtml += coverBuilder.build()
 
     // Statistiques
     this.loggerService.info('generate', 'Génération de la page de statistiques')
-    const statsBuilder = new StatsBuilder(trip, photosMapping)
+    const statsBuilder = new StatsBuilder(filteredTrip, photosMapping)
     bodyHtml += statsBuilder.build()
 
     // Carte
     this.loggerService.info('generate', 'Génération de la page carte')
-    const mapBuilder = new MapBuilder(trip, photosMapping, photoDataUrlMap)
+    const mapBuilder = new MapBuilder(filteredTrip, photosMapping, photoDataUrlMap)
     bodyHtml += await mapBuilder.build()
 
-    // Étapes
-    this.loggerService.info('generate', `Génération des pages pour ${trip.steps.length} étapes`)
-    for (const step of trip.steps) {
+    // Étapes (en excluant les étapes masquées)
+    this.loggerService.info('generate', `Génération des pages pour ${visibleSteps.length} étapes (${hiddenStepIds.size} masquée(s))`)
+    for (const step of visibleSteps) {
       const stepBuilder = new StepBuilder(trip, step, photosMapping, photoDataUrlMap, planByStep[step.id])
       bodyHtml += await stepBuilder.build()
     }
