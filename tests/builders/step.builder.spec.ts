@@ -209,4 +209,78 @@ describe('step.builder - StepBuilder', () => {
     expect(html).toContain('step-days-bar')
     expect(html).toContain('Jour ')
   })
+
+  it('agencement image-full : génère step-cover-image-full avec une photo et sans description', async () => {
+    const step: Step = { ...mockTrip.steps[0], description: 'Description qui ne devrait pas apparaître' }
+    const photos = { 10: { 1: { path: 'full.jpg', index: 1, ratio: 'PORTRAIT' as const } } }
+
+    const builder = new StepBuilder(
+      mockTrip,
+      step,
+      photos,
+      {},
+      { coverFormat: 'image-full', cover: 1, pages: [] }
+    )
+
+    const html = await builder.build()
+
+    expect(html).toContain('step-cover-image-full')
+    expect(html).toContain('step-cover-image-full__photo')
+    expect(html).toContain('full.jpg')
+    // Les infos step sont présentes
+    expect(html).toContain('Paris')
+    expect(html).toContain('step-stats')
+    // La description n'est PAS affichée
+    expect(html).not.toContain('step-description')
+  })
+
+  it('agencement image-two : génère step-cover-image-two avec 2 photos et sans description', async () => {
+    const step: Step = { ...mockTrip.steps[0], description: 'Description cachée' }
+    const photos = {
+      10: {
+        1: { path: 'photo1.jpg', index: 1, ratio: 'PORTRAIT' as const },
+        2: { path: 'photo2.jpg', index: 2, ratio: 'LANDSCAPE' as const }
+      }
+    }
+
+    const builder = new StepBuilder(
+      mockTrip,
+      step,
+      photos,
+      {},
+      { coverFormat: 'image-two', cover: 1, cover2: 2, pages: [] }
+    )
+
+    const html = await builder.build()
+
+    expect(html).toContain('step-cover-image-two')
+    expect(html).toContain('step-cover-image-two__photos')
+    expect(html).toContain('photo1.jpg')
+    expect(html).toContain('photo2.jpg')
+    // Les infos step sont présentes
+    expect(html).toContain('Paris')
+    expect(html).toContain('step-stats')
+    // La description n'est PAS affichée
+    expect(html).not.toContain('step-description')
+  })
+
+  it('agencement text-only : pas de photo de couverture, description affichée', async () => {
+    const step: Step = { ...mockTrip.steps[0], description: 'Ma description' }
+    const photos = { 10: { 1: { path: 'photo.jpg', index: 1, ratio: 'PORTRAIT' as const } } }
+
+    const builder = new StepBuilder(
+      mockTrip,
+      step,
+      photos,
+      {},
+      { coverFormat: 'text-only', pages: [] }
+    )
+
+    const html = await builder.build()
+
+    expect(html).not.toContain('step-cover-image-full')
+    expect(html).not.toContain('step-with-photo')
+    expect(html).toContain('step-description')
+    expect(html).toContain('Ma description')
+  })
 })

@@ -66,6 +66,42 @@
                     </div>
                   </template>
 
+                  <template v-else-if="coverFormat === 'image-full'">
+                    <div class="two-column-layout">
+                      <div class="cover-format-notice">
+                        <p>Agencement <strong>Image pleine</strong> : la description n'est pas affichée, seules les informations de l'étape apparaissent au-dessus de la photo.</p>
+                      </div>
+                      <CoverPhotoSelector
+                        :photo="coverPhoto"
+                        @open-library="openLibraryForSlot"
+                        @edit="openPhotoEditor"
+                        @clear="clearCover"
+                      />
+                    </div>
+                  </template>
+
+                  <template v-else-if="coverFormat === 'image-two'">
+                    <div class="cover-format-notice">
+                      <p>Agencement <strong>2 Images</strong> : la description n'est pas affichée, seules les informations de l'étape apparaissent au-dessus des photos.</p>
+                    </div>
+                    <div class="two-column-layout">
+                      <CoverPhotoSelector
+                        label="Photo gauche"
+                        :photo="coverPhoto"
+                        @open-library="openLibraryForSlot"
+                        @edit="openPhotoEditor"
+                        @clear="clearCover"
+                      />
+                      <CoverPhotoSelector
+                        label="Photo droite"
+                        :photo="cover2Photo"
+                        @open-library="openLibraryForCover2"
+                        @edit="openPhotoEditor"
+                        @clear="clearCover2"
+                      />
+                    </div>
+                  </template>
+
                   <template v-else>
                     <DescriptionEditor :modelValue="step?.description ?? ''" @update="updateDescription" />
                   </template>
@@ -134,7 +170,7 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, ref } from 'vue'
 import { useEditorStore } from '../../stores/editor.store'
-import type { StepPageLayout, PhotoRatio } from '../../models/editor.types'
+import type { StepPageLayout, PhotoRatio, CoverFormat } from '../../models/editor.types'
 import { usePhotoLibrary } from '../../composables/usePhotoLibrary'
 import { getLayoutCapacity } from '../../models/layout.constants'
 import type { GalleryPhoto, PhotoAdjustments, CropSettings, PhotoFilterPreset } from '../../models/gallery.types'
@@ -216,6 +252,7 @@ const activePageIndex = computed(() => pages.value.findIndex((page) => page.id =
 const canMoveLeft = computed(() => activePageIndex.value > 0)
 const canMoveRight = computed(() => activePageIndex.value >= 0 && activePageIndex.value < pages.value.length - 1)
 const coverPhotoIndex = computed(() => editorStore.currentStepPageState?.coverPhotoIndex ?? null)
+const cover2PhotoIndex = computed(() => editorStore.currentStepPageState?.cover2PhotoIndex ?? null)
 const selectedPhotoIndices = computed(() => activePage.value?.photoIndices ?? [])
 
 const proposalSummary = computed(() => {
@@ -299,9 +336,15 @@ const closeLibrary = () => {
 
 const selectPhotoForSlot = (photoIndex: number) => {
   if (currentLibrarySlot.value == null) return
-  // If selecting for the cover slot (we use slot 0 for cover), set the step cover photo
+  // Slot 0 sur la page couverture → photo de couverture principale
   if (currentLibrarySlot.value === 0 && isActivePageCover.value) {
     editorStore.setCurrentStepCoverPhotoIndex(photoIndex)
+    closeLibrary()
+    return
+  }
+  // Slot -1 sur la page couverture → 2e photo (format image-two)
+  if (currentLibrarySlot.value === -1 && isActivePageCover.value) {
+    editorStore.setCurrentStepCover2PhotoIndex(photoIndex)
     closeLibrary()
     return
   }
@@ -325,8 +368,23 @@ const coverPhoto = computed(() => {
   return libraryPhotos.value.find((p) => p.index === idx) ?? null
 })
 
+const cover2Photo = computed(() => {
+  const idx = cover2PhotoIndex.value
+  if (idx == null) return null
+  return libraryPhotos.value.find((p) => p.index === idx) ?? null
+})
+
 const clearCover = () => {
   editorStore.setCurrentStepCoverPhotoIndex(null)
+}
+
+const clearCover2 = () => {
+  editorStore.setCurrentStepCover2PhotoIndex(null)
+}
+
+const openLibraryForCover2 = () => {
+  currentLibrarySlot.value = -1
+  libraryPopinOpen.value = true
 }
 
 const editedPhotoHistory = computed<EditorPhotoHistory | null>(() => {
@@ -342,7 +400,7 @@ const isActivePageCover = computed(() => {
   return activePageId.value === firstPageId
 })
 
-const coverFormat = computed<'text-image' | 'text-only'>({
+const coverFormat = computed<CoverFormat>({
   get: () => currentPageState.value?.coverFormat ?? 'text-image',
   set: (format) => {
     editorStore.setCurrentStepCoverFormat(format)
@@ -577,6 +635,21 @@ const printPreview = () => {
   grid-template-columns: 1fr 360px;
   gap: 16px;
   align-items: start;
+}
+
+.cover-format-notice {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+
+.cover-format-notice p {
+  margin: 0;
+  font-size: 13px;
+  color: #0369a1;
+  line-height: 1.5;
 }
 
 @media (max-width: 900px) {

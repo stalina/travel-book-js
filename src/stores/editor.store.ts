@@ -3,6 +3,7 @@ import { ref, computed, reactive } from 'vue'
 import type { Trip, Step } from '../models/types'
 import type { SaveStatus } from '../composables/useAutoSave'
 import type {
+	CoverFormat,
 	EditorStepPage,
 	EditorStepPhoto,
 	PhotoRatio,
@@ -235,7 +236,8 @@ const createPageId = (stepId: number): string => {
 const createEmptyPageState = (): StepPageState => ({
 	pages: [],
 	activePageId: null,
-	coverPhotoIndex: null
+	coverPhotoIndex: null,
+	cover2PhotoIndex: null
 })
 
 /**
@@ -493,6 +495,9 @@ export const useEditorStore = defineStore('editor', () => {
 		const cover = Number.isInteger(state.coverPhotoIndex ?? NaN)
 			? (state.coverPhotoIndex as number)
 			: undefined
+		const cover2 = Number.isInteger(state.cover2PhotoIndex ?? NaN)
+			? (state.cover2PhotoIndex as number)
+			: undefined
 		const pages = state.pages.map((page) => ({
 			layout: page.layout,
 			photoIndices: Array.from(new Set(page.photoIndices.filter((index) => Number.isInteger(index))))
@@ -502,7 +507,7 @@ export const useEditorStore = defineStore('editor', () => {
 		// même si les pages sont vides. Cela permet de refléter fidèlement l'état de l'éditeur.
 		// Par exemple: si l'utilisateur supprime toutes les pages, on veut un plan vide,
 		// pas un retour à la génération automatique.
-		return { cover, pages }
+		return { cover, cover2, coverFormat: state.coverFormat, pages }
 	}
 
 	const regenerateStepPreview = async (stepId: number) => {
@@ -881,12 +886,25 @@ export const useEditorStore = defineStore('editor', () => {
 		notifyPageChange(step.id)
 	}
 
-	const setCurrentStepCoverFormat = (format: 'text-image' | 'text-only'): void => {
+	const setCurrentStepCoverFormat = (format: CoverFormat): void => {
 		const step = currentStep.value
 		if (!step) return
 		const state = ensurePageState(step.id)
 		if (state.coverFormat === format) return
 		state.coverFormat = format
+		notifyPageChange(step.id)
+		triggerAutoSave()
+		markPreviewStale()
+		schedulePreviewRegeneration(step.id)
+	}
+
+	const setCurrentStepCover2PhotoIndex = (index: number | null): void => {
+		const step = currentStep.value
+		if (!step) return
+		const state = ensurePageState(step.id)
+		if (index != null && !Number.isInteger(index)) return
+		if (state.cover2PhotoIndex === index) return
+		state.cover2PhotoIndex = index
 		notifyPageChange(step.id)
 		triggerAutoSave()
 		markPreviewStale()
@@ -1106,6 +1124,7 @@ export const useEditorStore = defineStore('editor', () => {
 		setCurrentPagePhotoIndices,
 		setCurrentStepCoverPhotoIndex,
 		setCurrentStepCoverFormat,
+		setCurrentStepCover2PhotoIndex,
 		addPhotoToCurrentStep,
 		applyAdjustmentsToCurrentPhoto,
 		getCurrentStepPhotoHistory,

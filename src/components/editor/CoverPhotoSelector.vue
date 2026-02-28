@@ -1,6 +1,6 @@
 <template>
   <section class="section photo-selection-column">
-    <h4>Photo de couverture</h4>
+    <h4>{{ label }}</h4>
     <SelectedSlot
       :photo="photo"
       :slotIndex="0"
@@ -16,7 +16,10 @@
 import SelectedSlot from './SelectedSlot.vue'
 import type { PropType } from 'vue'
 
-const props = defineProps({ photo: { type: Object as PropType<any>, default: null } })
+const props = defineProps({
+  photo: { type: Object as PropType<any>, default: null },
+  label: { type: String, default: 'Photo de couverture' }
+})
 const emit = defineEmits(['open-library', 'edit', 'clear'])
 
 const forwardOpenLibrary = (slotIndex: number) => emit('open-library', slotIndex)

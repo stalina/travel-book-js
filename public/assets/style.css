@@ -606,3 +606,71 @@ html, body {
     break-after: page;
   }
 }
+
+/* ============================================================
+   Agencements photo-only pour page de couverture d'étape
+   image-full : infos étape + 1 grande photo pleine largeur
+   image-two  : infos étape + 2 photos côte à côte
+   ============================================================ */
+
+/* Conteneur principal : occupe la même hauteur qu'une page */
+.step-cover-image-full,
+.step-cover-image-two {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 40px);
+}
+
+/* Bloc d'infos étape (titre, carte, stats) - sans description */
+.step-cover-image-full__info .text-content,
+.step-cover-image-two__info .text-content {
+  padding-top: calc(60px * var(--full-to-relative));
+  padding-bottom: calc(40px * var(--full-to-relative));
+  padding-left: calc(150px * var(--full-to-relative));
+  padding-right: calc(150px * var(--full-to-relative));
+}
+
+/* Réduction des marges internes pour que les infos restent compactes */
+.step-cover-image-full__info .step-stats,
+.step-cover-image-two__info .step-stats {
+  margin-top: calc(50px * var(--full-to-relative));
+}
+
+.step-cover-image-full__info .step-country,
+.step-cover-image-two__info .step-country {
+  margin-top: calc(30px * var(--full-to-relative));
+}
+
+/* Zone photo pour image-full : prend tout l'espace restant */
+.step-cover-image-full__photo {
+  flex: 1;
+  min-height: 0;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  position: relative;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* Zone photos pour image-two */
+.step-cover-image-two__photos {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 12px;
+  padding: 0 calc(20px * var(--full-to-relative)) calc(20px * var(--full-to-relative));
+}
+
+/* Chaque photo dans image-two occupe la moitié */
+.step-cover-image-two__photo {
+  flex: 1;
+  min-width: 0;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  position: relative;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
