@@ -262,6 +262,9 @@ export const useEditorStore = defineStore('editor', () => {
 	// Whether the right-side preview panel is open/expanded
 	const isPreviewOpen = ref(false)
 
+	// Set of step IDs that are hidden from the generated album
+	const hiddenStepIds = ref<Set<number>>(new Set())
+
 	const stepPhotosByStep = reactive<Record<number, EditorStepPhoto[]>>({})
 	const photoHistoriesByStep = reactive<Record<number, Record<number, PhotoEditHistory>>>({})
 	// proposal system removed
@@ -385,6 +388,7 @@ export const useEditorStore = defineStore('editor', () => {
 		clearObjectMap(proposalLoadingByStep)
 		clearObjectMap(stepPageStates)
 		clearObjectMap(photoHistoriesByStep)
+		hiddenStepIds.value = new Set()
 		pageIdCounter = 0
 
 		for (const key of Object.keys(previewTimers)) {
@@ -562,6 +566,23 @@ export const useEditorStore = defineStore('editor', () => {
 	const setPreviewOpen = (open: boolean) => {
 		isPreviewOpen.value = !!open
 	}
+
+	/**
+	 * Bascule la visibilité d'une étape dans l'album généré.
+	 * Une étape masquée n'est pas incluse dans le HTML généré.
+	 */
+	const toggleStepVisibility = (stepId: number) => {
+		const next = new Set(hiddenStepIds.value)
+		if (next.has(stepId)) {
+			next.delete(stepId)
+		} else {
+			next.add(stepId)
+		}
+		hiddenStepIds.value = next
+		invalidatePreview()
+	}
+
+	const isStepHidden = (stepId: number): boolean => hiddenStepIds.value.has(stepId)
 
 	const setExporting = (loading: boolean) => {
 		isExporting.value = loading
@@ -984,7 +1005,7 @@ export const useEditorStore = defineStore('editor', () => {
 		if (!trip) return
 
 		const service = DraftStorageService.getInstance()
-		await service.saveDraft(trip, currentStepIndex.value, stepPhotosByStep, stepPageStates)
+		await service.saveDraft(trip, currentStepIndex.value, stepPhotosByStep, stepPageStates, hiddenStepIds.value)
 		// Visual feedback
 		autoSaveStatus.value = 'saved'
 		lastSaveTime.value = new Date()
@@ -1062,6 +1083,11 @@ export const useEditorStore = defineStore('editor', () => {
 			}
 		}
 
+		// Restore hidden step IDs
+		if (snapshot.hiddenStepIds && snapshot.hiddenStepIds.length > 0) {
+			hiddenStepIds.value = new Set(snapshot.hiddenStepIds)
+		}
+
 		// Generate preview for the first visible step
 		const firstStep = clonedTrip.steps?.[snapshot.currentStepIndex] ?? clonedTrip.steps?.[0]
 		if (firstStep) {
@@ -1135,6 +1161,9 @@ export const useEditorStore = defineStore('editor', () => {
 		saveDraftToStorage,
 		restoreFromDraft,
 		stepPhotosByStep,
-		stepPageStates
+		stepPageStates,
+		hiddenStepIds,
+		toggleStepVisibility,
+		isStepHidden
 	}
 })

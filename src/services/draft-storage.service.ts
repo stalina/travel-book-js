@@ -131,7 +131,8 @@ export class DraftStorageService {
     trip: Trip,
     currentStepIndex: number,
     stepPhotosByStep: Record<number, EditorStepPhoto[]>,
-    stepPageStates: Record<number, StepPageState | undefined>
+    stepPageStates: Record<number, StepPageState | undefined>,
+    hiddenStepIds?: Set<number>
   ): DraftSnapshot {
     const serializedPhotos: Record<number, DraftPhotoEntry[]> = {}
     for (const [stepId, photos] of Object.entries(stepPhotosByStep)) {
@@ -151,7 +152,8 @@ export class DraftStorageService {
       trip: JSON.parse(JSON.stringify(trip)) as Trip,
       currentStepIndex,
       stepPhotosByStep: serializedPhotos,
-      stepPageStates: serializedPages
+      stepPageStates: serializedPages,
+      hiddenStepIds: hiddenStepIds ? Array.from(hiddenStepIds) : []
     }
   }
 
@@ -166,11 +168,12 @@ export class DraftStorageService {
     trip: Trip,
     currentStepIndex: number,
     stepPhotosByStep: Record<number, EditorStepPhoto[]>,
-    stepPageStates: Record<number, StepPageState | undefined>
+    stepPageStates: Record<number, StepPageState | undefined>,
+    hiddenStepIds?: Set<number>
   ): Promise<void> {
     this.logger.info('DraftStorageService', 'Saving draft…')
 
-    const snapshot = this.buildSnapshot(trip, currentStepIndex, stepPhotosByStep, stepPageStates)
+    const snapshot = this.buildSnapshot(trip, currentStepIndex, stepPhotosByStep, stepPageStates, hiddenStepIds)
 
     // Collect all photo blobs for storage
     const photoBlobs: Array<{ key: string; blob: Blob }> = []

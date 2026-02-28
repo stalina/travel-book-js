@@ -31,11 +31,11 @@ export function useEditorGeneration() {
     
     // Si on a des plans d'étapes de l'éditeur, on les utilise
     if (Object.keys(stepPlans).length > 0) {
-      return { stepPlans }
+      return { stepPlans, hiddenStepIds: editorStore.hiddenStepIds }
     }
     
     // Sinon, fallback sur le planText
-    return planText ? { photosPlan: planText } : undefined
+    return planText ? { photosPlan: planText, hiddenStepIds: editorStore.hiddenStepIds } : { hiddenStepIds: editorStore.hiddenStepIds }
   }
 
   const ensureArtifacts = async (): Promise<GeneratedArtifacts> => {

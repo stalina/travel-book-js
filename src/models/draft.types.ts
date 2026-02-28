@@ -48,4 +48,6 @@ export interface DraftSnapshot {
   stepPhotosByStep: Record<number, DraftPhotoEntry[]>
   /** Layout de pages par step id */
   stepPageStates: Record<number, StepPageState>
+  /** IDs des étapes masquées (exclues de la génération) */
+  hiddenStepIds?: number[]
 }
