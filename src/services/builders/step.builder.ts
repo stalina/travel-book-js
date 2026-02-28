@@ -1,5 +1,5 @@
 import { Trip, Step } from '../../models/types'
-import type { StepGenerationPlan, StepPageLayout, StepPagePlanItem } from '../../models/editor.types'
+import type { CoverFormat, StepGenerationPlan, StepPageLayout, StepPagePlanItem } from '../../models/editor.types'
 import { getPositionPercentage } from '../map.service'
 import { elevationService } from '../elevation.service'
 import { generateAutomaticPages, inferLayoutFromCount } from '../../utils/layout-generator'
@@ -54,18 +54,40 @@ export class StepBuilder {
   public async build(): Promise<string> {
     const mapping = this.photosMapping[this.step.id] || {}
     const photosArr = Object.values(mapping) as PhotoWithMeta[]
-    
-    const { cover, pages } = this.planLayout(photosArr)
+
+    const coverFormat: CoverFormat = this.stepPlan?.coverFormat ?? 'text-image'
+    const { cover, cover2, pages } = this.planLayout(photosArr, coverFormat)
     const dotStyle = await this.calculateMapDotPosition()
-    const stepInfo = await this.buildStepInfo(dotStyle)
 
     let html = ''
 
-    // Page de couverture avec ou sans photo
-    if (cover) {
-      html += this.buildCoverPageWithPhoto(stepInfo, cover)
-    } else {
-      html += this.buildCoverPageWithoutPhoto(stepInfo)
+    // Page de couverture selon l'agencement choisi
+    switch (coverFormat) {
+      case 'text-only':
+        html += this.buildCoverPageWithoutPhoto(await this.buildStepInfo(dotStyle))
+        break
+      case 'image-full':
+        if (cover) {
+          html += this.buildCoverPageImageFull(await this.buildStepInfoWithoutDescription(dotStyle), cover)
+        } else {
+          html += this.buildCoverPageWithoutPhoto(await this.buildStepInfo(dotStyle))
+        }
+        break
+      case 'image-two':
+        if (cover) {
+          html += this.buildCoverPageImageTwo(await this.buildStepInfoWithoutDescription(dotStyle), cover, cover2)
+        } else {
+          html += this.buildCoverPageWithoutPhoto(await this.buildStepInfo(dotStyle))
+        }
+        break
+      case 'text-image':
+      default:
+        if (cover) {
+          html += this.buildCoverPageWithPhoto(await this.buildStepInfo(dotStyle), cover)
+        } else {
+          html += this.buildCoverPageWithoutPhoto(await this.buildStepInfo(dotStyle))
+        }
+        break
     }
 
     // Pages de photos
@@ -77,10 +99,11 @@ export class StepBuilder {
   }
 
   /**
-   * Planifie la mise en page: sélectionne la photo de couverture et organise les pages
+   * Planifie la mise en page: sélectionne la/les photo(s) de couverture et organise les pages
    */
-  private planLayout(photosArr: PhotoWithMeta[]): {
+  private planLayout(photosArr: PhotoWithMeta[], coverFormat: CoverFormat): {
     cover: PhotoWithMeta | null
+    cover2: PhotoWithMeta | null
     pages: ResolvedPage[]
   } {
     const photoByIndex = new Map<number, PhotoWithMeta>()
@@ -88,17 +111,32 @@ export class StepBuilder {
       photoByIndex.set(photo.index, photo)
     }
 
+    // Pour 'text-only', aucune photo sur la page de couverture
+    if (coverFormat === 'text-only') {
+      if (this.stepPlan) {
+        const plannedPages = this.resolvePlannedPages(photoByIndex, null, null)
+        if (plannedPages.length) return { cover: null, cover2: null, pages: plannedPages }
+      }
+      return { cover: null, cover2: null, pages: this.buildAutomaticPages(photosArr, null) }
+    }
+
     const defaultCover = this.selectDefaultCover(photosArr)
     const cover = this.resolveCover(photoByIndex, defaultCover)
 
+    // Pour 'image-two', résoudre une 2e photo de couverture
+    let cover2: PhotoWithMeta | null = null
+    if (coverFormat === 'image-two') {
+      cover2 = this.resolveCover2(photoByIndex, photosArr, cover)
+    }
+
     if (this.stepPlan) {
-      const plannedPages = this.resolvePlannedPages(photoByIndex, cover)
+      const plannedPages = this.resolvePlannedPages(photoByIndex, cover, cover2)
       if (plannedPages.length) {
-        return { cover, pages: plannedPages }
+        return { cover, cover2, pages: plannedPages }
       }
     }
 
-    return { cover, pages: this.buildAutomaticPages(photosArr, cover) }
+    return { cover, cover2, pages: this.buildAutomaticPages(photosArr, cover, cover2) }
   }
 
   private selectDefaultCover(photosArr: PhotoWithMeta[]): PhotoWithMeta | null {
@@ -137,19 +175,40 @@ export class StepBuilder {
     }
   }
 
+  private resolveCover2(
+    photoByIndex: Map<number, PhotoWithMeta>,
+    photosArr: PhotoWithMeta[],
+    cover: PhotoWithMeta | null
+  ): PhotoWithMeta | null {
+    // Utiliser cover2 du plan si disponible
+    if (this.stepPlan?.cover2 != null) {
+      const planned = photoByIndex.get(this.stepPlan.cover2)
+      if (planned) return planned
+    }
+    // Auto-sélection : première photo différente de la couverture principale
+    const coverIndex = cover?.index ?? null
+    const candidate = photosArr.find(
+      (p) => p.index !== coverIndex && (p.ratio === 'PORTRAIT' || p.ratio === 'LANDSCAPE')
+    )
+    return candidate ?? null
+  }
+
   private resolvePlannedPages(
     photoByIndex: Map<number, PhotoWithMeta>,
-    cover: PhotoWithMeta | null
+    cover: PhotoWithMeta | null,
+    cover2: PhotoWithMeta | null = null
   ): ResolvedPage[] {
     if (!this.stepPlan) return []
-    const coverIndex = cover?.index ?? null
+    const coverIndices = new Set<number>()
+    if (cover != null) coverIndices.add(cover.index)
+    if (cover2 != null) coverIndices.add(cover2.index)
     const pages: ResolvedPage[] = []
 
     for (const rawEntry of this.stepPlan.pages ?? []) {
       const entry = this.normalizePlanEntry(rawEntry)
       const photos = entry.photoIndices
         .map((idx) => photoByIndex.get(idx) ?? null)
-        .filter((photo): photo is PhotoWithMeta => !!photo && (coverIndex == null || photo.index !== coverIndex))
+        .filter((photo): photo is PhotoWithMeta => !!photo && !coverIndices.has(photo.index))
 
       // ✅ Ne pas ajouter les pages vides : si l'utilisateur supprime toutes les photos d'une page,
       // on ne veut pas générer une page vide avec un message "Ajoutez des photos"
@@ -165,24 +224,29 @@ export class StepBuilder {
     return pages
   }
 
-  private buildAutomaticPages(photosArr: PhotoWithMeta[], cover: PhotoWithMeta | null): ResolvedPage[] {
-    const coverIndex = cover?.index ?? null
+  private buildAutomaticPages(photosArr: PhotoWithMeta[], cover: PhotoWithMeta | null, cover2: PhotoWithMeta | null = null): ResolvedPage[] {
+    const coverIndices = new Set<number>()
+    if (cover != null) coverIndices.add(cover.index)
+    if (cover2 != null) coverIndices.add(cover2.index)
+    const firstExcluded = cover?.index ?? null
     
     // Utiliser l'utilitaire partagé pour générer les pages
-    const generatedPages = generateAutomaticPages(photosArr, coverIndex)
+    const generatedPages = generateAutomaticPages(photosArr, firstExcluded)
     
-    // Convertir en ResolvedPage avec les photos complètes
+    // Convertir en ResolvedPage avec les photos complètes (exclure cover ET cover2)
     const photoByIndex = new Map<number, PhotoWithMeta>()
     for (const photo of photosArr) {
       photoByIndex.set(photo.index, photo)
     }
     
-    return generatedPages.map((page) => ({
-      layout: page.layout,
-      photos: page.photoIndices
-        .map((idx) => photoByIndex.get(idx))
-        .filter((photo): photo is PhotoWithMeta => !!photo)
-    }))
+    return generatedPages
+      .map((page) => ({
+        layout: page.layout,
+        photos: page.photoIndices
+          .map((idx) => photoByIndex.get(idx))
+          .filter((photo): photo is PhotoWithMeta => !!photo && !coverIndices.has(photo.index))
+      }))
+      .filter((page) => page.photos.length > 0)
   }
 
   /**
@@ -202,8 +266,9 @@ export class StepBuilder {
 
   /**
    * Construit la section d'information de l'étape
+   * @param includeDescription - Si false, la div step-description n'est pas incluse
    */
-  private async buildStepInfo(dotStyle: string): Promise<string> {
+  private async buildStepInfo(dotStyle: string, includeDescription = true): Promise<string> {
     const tripPercentage = this.calculateTripPercentage()
     const dayNumber = this.calculateDayNumber()
     const stepDate = new Date(this.step.start_time * 1000)
@@ -287,9 +352,17 @@ export class StepBuilder {
             <div class="step-stat-description">METRES D'ALTITUDE</div>
           </div>
         </div>
-        <div class="step-description">${esc(this.step.description ?? '')}</div>
+        ${includeDescription ? `<div class="step-description">${esc(this.step.description ?? '')}</div>` : ''}
       </div>
     </div>`
+  }
+
+  /**
+   * Construit la section d'information sans la description textuelle
+   * Utilisé pour les agencements image-full et image-two
+   */
+  private buildStepInfoWithoutDescription(dotStyle: string): Promise<string> {
+    return this.buildStepInfo(dotStyle, false)
   }
 
   /**
@@ -356,6 +429,44 @@ export class StepBuilder {
     return `
       <div class="break-after">
         ${stepInfo}
+      </div>`
+  }
+
+  /**
+   * Construit la page de couverture agencement image-full :
+   * infos étape en haut (sans description), 1 grande image en bas
+   */
+  private buildCoverPageImageFull(stepInfo: string, cover: PhotoWithMeta): string {
+    return `
+      <div class="break-after">
+        <div class="step-cover-image-full">
+          <div class="step-cover-image-full__info">${stepInfo}</div>
+          <div class="step-cover-image-full__photo" style="background-image: url(${cssUrlValue(this.resolvedPhotoUrl(cover))})">  
+            <div class="photo-index">${cover.index}</div>
+          </div>
+        </div>
+      </div>`
+  }
+
+  /**
+   * Construit la page de couverture agencement image-two :
+   * infos étape en haut (sans description), 2 images côte à côte en bas
+   */
+  private buildCoverPageImageTwo(stepInfo: string, cover: PhotoWithMeta, cover2: PhotoWithMeta | null): string {
+    return `
+      <div class="break-after">
+        <div class="step-cover-image-two">
+          <div class="step-cover-image-two__info">${stepInfo}</div>
+          <div class="step-cover-image-two__photos">
+            <div class="step-cover-image-two__photo" style="background-image: url(${cssUrlValue(this.resolvedPhotoUrl(cover))})">  
+              <div class="photo-index">${cover.index}</div>
+            </div>
+            ${cover2 ? `
+            <div class="step-cover-image-two__photo" style="background-image: url(${cssUrlValue(this.resolvedPhotoUrl(cover2))})">  
+              <div class="photo-index">${cover2.index}</div>
+            </div>` : ''}
+          </div>
+        </div>
       </div>`
   }
 

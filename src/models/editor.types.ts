@@ -52,6 +52,15 @@ export interface StepContextSnapshot {
 
 export type StepPageLayout = 'grid-2x2' | 'hero-plus-2' | 'three-columns' | 'full-page'
 
+/**
+ * Format de la page de couverture d'une étape :
+ * - 'text-image'  : texte à gauche, 1 image à droite
+ * - 'text-only'   : texte occupant toute la largeur (pas d'image)
+ * - 'image-full'  : 1 image pleine page (sans texte de description, infos étape conservées)
+ * - 'image-two'   : 2 images côte à côte (sans texte de description, infos étape conservées)
+ */
+export type CoverFormat = 'text-image' | 'text-only' | 'image-full' | 'image-two'
+
 export interface EditorStepPage {
   id: string
   layout: StepPageLayout
@@ -62,11 +71,10 @@ export interface StepPageState {
   pages: EditorStepPage[]
   activePageId: string | null
   coverPhotoIndex: number | null
-  /**
-   * Format de la page de couverture: 'text-image' = texte + image (image modifiable),
-   * 'text-only' = texte en pleine page (pas d'image)
-   */
-  coverFormat?: 'text-image' | 'text-only'
+  /** Index de la 2e photo pour le format 'image-two' */
+  cover2PhotoIndex?: number | null
+  /** Format de la page de couverture (voir CoverFormat) */
+  coverFormat?: CoverFormat
 }
 
 export interface StepPagePlanItem {
@@ -77,6 +85,11 @@ export interface StepPagePlanItem {
 export type StepPlanPage = StepPagePlanItem | number[]
 
 export interface StepGenerationPlan {
+  /** Index de la photo de couverture principale */
   cover?: number
+  /** Index de la 2e photo de couverture (format image-two) */
+  cover2?: number
+  /** Format de la page de couverture */
+  coverFormat?: CoverFormat
   pages: StepPlanPage[]
 }

@@ -29,6 +29,23 @@
               </div>
               <div class="cover-thumb small-thumb"><div class="img-placeholder"></div></div>
             </div>
+            <div v-else-if="coverFormat === 'image-full'" class="mini-cover layout-preview cover-preview image-full" aria-hidden="true">
+              <div class="cover-image-info-strip">
+                <div class="title-line small"></div>
+                <div class="subtitle-line xsmall"></div>
+              </div>
+              <div class="cover-image-photo-single img-placeholder"></div>
+            </div>
+            <div v-else-if="coverFormat === 'image-two'" class="mini-cover layout-preview cover-preview image-two" aria-hidden="true">
+              <div class="cover-image-info-strip">
+                <div class="title-line small"></div>
+                <div class="subtitle-line xsmall"></div>
+              </div>
+              <div class="cover-image-two-row">
+                <div class="img-placeholder"></div>
+                <div class="img-placeholder"></div>
+              </div>
+            </div>
             <div v-else class="mini-cover layout-preview cover-preview text-only" aria-hidden="true">
               <div class="cover-text-large">
                 <div class="title-line medium"></div>
@@ -154,6 +171,38 @@ const props = defineProps({
 .mini-cover .title-line.medium { height:10px; width:60%; border-radius:6px }
 .mini-cover .subtitle-line.xsmall { height:6px; width:40%; border-radius:4px }
 .small-thumb { min-width:32px; height:40px; border-radius:6px; overflow:hidden }
+/* Agencements photo-only dans la bande de pages */
+.cover-preview.image-full,
+.cover-preview.image-two {
+  flex-direction: column;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+.cover-image-info-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 6px 4px;
+}
+.cover-image-photo-single {
+  flex: 1;
+  min-height: 0;
+  border-radius: 0;
+}
+.cover-image-two-row {
+  flex: 1;
+  display: flex;
+  gap: 3px;
+  padding: 0 4px 4px;
+  min-height: 0;
+}
+.cover-image-two-row .img-placeholder {
+  flex: 1;
+  min-width: 0;
+  border-radius: 4px;
+}
+.img-placeholder { background:linear-gradient(180deg,#cfe1ff,#e6efff); border-radius:inherit }
 .thumb-grid { display:flex; gap:6px; align-items:center; justify-content:center; flex-wrap:wrap }
 .thumb-grid .slot { width:40px; height:28px; background:linear-gradient(180deg,#eef2ff,#f8fbff); border-radius:4px }
 .mini-layout .layout-preview {
