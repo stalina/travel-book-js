@@ -1,9 +1,10 @@
 ---
 id: TASK-40
 title: Cadrage initial de la carte
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-08 22:30'
+updated_date: '2026-03-08 22:36'
 labels: []
 dependencies: []
 ---
@@ -16,6 +17,12 @@ Ajouter une tâche pour implémenter le cadrage initial de la carte (centrage/zo
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Supporter bbox, stepIds ou centre+zoom
-- [ ] #2 Comportement par défaut inchangé
+- [x] #1 Supporter bbox, stepIds ou centre+zoom
+- [x] #2 Comportement par défaut inchangé
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Implementation: MapBuilder updated to accept initialFocus (bbox, stepIds, center+zoom). Added helpers: computeBBoxFromStepIds, computeBBoxFromCenterZoom, zoomToDegreeSpan. Added unit tests at tests/map.builder.spec.ts and committed changes on feat/map.
+<!-- SECTION:NOTES:END -->
