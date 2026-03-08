@@ -22,6 +22,13 @@ type ViewBox = {
   height: number 
 }
 
+export type InitialFocus = {
+  bbox?: { minLat: number; maxLat: number; minLon: number; maxLon: number }
+  stepIds?: number[]
+  center?: { lat: number; lon: number }
+  zoom?: number
+}
+
 /**
  * Builder pour générer la page cartographique du voyage
  * Prend le voyage, le mapping des photos et les data URLs via le constructeur
@@ -36,7 +43,8 @@ export class MapBuilder {
   constructor(
     private readonly trip: Trip,
     private readonly photosMapping: Record<number, Record<number, any>>,
-    private readonly photoDataUrlMap: Record<string, string>
+    private readonly photoDataUrlMap: Record<string, string>,
+    private readonly initialFocus?: InitialFocus
   ) {}
 
   /**
@@ -122,6 +130,45 @@ export class MapBuilder {
       y: bbox.minLat - padLat,
       width: lonSpan + 2 * padLon,
       height: latSpan + 2 * padLat
+    }
+  }
+
+  // Map a zoom level to an approximate span (degrees)
+  private zoomToDegreeSpan(zoom: number): number {
+    if (zoom >= 14) return 0.02
+    if (zoom >= 13) return 0.05
+    if (zoom >= 12) return 0.1
+    if (zoom >= 11) return 0.25
+    if (zoom >= 10) return 0.5
+    if (zoom >= 9) return 1
+    if (zoom >= 8) return 2
+    if (zoom >= 7) return 5
+    if (zoom >= 6) return 10
+    return 20
+  }
+
+  private computeBBoxFromStepIds(stepIds: number[]): BBox | null {
+    let minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity
+    for (const id of stepIds) {
+      const step = this.trip.steps.find(s => s.id === id)
+      if (!step) continue
+      if (step.lat < minLat) minLat = step.lat
+      if (step.lat > maxLat) maxLat = step.lat
+      if (step.lon < minLon) minLon = step.lon
+      if (step.lon > maxLon) maxLon = step.lon
+    }
+    if (minLat === Infinity) return null
+    return { minLat, maxLat, minLon, maxLon }
+  }
+
+  private computeBBoxFromCenterZoom(center: { lat: number; lon: number }, zoom: number): BBox {
+    const span = this.zoomToDegreeSpan(zoom)
+    const half = span / 2
+    return {
+      minLat: center.lat - half,
+      maxLat: center.lat + half,
+      minLon: center.lon - half,
+      maxLon: center.lon + half
     }
   }
 
