@@ -61,7 +61,8 @@ describe('EditorHeader', () => {
       name: 'Voyage initial',
       start_date: 1234567890,
       end_date: 1234567890,
-      steps: []
+      steps: [],
+      cover_photo: null
     } as Trip
     store.setTrip(mockTrip)
     await wrapper.vm.$nextTick()

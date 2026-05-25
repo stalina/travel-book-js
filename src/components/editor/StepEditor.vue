@@ -20,7 +20,7 @@
           <!-- Pages strip component -->
           <PagesStrip
             :pages="pages"
-            :activePageId="activePageId"
+            :activePageId="activePageId ?? undefined"
             :coverFormat="coverFormat"
             :previewClassFor="previewClassFor"
             :canMoveLeft="canMoveLeft"
@@ -43,7 +43,7 @@
             v-else-if="activePage"
             :title="'Mise en page'"
             :options="layoutOptions"
-            :active="activeLayout"
+            :active="activeLayout ?? undefined"
             :previewClassFor="previewClassFor"
             :descriptions="layoutDescriptions"
             @select="selectLayout"
@@ -123,7 +123,7 @@
               <PreviewSection
                 :previewHtml="previewHtml"
                 :isLoading="isPreviewLoading"
-                :previewUpdatedAt="previewUpdatedAt"
+                :previewUpdatedAt="previewUpdatedAt ?? undefined"
                 @refresh="refreshPreview"
                 @print="printPreview"
               />

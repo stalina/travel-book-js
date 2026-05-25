@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { ref } from 'vue'
+import { ref, type Ref } from 'vue'
 import { useDragAndDrop } from '../../src/composables/useDragAndDrop'
 
 describe('useDragAndDrop', () => {
-  let items: ReturnType<typeof ref<string[]>>
+  let items: Ref<string[]>
   let onReorder: (newOrder: string[]) => void
 
   beforeEach(() => {
