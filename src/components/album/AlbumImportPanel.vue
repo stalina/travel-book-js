@@ -28,7 +28,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { usePolarstepsImport } from '../../composables/usePolarstepsImport'
 import BaseButton from '../BaseButton.vue'
 export default {
