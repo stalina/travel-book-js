@@ -24,7 +24,7 @@
     "@vue/test-utils": "2.4.10",
     "fake-indexeddb": "6.2.5",
     "happy-dom": "20.9.0",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.3",
     "vite": "8.0.12",
     "vitest": "4.1.7",
     "vue-tsc": "3.2.8"
