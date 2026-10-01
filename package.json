@@ -19,7 +19,7 @@
     "vue-router": "^5.3.1"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "6.0.8",
+    "@vitejs/plugin-vue": "6.0.9",
     "@vitest/coverage-v8": "5.0.0",
     "@vue/test-utils": "2.5.0",
     "fake-indexeddb": "6.2.5",
