@@ -1,22 +1,20 @@
-import { describe, it, expect, beforeAll, vi } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { StepBuilder } from '../../src/services/builders/step.builder'
 import type { Step, Trip } from '../../src/models/types'
 
-describe('step.builder - StepBuilder', () => {
-  beforeAll(() => {
-    // Mock getPositionPercentage et elevationService
-    vi.mock('../../src/services/map.service', () => ({
-      getPositionPercentage: vi.fn(() => Promise.resolve({ top: 50, left: 50 }))
-    }))
-    vi.mock('../../src/services/elevation.service', () => ({
-      elevationService: {
-        getElevation: vi.fn(() => Promise.resolve(350))
-      },
-      // Rétrocompatibilité
-      getElevation: vi.fn(() => Promise.resolve(350))
-    }))
-  })
+// Mock getPositionPercentage et elevationService
+vi.mock('../../src/services/map.service', () => ({
+  getPositionPercentage: vi.fn(() => Promise.resolve({ top: 50, left: 50 }))
+}))
+vi.mock('../../src/services/elevation.service', () => ({
+  elevationService: {
+    getElevation: vi.fn(() => Promise.resolve(350))
+  },
+  // Rétrocompatibilité
+  getElevation: vi.fn(() => Promise.resolve(350))
+}))
 
+describe('step.builder - StepBuilder', () => {
   const mockTrip: Trip = {
     id: 1,
     name: 'Voyage Test',
