@@ -99,6 +99,66 @@ describe('RichTextEditor', () => {
     expect(wrapper.emitted('update:modelValue')).toEqual([['<p><b>Hello</b></p>link']])
   })
 
+  // happy-dom n'exécute pas les gestionnaires inline : on vérifie le balisage injecté dans le DOM
+  it('sanitizes a malicious initial modelValue before rendering it', () => {
+    const wrapper = mount(RichTextEditor, {
+      props: {
+        modelValue: '<p onmouseover="alert(1)">Hi</p><img src=x onerror=alert(2)><script>alert(3)</script>',
+        placeholder: 'Enter text'
+      }
+    })
+
+    const editable = wrapper.find('[contenteditable="true"]').element
+    expect(editable.innerHTML).toBe('<p>Hi</p>')
+    expect(editable.querySelector('img, script, [onmouseover], [onerror]')).toBeNull()
+  })
+
+  it('sanitizes a malicious modelValue set after mount', async () => {
+    const wrapper = mount(RichTextEditor, {
+      props: {
+        modelValue: '<p>Initial</p>',
+        placeholder: 'Enter text'
+      }
+    })
+
+    await wrapper.setProps({ modelValue: '<b style="color:red">Bold</b><img src=x onerror=alert(1)>' })
+
+    const editable = wrapper.find('[contenteditable="true"]').element
+    expect(editable.innerHTML).toBe('<b>Bold</b>')
+    expect(editable.querySelector('img, [onerror], [style]')).toBeNull()
+  })
+
+  it('displays plain-text descriptions unchanged', async () => {
+    const text = 'Fish & chips < 10€\nthen a walk'
+    const wrapper = mount(RichTextEditor, {
+      props: { modelValue: text, placeholder: 'Enter text' }
+    })
+
+    const editable = wrapper.find('[contenteditable="true"]').element
+    expect(editable.textContent).toBe(text)
+
+    await wrapper.setProps({ modelValue: `${text} again` })
+    expect(editable.textContent).toBe(`${text} again`)
+  })
+
+  it('does not rewrite the DOM when the parent echoes the emitted value', async () => {
+    const wrapper = mount(RichTextEditor, {
+      props: { modelValue: '', placeholder: 'Enter text' }
+    })
+
+    const editable = wrapper.find('[contenteditable="true"]')
+    editable.element.innerHTML = '<p>Fish &amp; chips</p>'
+    const paragraph = editable.element.firstChild
+    await editable.trigger('input')
+
+    const [[emitted]] = wrapper.emitted('update:modelValue') as [[string]]
+    const innerHtmlSetter = vi.spyOn(editable.element, 'innerHTML', 'set')
+    await wrapper.setProps({ modelValue: emitted })
+
+    expect(innerHtmlSetter).not.toHaveBeenCalled()
+    expect(editable.element.firstChild).toBe(paragraph)
+  })
+
   it('renders FormattingToolbar', () => {
     const wrapper = mount(RichTextEditor, {
       props: {
