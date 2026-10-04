@@ -39,6 +39,7 @@ export class MapBuilder {
    * @param trip - Le voyage complet avec toutes les étapes
    * @param photosMapping - Mapping des photos par étape
    * @param photoDataUrlMap - Mapping des URLs vers data URLs
+   * @param initialFocus - Cadrage initial optionnel (bbox, stepIds ou centre+zoom) ; tout le voyage par défaut
    */
   constructor(
     private readonly trip: Trip,
@@ -57,21 +58,22 @@ export class MapBuilder {
       
       loggerService.debug('MapBuilder', 'Construction de la section carte')
 
-      const bbox = this.calculateBoundingBox()
+      const focusBBox = this.resolveInitialFocus()
+      const bbox = focusBBox ?? this.calculateBoundingBox()
       if (!bbox) return ''
 
       const { tiles, adjustedViewBox: viewBox } = await this.fetchTilesForBbox(bbox)
       loggerService.debug('MapBuilder', 'Tuiles satellite récupérées', { count: tiles.length })
       loggerService.debug('MapBuilder', 'ViewBox utilisé pour le rendu', viewBox)
 
-      // Vérifier que toutes les étapes sont dans le viewBox
+      // Vérifier que toutes les étapes sont dans le viewBox (attendu hors champ avec un cadrage initial)
       const stepsOutside = this.trip.steps.filter(step => {
         return step.lat < viewBox.y || 
                step.lat > viewBox.y + viewBox.height || 
                step.lon < viewBox.x || 
                step.lon > viewBox.x + viewBox.width
       })
-      if (stepsOutside.length > 0) {
+      if (stepsOutside.length > 0 && !focusBBox) {
         loggerService.warn('MapBuilder', 'Certaines étapes sont hors du viewBox', { 
           count: stepsOutside.length,
           steps: stepsOutside.map(s => ({ name: s.name, lat: s.lat, lon: s.lon }))
@@ -131,6 +133,36 @@ export class MapBuilder {
       width: lonSpan + 2 * padLon,
       height: latSpan + 2 * padLat
     }
+  }
+
+  /**
+   * Résout le cadrage initial en bbox. Seule la première forme fournie est retenue,
+   * par priorité : bbox explicite > stepIds > centre+zoom.
+   * Retourne null (emprise complète du voyage) sans cadrage ou si celui-ci ne donne pas de bbox valide.
+   */
+  private resolveInitialFocus(): BBox | null {
+    const focus = this.initialFocus
+    if (!focus) return null
+
+    const bbox = focus.bbox
+      ? focus.bbox
+      : focus.stepIds?.length
+        ? this.computeBBoxFromStepIds(focus.stepIds)
+        : focus.center && focus.zoom !== undefined
+          ? this.computeBBoxFromCenterZoom(focus.center, focus.zoom)
+          : null
+
+    if (bbox && this.isValidBBox(bbox)) return bbox
+    if (Object.keys(focus).length) {
+      loggerService.warn('MapBuilder', 'Cadrage initial inutilisable, carte cadrée sur tout le voyage', focus)
+    }
+    return null
+  }
+
+  private isValidBBox(bbox: BBox): boolean {
+    return [bbox.minLat, bbox.maxLat, bbox.minLon, bbox.maxLon].every(Number.isFinite)
+      && bbox.minLat <= bbox.maxLat
+      && bbox.minLon <= bbox.maxLon
   }
 
   // Map a zoom level to an approximate span (degrees)

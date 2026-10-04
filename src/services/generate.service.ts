@@ -3,7 +3,7 @@ import { Trip } from '../models/types'
 import { elevationService, ElevationService } from './elevation.service'
 import { CoverBuilder } from './builders/cover.builder'
 import { StatsBuilder } from './builders/stats.builder'
-import { MapBuilder } from './builders/map.builder'
+import { MapBuilder, type InitialFocus } from './builders/map.builder'
 import { StepBuilder } from './builders/step.builder'
 import type { StepGenerationPlan } from '../models/editor.types'
 import { loggerService, LoggerService } from './logger.service'
@@ -16,6 +16,7 @@ export type GenerateOptions = {
   photosPlan?: string // contenu texte de photos_by_pages.txt permettant d'écraser la pagination auto
   stepPlans?: Record<number, StepGenerationPlan> // plans d'étapes depuis l'éditeur (prioritaire sur photosPlan)
   hiddenStepIds?: Set<number> // IDs des étapes à exclure de la génération
+  mapFocus?: InitialFocus // cadrage initial de la carte (bbox, stepIds ou centre+zoom) ; tout le voyage par défaut
 }
 
 type StepPlan = StepGenerationPlan
@@ -75,7 +76,7 @@ export class ArtifactGenerator {
     // Fusionner les plans: stepPlans de l'éditeur prioritaire sur le parsing du fichier texte
     const planByStep = options?.stepPlans ?? this.parseUserPlan(userPlanText)
     const hiddenStepIds = options?.hiddenStepIds ?? new Set<number>()
-    const bodyHtml = await this.buildHtmlBody(trip, photosMapping, photoDataUrlMap, planByStep, hiddenStepIds)
+    const bodyHtml = await this.buildHtmlBody(trip, photosMapping, photoDataUrlMap, planByStep, hiddenStepIds, options?.mapFocus)
 
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -376,7 +377,8 @@ ${bodyHtml}
     photosMapping: Record<number, Record<number, any>>,
     photoDataUrlMap: Record<string, string>,
     planByStep: Record<number, StepPlan>,
-    hiddenStepIds: Set<number> = new Set()
+    hiddenStepIds: Set<number> = new Set(),
+    mapFocus?: InitialFocus
   ): Promise<string> {
     let bodyHtml = ''
 
@@ -396,7 +398,7 @@ ${bodyHtml}
 
     // Carte
     this.loggerService.info('generate', 'Génération de la page carte')
-    const mapBuilder = new MapBuilder(filteredTrip, photosMapping, photoDataUrlMap)
+    const mapBuilder = new MapBuilder(filteredTrip, photosMapping, photoDataUrlMap, mapFocus)
     bodyHtml += await mapBuilder.build()
 
     // Étapes (en excluant les étapes masquées)
