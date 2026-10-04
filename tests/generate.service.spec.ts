@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeAll } from 'vitest'
-import { artifactGenerator } from '../src/services/generate.service'
+import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest'
+import { artifactGenerator, type GenerateOptions } from '../src/services/generate.service'
 
 function mockFile(name: string, content = 'x'): File {
   return new File([content], name, { type: 'image/jpeg' })
@@ -138,7 +138,7 @@ describe('generate.service - page carte', () => {
     }) as any
   })
 
-  async function setupMap(tripOverrides: any = {}, stepPhotos: Record<number, File[]> = {}) {
+  async function setupMap(tripOverrides: any = {}, stepPhotos: Record<number, File[]> = {}, options?: GenerateOptions) {
     const baseTrip: any = {
       id: 1,
       name: 'Voyage Test Carte',
@@ -154,7 +154,7 @@ describe('generate.service - page carte', () => {
     }
     const trip = { ...baseTrip, ...tripOverrides, steps: tripOverrides.steps || baseTrip.steps }
     ;(window as any).__parsedTrip = { trip, stepPhotos }
-    const artifacts = await artifactGenerator.generate({} as any)
+    const artifacts = await artifactGenerator.generate({} as any, options)
     const html = await artifactGenerator.buildSingleFileHtmlString(artifacts)
     return { html, trip }
   }
@@ -237,5 +237,33 @@ describe('generate.service - page carte', () => {
     const hasFallback = html.includes('satelliteGradient') || html.includes('terrainPattern')
     // Au moins l'un des deux doit être présent
     expect(hasTiles || hasFallback).toBe(true)
+  })
+
+  describe('cadrage initial (mapFocus)', () => {
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    // Vignettes des étapes Paris, Lyon, Marseille dans le cadre SVG 1000x1000 ?
+    const markersInFrame = (html: string) =>
+      [...html.matchAll(/<foreignObject x="([-\d.]+)" y="([-\d.]+)"/g)]
+        .map(m => ({ x: Number(m[1]) + 20, y: Number(m[2]) + 20 }))
+        .map(({ x, y }) => x >= 0 && x <= 1000 && y >= 0 && y <= 1000)
+
+    it('cadre la carte sur toutes les étapes sans mapFocus', async () => {
+      const { html } = await setupMap()
+      expect(markersInFrame(html)).toEqual([true, true, true])
+    })
+
+    it('transmet mapFocus à la carte', async () => {
+      const { html } = await setupMap({}, {}, { mapFocus: { stepIds: [12] } })
+      expect(markersInFrame(html)).toEqual([false, false, true])
+    })
+
+    it('ignore un mapFocus ne visant que des étapes masquées', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const { html } = await setupMap({}, {}, { mapFocus: { stepIds: [12] }, hiddenStepIds: new Set([12]) })
+      expect(markersInFrame(html)).toEqual([true, true])
+    })
   })
 })
