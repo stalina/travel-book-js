@@ -2,25 +2,31 @@ import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import RichTextEditor from '../../src/components/editor/RichTextEditor.vue'
 
-vi.mock('../../src/composables/useTextFormatting', () => ({
-  useTextFormatting: () => ({
-    applyFormat: vi.fn(),
-    isFormatActive: {
-      bold: false,
-      italic: false,
-      underline: false,
-      strikethrough: false,
-      h1: false,
-      h2: false,
-      h3: false,
-      ul: false,
-      ol: false
-    },
-    updateActiveFormats: vi.fn(),
-    sanitizeHtml: (html: string) => html,
-    handleSelectionChange: vi.fn()
-  })
-}))
+// Seules les API dépendantes de la sélection/execCommand sont simulées :
+// le vrai sanitizeHtml est conservé pour vérifier ce que l'éditeur émet
+vi.mock('../../src/composables/useTextFormatting', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/composables/useTextFormatting')>()
+  const { sanitizeHtml } = actual.useTextFormatting()
+  return {
+    useTextFormatting: () => ({
+      applyFormat: vi.fn(),
+      isFormatActive: {
+        bold: false,
+        italic: false,
+        underline: false,
+        strikethrough: false,
+        h1: false,
+        h2: false,
+        h3: false,
+        ul: false,
+        ol: false
+      },
+      updateActiveFormats: vi.fn(),
+      sanitizeHtml,
+      handleSelectionChange: vi.fn()
+    })
+  }
+})
 
 describe('RichTextEditor', () => {
   it('renders the contenteditable div', () => {
@@ -75,6 +81,22 @@ describe('RichTextEditor', () => {
     await editable.trigger('input')
 
     expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+  })
+
+  it('emits sanitized HTML on input', async () => {
+    const wrapper = mount(RichTextEditor, {
+      props: {
+        modelValue: '',
+        placeholder: 'Enter text'
+      }
+    })
+
+    const editable = wrapper.find('[contenteditable="true"]')
+    editable.element.innerHTML =
+      '<p onmouseover="alert(1)" style="color:red"><b class="x">Hello</b></p><a href="javascript:alert(2)">link</a>'
+    await editable.trigger('input')
+
+    expect(wrapper.emitted('update:modelValue')).toEqual([['<p><b>Hello</b></p>link']])
   })
 
   it('renders FormattingToolbar', () => {

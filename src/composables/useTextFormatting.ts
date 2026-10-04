@@ -101,28 +101,34 @@ export function useTextFormatting() {
   }
 
   /**
-   * Nettoie le HTML en conservant uniquement les tags autorisés
+   * Nettoie le HTML en conservant uniquement les tags autorisés, sans aucun attribut
    */
   const sanitizeHtml = (html: string): string => {
     const allowedTags = ['b', 'i', 'u', 's', 'strong', 'em', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'p', 'br']
-    const div = document.createElement('div')
-    div.innerHTML = html
+    // Le contenu d'un <template> est inerte : rien n'est chargé ni exécuté pendant l'analyse
+    // (avec un <div>, même détaché, <img src=x onerror=...> déclenche son gestionnaire)
+    const template = document.createElement('template')
+    template.innerHTML = html
+    const content = template.content
 
     // Supprimer les scripts et styles
-    const scripts = div.querySelectorAll('script, style')
+    const scripts = content.querySelectorAll('script, style')
     scripts.forEach(script => script.remove())
 
     // Filtrer les tags non autorisés
-    const allElements = div.querySelectorAll('*')
+    const allElements = content.querySelectorAll('*')
     allElements.forEach(element => {
       if (!allowedTags.includes(element.tagName.toLowerCase())) {
         // Remplacer par le contenu texte
         const textNode = document.createTextNode(element.textContent || '')
         element.parentNode?.replaceChild(textNode, element)
+      } else {
+        // Aucun attribut n'est nécessaire à ce formatage (on*, style, class...)
+        element.getAttributeNames().forEach(name => element.removeAttribute(name))
       }
     })
 
-    return div.innerHTML
+    return template.innerHTML
   }
 
   /**
