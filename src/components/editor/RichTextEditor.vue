@@ -37,8 +37,9 @@ const toolbarRef = ref<InstanceType<typeof FormattingToolbar> | null>(null)
 const { sanitizeHtml, handleSelectionChange } = useTextFormatting()
 
 onMounted(() => {
+  // modelValue peut venir de données importées ou d'un brouillon : on ne l'injecte jamais brut
   if (editorRef.value && props.modelValue) {
-    editorRef.value.innerHTML = props.modelValue
+    editorRef.value.innerHTML = sanitizeHtml(props.modelValue)
   }
 
   // Écouter les changements de sélection pour mettre à jour la toolbar (guarded for test env)
@@ -55,8 +56,12 @@ onMounted(() => {
 })
 
 watch(() => props.modelValue, (newValue) => {
-  if (editorRef.value && editorRef.value.innerHTML !== newValue) {
-    editorRef.value.innerHTML = newValue
+  if (!editorRef.value) return
+  // Comparer à la valeur nettoyée : le parent renvoie la valeur déjà nettoyée émise par handleInput,
+  // il ne faut alors pas réécrire le DOM (ce qui déplacerait le curseur pendant la saisie)
+  const sanitized = sanitizeHtml(newValue)
+  if (editorRef.value.innerHTML !== sanitized) {
+    editorRef.value.innerHTML = sanitized
   }
 })
 
