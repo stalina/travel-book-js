@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "6.0.10",
-    "@vitest/coverage-v8": "5.0.5",
+    "@vitest/coverage-v8": "5.1.0",
     "@vue/test-utils": "2.5.1",
     "fake-indexeddb": "6.2.6",
     "happy-dom": "21.0.4",
