@@ -25,7 +25,7 @@
     "fake-indexeddb": "6.2.7",
     "happy-dom": "21.0.4",
     "typescript": "^6.0.3",
-    "vite": "8.3.5",
+    "vite": "8.3.6",
     "vitest": "5.0.5",
     "vue-tsc": "3.3.14"
   }
