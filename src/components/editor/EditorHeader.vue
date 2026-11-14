@@ -42,6 +42,10 @@
         📤 Exporter
       </BaseButton>
     </div>
+    <div v-if="exportError" class="export-error" role="alert">
+      <span>Export impossible : {{ exportError }}</span>
+      <button class="export-error-close" aria-label="Fermer le message" @click="exportError = null">✕</button>
+    </div>
   </header>
 </template>
 
@@ -93,14 +97,20 @@ const onSaveDraft = async () => {
 
 
 
+// Message affiché si l'export échoue (sinon le bouton revient à son état initial sans retour)
+const exportError = ref<string | null>(null)
+
 const onExport = async () => {
+  exportError.value = null
   await exportTravelBook()
+  exportError.value = editorStore.previewError
 }
 
 </script>
 
 <style scoped>
 .editor-header {
+  position: relative;
   grid-area: header;
   background: white;
   border-bottom: 1px solid var(--color-border, #e0e0e0);
@@ -190,5 +200,30 @@ const onExport = async () => {
     min-width: 150px;
     font-size: var(--font-size-base, 16px);
   }
+}
+
+.export-error {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: var(--spacing-lg, 24px);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm, 8px);
+  max-width: 480px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md, 8px);
+  background: #fdecea;
+  color: var(--color-error, #c0392b);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  font-size: 14px;
+  z-index: 1100;
+}
+
+.export-error-close {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 14px;
 }
 </style>

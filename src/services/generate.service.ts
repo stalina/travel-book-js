@@ -17,6 +17,15 @@ export type GenerateOptions = {
   stepPlans?: Record<number, StepGenerationPlan> // plans d'étapes depuis l'éditeur (prioritaire sur photosPlan)
   hiddenStepIds?: Set<number> // IDs des étapes à exclure de la génération
   mapFocus?: InitialFocus // cadrage initial de la carte (bbox, stepIds ou centre+zoom) ; tout le voyage par défaut
+  /**
+   * Voyage à générer (ex. le voyage édité dans l'éditeur). Prioritaire sur window.__parsedTrip.trip.
+   */
+  trip?: Trip
+  /**
+   * Photos par étape. La position dans le tableau donne l'index de la photo (position 0 → index 1) ;
+   * les cases vides sont ignorées. Prioritaire sur window.__parsedTrip.stepPhotos.
+   */
+  stepPhotos?: Record<number, Array<File | undefined>>
 }
 
 type StepPlan = StepGenerationPlan
@@ -36,12 +45,15 @@ export class ArtifactGenerator {
   /**
    * Génère tous les artefacts (HTML, CSS, fonts, photos, cartes) pour un voyage
    * 
-   * @param input - Source de données (FileList ou DirectoryHandle)
-   * @param options - Options de génération (plan photos personnalisé)
+   * @param input - Source de données (FileList ou DirectoryHandle). Optionnelle quand
+   *   `options.trip` est fourni (ex. reprise d'un brouillon sans le dossier d'origine).
+   * @param options - Options de génération (plan photos personnalisé, voyage édité…)
    * @returns Manifest des artefacts générés
    */
-  public async generate(input: FFInput, options?: GenerateOptions): Promise<GeneratedArtifacts> {
-    const { trip, stepPhotos } = (window as any).__parsedTrip as { trip: Trip, stepPhotos: Record<number, File[]> }
+  public async generate(input: FFInput | null, options?: GenerateOptions): Promise<GeneratedArtifacts> {
+    const parsed = (window as any).__parsedTrip as { trip?: Trip, stepPhotos?: Record<number, File[]> } | undefined
+    const trip = options?.trip ?? parsed?.trip
+    const stepPhotos = options?.stepPhotos ?? parsed?.stepPhotos ?? {}
     if (!trip) throw new Error('Trip non parsé')
     
     this.loggerService.info('generate', 'Début de la génération', { tripId: (trip as any).id, steps: trip.steps.length })
@@ -162,20 +174,23 @@ ${bodyHtml}
    */
   private async processPhotos(
     trip: Trip,
-    stepPhotos: Record<number, File[]>,
+    stepPhotos: Record<number, Array<File | undefined>>,
     manifest: Record<string, Blob>,
     photoDataUrlMap: Record<string, string>
   ): Promise<Record<number, Record<number, any>>> {
     this.loggerService.info('generate', `Traitement de ${trip.steps.length} étapes`)
-    
+
     const photosMapping: Record<number, Record<number, any>> = {}
 
     for (const step of trip.steps) {
       const photos = stepPhotos[step.id] || []
       const mapping: Record<number, any> = {}
-      let idx = 1
 
-      for (const f of photos) {
+      for (let position = 0; position < photos.length; position++) {
+        const f = photos[position]
+        if (!f) continue
+        // L'index de la photo est sa position (base 1) : il doit correspondre aux index des plans de l'éditeur
+        const idx = position + 1
         const url = this.normalizePath('assets/images/photos', f.name)
         manifest[url] = f
 
@@ -190,7 +205,6 @@ ${bodyHtml}
         } catch {}
 
         mapping[idx] = { id: f.name, index: idx, path: url, ratio }
-        idx++
       }
 
       photosMapping[step.id] = mapping

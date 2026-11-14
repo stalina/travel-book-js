@@ -105,7 +105,7 @@ describe('usePreview', () => {
     const { content } = usePreview({ trip })
 
     expect(content.value).toContain('Aucun voyage sélectionné')
-    expect(content.value).toContain('Cliquez sur « Prévisualiser »')
+    expect(content.value).toContain('s\'affichera ici une fois généré')
     expect(content.value.startsWith('<!DOCTYPE html>')).toBe(true)
   })
 

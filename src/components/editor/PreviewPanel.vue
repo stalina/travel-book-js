@@ -16,20 +16,6 @@
         <button class="mode-button" :class="{ active: mode === 'desktop' }" @click="setMode('desktop')">💻</button>
         <button class="mode-button" :class="{ active: mode === 'pdf' }" @click="setMode('pdf')">📄</button>
 
-        <div class="status-message" :class="statusClass">
-          <template v-if="previewError">
-            <span class="status-text">{{ previewError }}</span>
-          </template>
-          <template v-else-if="previewContent && previewContent.trim().length">
-            <span class="status-text">Aperçu généré le {{ previewUpdatedAtString }}</span>
-          </template>
-          <template v-else-if="isGenerating">
-            <span class="status-text">Génération en cours…</span>
-          </template>
-          <template v-else>
-            <span class="status-text">Aucun aperçu disponible</span>
-          </template>
-        </div>
       </div>
 
       <div :class="['preview-content', `mode-${mode ?? 'desktop'}`]">
@@ -40,8 +26,25 @@
 
         <div class="preview-overlay-panel" role="dialog" aria-label="Aperçu">
       <div class="preview-overlay-header">
-        <div class="preview-overlay-title">Aperçu (PDF)</div>
+        <div class="preview-overlay-heading">
+          <div class="preview-overlay-title">Aperçu (PDF)</div>
+          <!-- État visible de la génération (l'ancienne barre d'état était masquée par ce panneau) -->
+          <div class="status-message" :class="statusClass" role="status" aria-live="polite">
+            <span v-if="isGenerating" class="status-text">Génération en cours…</span>
+            <span v-else-if="previewError" class="status-text">Erreur : {{ previewError }}</span>
+            <span v-else-if="hasGeneratedPreview && isPreviewStale" class="status-text">Modifications non prises en compte</span>
+            <span v-else-if="hasGeneratedPreview" class="status-text">Aperçu généré le {{ previewUpdatedAtString }}</span>
+            <span v-else class="status-text">Aucun aperçu disponible</span>
+          </div>
+        </div>
         <div class="preview-overlay-actions">
+          <button
+            v-if="canRegenerate"
+            class="regenerate-button"
+            :aria-label="regenerateLabel"
+            :title="regenerateLabel"
+            @click="regenerate"
+          >{{ regenerateLabel }}</button>
           <button class="download-button" @click="downloadHtml" :disabled="isGenerating || !previewContent" aria-label="Télécharger HTML" title="Télécharger le HTML de l'aperçu">⤓</button>
           <button class="open-button" @click="openInNewTab" :disabled="isGenerating || !previewContent" aria-label="Ouvrir dans un nouvel onglet" title="Ouvrir l'aperçu dans un nouvel onglet">↗️</button>
           <button class="print-button" @click="printPreview" :disabled="isGenerating || !previewContent" aria-label="Imprimer" title="Imprimer l'aperçu">🖨️</button>
@@ -53,6 +56,11 @@
         <div v-if="isGenerating" class="preview-loading-overlay">
           <span class="overlay-spinner"></span>
           <p>Génération en cours…</p>
+        </div>
+        <div v-else-if="previewError && !hasGeneratedPreview" class="preview-error" role="alert">
+          <p class="preview-error-title">L'aperçu n'a pas pu être généré.</p>
+          <p class="preview-error-message">{{ previewError }}</p>
+          <button class="preview-error-retry" @click="regenerate">Réessayer</button>
         </div>
         <iframe
           v-else
@@ -262,6 +270,14 @@ const isGenerating = computed(() => editorStore.isPreviewLoading)
 
 
 const previewError = computed(() => editorStore.previewError)
+const hasGeneratedPreview = computed(() => !!editorStore.previewHtml && editorStore.previewHtml.trim().length > 0)
+const isPreviewStale = computed(() => editorStore.isPreviewStale)
+// Réessayer après une erreur, ou intégrer les dernières modifications à l'aperçu
+const canRegenerate = computed(() => !isGenerating.value && (!!previewError.value || (hasGeneratedPreview.value && isPreviewStale.value)))
+const regenerateLabel = computed(() => (previewError.value ? 'Réessayer' : 'Mettre à jour'))
+const regenerate = () => {
+  void previewTravelBook()
+}
 const previewUpdatedAtString = computed(() => {
   return editorStore.previewUpdatedAt ? new Date(editorStore.previewUpdatedAt).toLocaleString() : ''
 })
@@ -339,9 +355,53 @@ watch(
     border-bottom: 1px solid var(--color-border);
   }
 
+  .preview-overlay-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
   .preview-overlay-title {
     font-weight: var(--font-weight-semibold);
     color: var(--color-text-primary);
+  }
+
+  .status-message {
+    font-size: 13px;
+    color: var(--color-text-secondary, #52606d);
+  }
+  .status-message.type-error { color: var(--color-error, #c0392b); }
+  .status-message.type-success { color: var(--color-text-secondary, #52606d); }
+
+  .preview-overlay-actions button.regenerate-button {
+    width: auto;
+    padding: 0 12px;
+    font-size: 14px;
+    font-weight: var(--font-weight-medium, 500);
+    background: var(--color-primary, #ff6b6b);
+    color: var(--color-on-primary, #fff);
+    border-color: transparent;
+  }
+
+  .preview-error {
+    max-width: 520px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm, 8px);
+  }
+  .preview-error-title { margin: 0; font-weight: var(--font-weight-semibold, 600); }
+  .preview-error-message { margin: 0; color: var(--color-error, #c0392b); }
+  .preview-error-retry {
+    margin-top: var(--spacing-sm, 8px);
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    background: var(--color-primary, #ff6b6b);
+    color: var(--color-on-primary, #fff);
+    cursor: pointer;
   }
   .preview-overlay-actions button {
     margin-left: 8px;

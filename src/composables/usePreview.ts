@@ -205,7 +205,7 @@ export function usePreview(options: PreviewOptions) {
   <body>
     <div class="placeholder-wrapper">
       <h1>${title || 'Travel Book'}</h1>
-      <p class="description">Cliquez sur « Prévisualiser » pour générer l'aperçu complet.</p>
+      <p class="description">L'aperçu complet du travel book s'affichera ici une fois généré.</p>
       <ul>${stepsMarkup}</ul>
     </div>
   </body>

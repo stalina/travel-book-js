@@ -59,6 +59,28 @@ describe('generate.service - page de couverture', () => {
     }
   })
 
+  it('utilise le voyage et les photos passés en options plutôt que window.__parsedTrip', async () => {
+    ;(window as any).__parsedTrip = undefined
+    const trip: any = {
+      id: 1,
+      name: 'Titre édité dans l éditeur',
+      start_date: Date.UTC(2023,0,2) / 1000,
+      end_date: Date.UTC(2023,0,5) / 1000,
+      steps: [
+        { id: 10, name: 'Etape éditée', description: 'Desc', start_time: Date.UTC(2023,0,2)/1000, lat: 0, lon: 0, country_code: '00', weather_condition: 'clear-day', weather_temperature: 20 }
+      ],
+      cover_photo: null
+    }
+    const artifacts = await artifactGenerator.generate(null, { trip, stepPhotos: { 10: [undefined, mockFile('deux.jpg')] } })
+    const html = await artifactGenerator.buildSingleFileHtmlString(artifacts)
+    expect(html).toContain('Titre édité dans l éditeur')
+    expect(html).toContain('Etape éditée')
+    const mapping = JSON.parse(await artifacts.manifest['photos_mapping.json'].text())
+    // La position dans le tableau donne l'index : la case vide (index 1) est ignorée
+    expect(Object.keys(mapping[10])).toEqual(['2'])
+    expect(mapping[10][2].id).toBe('deux.jpg')
+  })
+
   it('fallback sur première photo de step si pas de cover_photo', async () => {
   const file = mockFile('test.jpg')
   const { html } = await setup({}, { 10: [file] })

@@ -2,6 +2,8 @@ import { useTripStore } from '../stores/trip.store'
 import { useEditorStore } from '../stores/editor.store'
 import { artifactGenerator, type GenerateOptions, type GeneratedArtifacts } from '../services/generate.service'
 import type { StepGenerationPlan } from '../models/editor.types'
+import type { Trip } from '../models/types'
+import { toRaw } from 'vue'
 
 // Module-level lock to prevent concurrent preview generations
 let previewLock = false
@@ -14,12 +16,40 @@ export function useEditorGeneration() {
   const tripStore = useTripStore()
   const editorStore = useEditorStore()
 
-  const buildOptions = (): GenerateOptions | undefined => {
+  /**
+   * Photos de l'éditeur par étape, positionnées selon leur index (index 1 → position 0)
+   * pour rester alignées avec les index utilisés dans les plans de pages.
+   */
+  const buildEditorStepPhotos = (): Record<number, Array<File | undefined>> => {
+    const result: Record<number, Array<File | undefined>> = {}
+    for (const [stepId, photos] of Object.entries(editorStore.stepPhotosByStep)) {
+      const files: Array<File | undefined> = []
+      for (const photo of photos ?? []) {
+        if (photo.file && Number.isInteger(photo.index) && photo.index >= 1) {
+          files[photo.index - 1] = toRaw(photo.file)
+        }
+      }
+      result[Number(stepId)] = files
+    }
+    return result
+  }
+
+  const buildOptions = (): GenerateOptions => {
     const planText = tripStore.photosPlanText?.trim()
-    
+    const trip = editorStore.currentTrip
+
+    // Le voyage et les photos de l'éditeur font foi : ils intègrent les modifications de
+    // l'utilisateur et sont disponibles même après la reprise d'un brouillon (sans dossier source).
+    const editorData: Pick<GenerateOptions, 'trip' | 'stepPhotos'> = trip
+      ? {
+          // Copie simple : la génération annote les étapes (altitude) et ne doit pas toucher à l'état réactif
+          trip: JSON.parse(JSON.stringify(toRaw(trip))) as Trip,
+          stepPhotos: buildEditorStepPhotos()
+        }
+      : {}
+
     // Construire les plans d'étapes depuis l'éditeur
     const stepPlans: Record<number, StepGenerationPlan> = {}
-    const trip = editorStore.currentTrip
     if (trip?.steps) {
       for (const step of trip.steps) {
         const plan = editorStore.buildStepPlan(step.id)
@@ -28,14 +58,16 @@ export function useEditorGeneration() {
         }
       }
     }
-    
+
     // Si on a des plans d'étapes de l'éditeur, on les utilise
     if (Object.keys(stepPlans).length > 0) {
-      return { stepPlans, hiddenStepIds: editorStore.hiddenStepIds }
+      return { ...editorData, stepPlans, hiddenStepIds: editorStore.hiddenStepIds }
     }
-    
+
     // Sinon, fallback sur le planText
-    return planText ? { photosPlan: planText, hiddenStepIds: editorStore.hiddenStepIds } : { hiddenStepIds: editorStore.hiddenStepIds }
+    return planText
+      ? { ...editorData, photosPlan: planText, hiddenStepIds: editorStore.hiddenStepIds }
+      : { ...editorData, hiddenStepIds: editorStore.hiddenStepIds }
   }
 
   const ensureArtifacts = async (): Promise<GeneratedArtifacts> => {
