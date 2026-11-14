@@ -125,4 +125,25 @@ describe('EditorHeader', () => {
     expect(texts.some(t => t.includes('Jours'))).toBe(true)
     expect(texts.some(t => t.includes('Pages'))).toBe(true)
   })
+
+  it('affiche un message quand l\'export échoue', async () => {
+    const store = useEditorStore()
+    exportMock.mockImplementation(async () => {
+      store.setPreviewError('Aucun input')
+    })
+    const wrapper = mount(EditorHeader)
+    expect(wrapper.find('.export-error').exists()).toBe(false)
+
+    const exportButton = wrapper.findAllComponents({ name: 'BaseButton' }).find(btn => btn.text().includes('Exporter'))
+    await exportButton!.trigger('click')
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+
+    const alert = wrapper.find('.export-error')
+    expect(alert.exists()).toBe(true)
+    expect(alert.text()).toContain('Export impossible : Aucun input')
+
+    await wrapper.find('.export-error-close').trigger('click')
+    expect(wrapper.find('.export-error').exists()).toBe(false)
+  })
 })

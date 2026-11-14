@@ -264,4 +264,43 @@ describe('PreviewPanel', () => {
   clickSpy.mockRestore()
   createSpy.mockRestore()
   })
+
+  it('affiche l\'erreur dans le panneau visible et permet de réessayer', async () => {
+    const wrapper = mount(PreviewPanel)
+    store.setPreviewOpen(true)
+    await wrapper.vm.$nextTick()
+    previewMock.mockClear()
+    store.setPreviewError('Aucun input')
+    await wrapper.vm.$nextTick()
+
+    // Le message d'état est dans l'en-tête du panneau superposé (et non dans la barre masquée)
+    const status = wrapper.find('.preview-overlay-header .status-message')
+    expect(status.exists()).toBe(true)
+    expect(status.text()).toContain('Aucun input')
+
+    const errorBlock = wrapper.find('.preview-error')
+    expect(errorBlock.exists()).toBe(true)
+    expect(errorBlock.text()).toContain('Aucun input')
+
+    await wrapper.find('button.preview-error-retry').trigger('click')
+    expect(previewMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('propose de mettre à jour un aperçu devenu obsolète', async () => {
+    const wrapper = mount(PreviewPanel)
+    store.setPreviewOpen(true)
+    store.setPreviewHtml('<!DOCTYPE html><html><body>ok</body></html>')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('button.regenerate-button').exists()).toBe(false)
+
+    store.markPreviewStale()
+    await wrapper.vm.$nextTick()
+    const button = wrapper.find('button.regenerate-button')
+    expect(button.exists()).toBe(true)
+    expect(button.text()).toBe('Mettre à jour')
+
+    previewMock.mockClear()
+    await button.trigger('click')
+    expect(previewMock).toHaveBeenCalledTimes(1)
+  })
 })
