@@ -51,7 +51,8 @@ export const useTripStore = defineStore('trip', {
       this.parsedTrip = trip
     },
     async generateArtifacts(options?: GenerateOptions) {
-      if (!this.input) throw new Error('Aucun input')
+      // Sans dossier source (ex. brouillon repris), la génération s'appuie sur le voyage fourni par l'éditeur
+      if (!this.input && !options?.trip) throw new Error('Aucun input')
       this.artifacts = await artifactGenerator.generate(this.input, options)
     },
     async ensureDraftPlan() {
