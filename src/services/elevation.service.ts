@@ -2,8 +2,13 @@ import { loggerService } from './logger.service'
 
 export type ElevationCache = Record<string, number | null>
 
-// Use dev proxy path to avoid CORS in development; Vite rewrites to https://api.opentopodata.org
-const API_URL = '/api/opentopo/v1/aster30m'
+/**
+ * API d'altitude Open-Meteo (Copernicus DEM 90 m) : gratuite, sans clé et compatible CORS,
+ * donc appelable directement depuis GitHub Pages comme depuis le serveur de dev.
+ * Limite : 100 coordonnées par requête.
+ */
+export const ELEVATION_API_URL = 'https://api.open-meteo.com/v1/elevation'
+const MAX_POINTS_PER_REQUEST = 100
 
 type Pending = {
   lat: number
@@ -23,6 +28,8 @@ export class ElevationService {
   private pendingByKey = new Map<string, Pending>()
   private queue: Array<{ key: string; lat: number; lon: number }> = []
   private processing = false
+  // Un seul avertissement par session si l'API est indisponible (évite d'inonder la console)
+  private hasWarned = false
 
   /**
    * Constructeur privé pour forcer l'utilisation du pattern Singleton
@@ -103,8 +110,7 @@ export class ElevationService {
 
     loggerService.debug('ElevationService', `${need.length} points à récupérer depuis l'API`)
 
-    // Batch in chunks of 100 like Python
-    const chunkSize = 100
+    const chunkSize = MAX_POINTS_PER_REQUEST
     for (let start = 0; start < need.length; start += chunkSize) {
       const chunk = need.slice(start, start + chunkSize)
       await this.fetchBatch(chunk, out)
@@ -139,26 +145,48 @@ export class ElevationService {
     chunk: Array<{ idx: number; key: string; lat: number; lon: number }>,
     out: Array<number | null>
   ): Promise<void> {
-    const locationsParam = chunk.map(({ lat, lon }) => `${lat},${lon}`).join('|')
     try {
-      const res = await fetch(`${API_URL}?locations=${locationsParam}`)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const data = (await res.json()) as { results?: Array<{ elevation?: number | null }> }
-      const results = data.results || []
-      for (let i = 0; i < chunk.length; i++) {
-        const { idx, key } = chunk[i]
-        const elev = (results[i]?.elevation ?? null) as number | null
-        out[idx] = elev
-        this.memCache.set(key, elev)
-      }
+      const elevations = await this.requestElevations(chunk)
+      chunk.forEach(({ idx, key }, i) => {
+        out[idx] = elevations[i]
+        this.memCache.set(key, elevations[i])
+      })
       loggerService.debug('ElevationService', `Batch récupéré: ${chunk.length} points`)
     } catch (error) {
       // On error, fill the chunk with null and cache it to avoid retry storm
-      loggerService.warn('ElevationService', 'Erreur lors du fetch batch', error)
+      this.reportFailure(error)
       for (const { idx, key } of chunk) {
         out[idx] = null
         this.memCache.set(key, null)
       }
+    }
+  }
+
+  /**
+   * Interroge l'API pour un lot de points (≤ 100) et renvoie les altitudes dans le même ordre.
+   */
+  private async requestElevations(points: Array<{ lat: number; lon: number }>): Promise<Array<number | null>> {
+    const latitude = points.map(({ lat }) => lat.toFixed(6)).join(',')
+    const longitude = points.map(({ lon }) => lon.toFixed(6)).join(',')
+    const res = await fetch(`${ELEVATION_API_URL}?latitude=${latitude}&longitude=${longitude}`)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = (await res.json()) as { elevation?: Array<number | null> }
+    const elevations = data.elevation ?? []
+    return points.map((_, i) => {
+      const value = elevations[i]
+      return typeof value === 'number' && Number.isFinite(value) ? value : null
+    })
+  }
+
+  /**
+   * Signale une indisponibilité de l'API : un avertissement, puis des logs de debug.
+   */
+  private reportFailure(error: unknown): void {
+    if (!this.hasWarned) {
+      this.hasWarned = true
+      loggerService.warn('ElevationService', 'Altitudes indisponibles, elles seront omises', error)
+    } else {
+      loggerService.debug('ElevationService', 'Échec de récupération des altitudes', error)
     }
   }
 
@@ -172,16 +200,12 @@ export class ElevationService {
     try {
       while (this.queue.length > 0) {
         // Batch up to 100 points per request
-        const batch = this.queue.splice(0, 100)
-        const locationsParam = batch.map(({ lat, lon }) => `${lat},${lon}`).join('|')
+        const batch = this.queue.splice(0, MAX_POINTS_PER_REQUEST)
         try {
-          const res = await fetch(`${API_URL}?locations=${locationsParam}`)
-          if (!res.ok) throw new Error(`HTTP ${res.status}`)
-          const data = (await res.json()) as { results?: Array<{ elevation?: number | null }> }
-          const results = data.results || []
+          const elevations = await this.requestElevations(batch)
           for (let i = 0; i < batch.length; i++) {
             const { key } = batch[i]
-            const elev = (results[i]?.elevation ?? null) as number | null
+            const elev = elevations[i]
             this.memCache.set(key, elev)
             const pending = this.pendingByKey.get(key)
             if (pending) {
@@ -192,7 +216,7 @@ export class ElevationService {
           loggerService.debug('ElevationService', `Queue batch traité: ${batch.length} points`)
         } catch (error) {
           // On error, resolve all with null to avoid blocking UI
-          loggerService.warn('ElevationService', 'Erreur lors du traitement queue', error)
+          this.reportFailure(error)
           for (const { key } of batch) {
             this.memCache.set(key, null)
             const pending = this.pendingByKey.get(key)
@@ -202,7 +226,7 @@ export class ElevationService {
             }
           }
         }
-        // Respect API guidance similar to Python (1 call per second)
+        // Rester raisonnable avec l'API publique (1 requête par seconde)
         if (this.queue.length > 0) {
           await new Promise((r) => setTimeout(r, 1000))
         }
